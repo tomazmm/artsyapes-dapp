@@ -1,0 +1,12 @@
+/home/tomazm/Dev/artsyapes-dapp/contracts/cw-nfts/target/wasm32-unknown-unknown/release/deps/cw0-f8dea03159a1dea4.rmeta: /home/tomazm/.cargo/registry/src/github.com-1ecc6299db9ec823/cw0-0.9.1/src/lib.rs /home/tomazm/.cargo/registry/src/github.com-1ecc6299db9ec823/cw0-0.9.1/src/balance.rs /home/tomazm/.cargo/registry/src/github.com-1ecc6299db9ec823/cw0-0.9.1/src/event.rs /home/tomazm/.cargo/registry/src/github.com-1ecc6299db9ec823/cw0-0.9.1/src/expiration.rs /home/tomazm/.cargo/registry/src/github.com-1ecc6299db9ec823/cw0-0.9.1/src/pagination.rs /home/tomazm/.cargo/registry/src/github.com-1ecc6299db9ec823/cw0-0.9.1/src/payment.rs
+
+/home/tomazm/Dev/artsyapes-dapp/contracts/cw-nfts/target/wasm32-unknown-unknown/release/deps/libcw0-f8dea03159a1dea4.rlib: /home/tomazm/.cargo/registry/src/github.com-1ecc6299db9ec823/cw0-0.9.1/src/lib.rs /home/tomazm/.cargo/registry/src/github.com-1ecc6299db9ec823/cw0-0.9.1/src/balance.rs /home/tomazm/.cargo/registry/src/github.com-1ecc6299db9ec823/cw0-0.9.1/src/event.rs /home/tomazm/.cargo/registry/src/github.com-1ecc6299db9ec823/cw0-0.9.1/src/expiration.rs /home/tomazm/.cargo/registry/src/github.com-1ecc6299db9ec823/cw0-0.9.1/src/pagination.rs /home/tomazm/.cargo/registry/src/github.com-1ecc6299db9ec823/cw0-0.9.1/src/payment.rs
+
+/home/tomazm/Dev/artsyapes-dapp/contracts/cw-nfts/target/wasm32-unknown-unknown/release/deps/cw0-f8dea03159a1dea4.d: /home/tomazm/.cargo/registry/src/github.com-1ecc6299db9ec823/cw0-0.9.1/src/lib.rs /home/tomazm/.cargo/registry/src/github.com-1ecc6299db9ec823/cw0-0.9.1/src/balance.rs /home/tomazm/.cargo/registry/src/github.com-1ecc6299db9ec823/cw0-0.9.1/src/event.rs /home/tomazm/.cargo/registry/src/github.com-1ecc6299db9ec823/cw0-0.9.1/src/expiration.rs /home/tomazm/.cargo/registry/src/github.com-1ecc6299db9ec823/cw0-0.9.1/src/pagination.rs /home/tomazm/.cargo/registry/src/github.com-1ecc6299db9ec823/cw0-0.9.1/src/payment.rs
+
+/home/tomazm/.cargo/registry/src/github.com-1ecc6299db9ec823/cw0-0.9.1/src/lib.rs:
+/home/tomazm/.cargo/registry/src/github.com-1ecc6299db9ec823/cw0-0.9.1/src/balance.rs:
+/home/tomazm/.cargo/registry/src/github.com-1ecc6299db9ec823/cw0-0.9.1/src/event.rs:
+/home/tomazm/.cargo/registry/src/github.com-1ecc6299db9ec823/cw0-0.9.1/src/expiration.rs:
+/home/tomazm/.cargo/registry/src/github.com-1ecc6299db9ec823/cw0-0.9.1/src/pagination.rs:
+/home/tomazm/.cargo/registry/src/github.com-1ecc6299db9ec823/cw0-0.9.1/src/payment.rs:
