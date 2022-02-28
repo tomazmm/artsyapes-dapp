@@ -6,5 +6,13 @@
         "default": "terra1kfrqkqn9qw5jsahsds76ywuqxrp8rd8xj90gef"
       }
     }
+  },
+  "mainnet": {
+    "cw-nfts": {
+      "codeId": "1870",
+      "contractAddresses": {
+        "default": "terra1vdwz6zlrk6ptsxu97dk43uup9frchuwse8s6d8"
+      }
+    }
   }
 }
