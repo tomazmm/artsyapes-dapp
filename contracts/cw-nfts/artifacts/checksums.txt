@@ -1,2 +1,0 @@
-b19865c6cd71cfd62b2aa3da7270ae6b076e7ff1d6524a0ecddc615042421b46  cw721_base.wasm
-c53a50300790d2c026fb634c1a1d7f174d5f482ba3ae24a35ad1cad4574af3a7  cw721_metadata_onchain.wasm
