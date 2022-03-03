@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Vuex, { StoreOptions } from 'vuex';
 import { RootState } from '@/store/types';
-import { auth } from './auth/index';
+import { walletController } from './walletcontroller/index';
 
 Vue.use(Vuex);
 
@@ -10,7 +10,7 @@ const store: StoreOptions<RootState> = {
     version: '0.0.1',
   },
   modules: {
-    auth,
+    walletController,
   },
 };
 

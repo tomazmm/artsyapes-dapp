@@ -7,11 +7,19 @@
 <script lang="ts">
 import Vue from 'vue';
 import { Component } from 'vue-property-decorator';
+import {Action, Getter} from 'vuex-class';
 
 @Component({
 })
 export default class App extends Vue {
+  @Action('initialize', { namespace: 'walletController' }) initWalletController : any
 
+  @Getter('init', { namespace: 'walletController'}) isInit: any
+  walletControllerInitialized = false;
+
+  created() : void{
+    this.initWalletController();
+  }
 }
 </script>
 

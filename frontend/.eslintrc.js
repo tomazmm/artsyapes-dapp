@@ -5,7 +5,6 @@ module.exports = {
   },
   extends: [
     'plugin:vue/essential',
-    '@vue/airbnb',
     '@vue/typescript/recommended',
   ],
   parserOptions: {
@@ -14,7 +13,7 @@ module.exports = {
   rules: {
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
     'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
-    "@typescript-eslint/ban-ts-comment": "off",
-    "no-underscore-dangle":  ["error", { "allow": ["_place"] }]
+    '@typescript-eslint/ban-ts-comment': 'off',
+    'no-underscore-dangle': ['error', { allow: ['_place'] }],
   },
 };
