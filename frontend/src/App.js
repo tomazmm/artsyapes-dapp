@@ -9,6 +9,8 @@ import {
 import * as execute from './contract/execute'
 import * as query from './contract/query'
 import { ConnectWallet } from './components/ConnectWallet'
+import {Welcome} from "./components/layout/Welcome";
+
 
 function App() {
   const [count, setCount] = useState(null)
@@ -31,27 +33,12 @@ function App() {
 
   return (
     <div className="ArtsyApesApp">
-      <header className="App-header">
-        <div style={{ display: 'inline' }}>
-          COUNT: {count} {updating ? '(updating . . .)' : ''}
-        </div>
-        {status === WalletStatus.WALLET_CONNECTED && (
-          <div style={{ display: 'inline' }}>
-            <input
-              type="number"
-              onChange={(e) => setResetValue(+e.target.value)}
-              value={resetValue}
-            />
-            {/*<button onClick={onClickReset} type="button">*/}
-            {/*  {' '}*/}
-            {/*  reset{' '}*/}
-            {/*</button>*/}
-          </div>
-        )}
-        <ConnectWallet />
-      </header>
+      <Welcome>
+
+      </Welcome>
     </div>
   )
 }
+
 
 export default App
