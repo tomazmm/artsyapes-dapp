@@ -1,4 +1,3 @@
-import './App.css'
 
 import { useEffect, useState } from 'react'
 import {
@@ -23,37 +22,18 @@ function App() {
   useEffect(() => {
     const prefetch = async () => {
       if (connectedWallet) {
-        setCount((await query.getCount(connectedWallet)).count)
+        setCount((await query.numTokens(connectedWallet)).count)
       }
       setUpdating(false)
     }
     prefetch()
   }, [connectedWallet])
 
-  const onClickIncrement = async () => {
-    setUpdating(true)
-    await execute.increment(connectedWallet)
-    setCount((await query.getCount(connectedWallet)).count)
-    setUpdating(false)
-  }
-
-  const onClickReset = async () => {
-    setUpdating(true)
-    console.log(resetValue)
-    await execute.reset(connectedWallet, resetValue)
-    setCount((await query.getCount(connectedWallet)).count)
-    setUpdating(false)
-  }
-
   return (
-    <div className="App">
+    <div className="ArtsyApesApp">
       <header className="App-header">
         <div style={{ display: 'inline' }}>
           COUNT: {count} {updating ? '(updating . . .)' : ''}
-          <button onClick={onClickIncrement} type="button">
-            {' '}
-            +{' '}
-          </button>
         </div>
         {status === WalletStatus.WALLET_CONNECTED && (
           <div style={{ display: 'inline' }}>
@@ -62,10 +42,10 @@ function App() {
               onChange={(e) => setResetValue(+e.target.value)}
               value={resetValue}
             />
-            <button onClick={onClickReset} type="button">
-              {' '}
-              reset{' '}
-            </button>
+            {/*<button onClick={onClickReset} type="button">*/}
+            {/*  {' '}*/}
+            {/*  reset{' '}*/}
+            {/*</button>*/}
           </div>
         )}
         <ConnectWallet />
