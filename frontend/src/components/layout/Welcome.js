@@ -40,8 +40,8 @@ export const Welcome = () => {
                     {/*<Col xs={{span: 5,offset: 1}} className="d-flex flex-column justify-content-end">*/}
                     {/*    <GoldenApe src={'/assets/golden-ape.png'}/>*/}
                     {/*</Col>*/}
-                    <Col lg={{span: 5, offset: 6}}
-                         md={{span: 12}}
+                    <Col xl={{span: 5, offset: 6}}
+                         lg={{span: 12}}
                          className="d-flex flex-column justify-content-center align-content-center align-items-center">
                         <Logo className="w-75 mb-5" src={'/assets/logo.png'}/>
                         <ConnectWallet/>
