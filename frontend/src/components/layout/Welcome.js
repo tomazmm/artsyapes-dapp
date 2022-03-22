@@ -12,43 +12,38 @@
 // import backgroundImg from '../../../public/assets/space-background.png';
 
 import styled from 'styled-components';
-import {Col, Container, Row} from "react-bootstrap";
+import {Button, Col, Container, Row} from "react-bootstrap";
+import {ConnectWallet} from "../ConnectWallet";
 
 
 export const Welcome = () => {
 
     const Background = styled.div`
-      background: url("/assets/space-background.png");
+      background: url("/assets/space-background-new.png");
       background-size: cover;
       height: 100vh;
-      overflow: hidden;
     `;
-    //
-    // const container = styled(Container)`
-    //     height: 100%;
-    // `
-    //
-    // const Row = styled(Row)`
-    //   height: 100%;
-    // `
 
 
     const GoldenApe = styled.img`
       Width: 100%;
-      bottom: 0
     `
 
-    const Logo = styled.img``
+    const Logo = styled.img`
+      width: 100%;
+    `
 
     return (
         <Background>
-            <Container>
-                <Row>
-                    <Col>
+            <Container fluid className="h-100">
+                <Row className="h-100">
+                    <Col xs={{span: 5,offset: 1}} className="d-flex flex-column justify-content-end">
                         <GoldenApe src={'/assets/golden-ape.png'}/>
                     </Col>
-                    <Col>
-                        <Logo src={'/assets/logo.png'}/>
+                    <Col xs={{span: 5}} className="d-flex flex-column justify-content-center align-content-center align-items-center">
+                        <Logo className="w-75 mb-5" src={'/assets/logo.png'}/>
+                        <ConnectWallet/>
+                        <span>to enter app</span>
                     </Col>
                 </Row>
             </Container>

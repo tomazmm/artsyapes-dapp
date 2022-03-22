@@ -33,8 +33,8 @@ function App() {
 
   return (
     <div className="ArtsyApesApp">
-      {/*<Welcome/>*/}
-      <ConnectWallet/>
+      <Welcome/>
+      {/*<ConnectWallet/>*/}
       {/*<Welcome>*/}
 
       {/*</Welcome>*/}
