@@ -30,7 +30,7 @@ export const Welcome = () => {
     `
 
     const Logo = styled.img`
-      width: 100%;
+      //width: 100%;
     `
 
     return (
@@ -40,7 +40,7 @@ export const Welcome = () => {
                     {/*<Col xs={{span: 5,offset: 1}} className="d-flex flex-column justify-content-end">*/}
                     {/*    <GoldenApe src={'/assets/golden-ape.png'}/>*/}
                     {/*</Col>*/}
-                    <Col xl={{span: 5, offset: 6}}
+                    <Col xl={{span: 6, offset: 6}}
                          lg={{span: 12}}
                          className="d-flex flex-column justify-content-center align-content-center align-items-center">
                         <Logo className="w-75 mb-5" src={'/assets/logo.png'}/>
