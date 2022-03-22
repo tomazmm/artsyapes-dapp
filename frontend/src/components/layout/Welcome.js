@@ -37,10 +37,12 @@ export const Welcome = () => {
         <Background>
             <Container fluid className="h-100">
                 <Row className="h-100">
-                    <Col xs={{span: 5,offset: 1}} className="d-flex flex-column justify-content-end">
-                        <GoldenApe src={'/assets/golden-ape.png'}/>
-                    </Col>
-                    <Col xs={{span: 5}} className="d-flex flex-column justify-content-center align-content-center align-items-center">
+                    {/*<Col xs={{span: 5,offset: 1}} className="d-flex flex-column justify-content-end">*/}
+                    {/*    <GoldenApe src={'/assets/golden-ape.png'}/>*/}
+                    {/*</Col>*/}
+                    <Col lg={{span: 5, offset: 6}}
+                         md={{span: 12}}
+                         className="d-flex flex-column justify-content-center align-content-center align-items-center">
                         <Logo className="w-75 mb-5" src={'/assets/logo.png'}/>
                         <ConnectWallet/>
                         <span>to enter app</span>
