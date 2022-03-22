@@ -1,15 +1,16 @@
 import { LCDClient, MsgExecuteContract, Fee } from "@terra-money/terra.js";
 import { contractAdress } from "./address";
+import {ConnectedWallet} from "@terra-dev/use-wallet/useConnectedWallet";
 
 // ==== utils ====
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms: any) => new Promise((resolve) => setTimeout(resolve, ms));
 const until = Date.now() + 1000 * 60 * 60;
 const untilInterval = Date.now() + 1000 * 60;
 
 const _exec =
-  (msg, fee = new Fee(200000, { uluna: 10000 })) =>
-  async (wallet) => {
+  (msg: any, fee = new Fee(200000, { uluna: 10000 })) =>
+  async (wallet: ConnectedWallet) => {
     const lcd = new LCDClient({
       URL: wallet.network.lcd,
       chainID: wallet.network.chainID,
@@ -47,5 +48,5 @@ const _exec =
 
 export const increment = _exec({ increment: {} });
 
-export const reset = async (wallet, count) =>
+export const reset = async (wallet: any, count: any) =>
   _exec({ reset: { count } })(wallet);
