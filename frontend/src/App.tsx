@@ -24,6 +24,7 @@ function App() {
   useEffect(() => {
     const prefetch = async () => {
       if (connectedWallet) {
+        // @ts-ignore
         setCount((await query.numTokens(connectedWallet)).count)
       }
       setUpdating(false)
