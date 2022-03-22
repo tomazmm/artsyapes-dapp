@@ -33,9 +33,11 @@ function App() {
 
   return (
     <div className="ArtsyApesApp">
-      <Welcome>
+      {/*<Welcome/>*/}
+      <ConnectWallet/>
+      {/*<Welcome>*/}
 
-      </Welcome>
+      {/*</Welcome>*/}
     </div>
   )
 }
