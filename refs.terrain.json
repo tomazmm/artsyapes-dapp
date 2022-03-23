@@ -5,6 +5,12 @@
       "contractAddresses": {
         "default": "terra1qpg75wmr0cs263529cxdtx7jxr37w62j7rvetq"
       }
+    },
+    "cw721-nfc": {
+      "codeId": "55977",
+      "contractAddresses": {
+        "default": "terra1t0al5df4w9sd3xavhc2j582znnv2vm7pycghnr"
+      }
     }
   },
   "mainnet": {

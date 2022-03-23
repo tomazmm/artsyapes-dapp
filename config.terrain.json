@@ -16,10 +16,13 @@
             "uluna": 1000000
           }
         },
-        "instantiateMsg": {
+        "instantiateMsg_cw721": {
           "minter": "terra1hgnvkekt6kfh4ds7kv5jqer0wswm9qnpvwmtdr",
           "name": "ArtsyApes",
           "symbol": "ART"
+        },
+        "instantiateMsg": {
+          "cw721": "terra1vdwz6zlrk6ptsxu97dk43uup9frchuwse8s6d8"
         }
       }
     }
