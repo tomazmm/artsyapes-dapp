@@ -5,10 +5,22 @@
     {
       "type": "object",
       "required": [
-        "get_count"
+        "get_cw721_address"
       ],
       "properties": {
-        "get_count": {
+        "get_cw721_address": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "get_cw721_token_num"
+      ],
+      "properties": {
+        "get_cw721_token_num": {
           "type": "object"
         }
       },
