@@ -1,10 +1,11 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery};
 use cw2::set_contract_version;
+use cw721_base::msg::QueryMsg::NumTokens;
 
 use crate::error::ContractError;
-use crate::msg::{ Cw721AddressResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{Cw721AddressResponse, ExecuteMsg, GetCw721TokenNumResponse, InstantiateMsg, QueryMsg};
 use crate::state::{State, STATE};
 
 // version info for migration info
@@ -31,25 +32,50 @@ pub fn instantiate(
         .add_attribute("cw721", state.cw721.as_str()))
 }
 
-// #[cfg_attr(not(feature = "library"), entry_point)]
-// pub fn execute(
-//     deps: DepsMut,
-//     _env: Env,
-//     info: MessageInfo,
-//     msg: ExecuteMsg,
-// ) -> Result<Response, ContractError> {
-//     match msg {
-//         ExecuteMsg::Increment {} => try_increment(deps),
-//         ExecuteMsg::Reset { count } => try_reset(deps, info, count),
-//         ExecuteMsg::AddNfcTag { count } => try_reset(deps, info, count),
-//     }
-// }
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn execute(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    msg: ExecuteMsg,
+) -> Result<Response, ContractError> {
+    match msg {
+        ExecuteMsg::CreateOrder {} => create_order(deps, info)
+    }
+}
+pub fn create_order(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractError> {
+    // let state = STATE.load(deps.storage)?;
+    // // let nft_owner = info.sender;
+    // let num_tokens = deps.querier.query(&Wasm(WasmQuery::Smart {
+    //     contract_addr: state.cw721.to_string(),
+    //     msg: to_binary(&NumTokens{})?,
+    // }))?;
+    // let res: PriceResponse = deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
+    //     contract_addr: oracle.to_string(),
+    //     msg: to_binary(&OracleQueryMsg::Price {
+    //         base_asset,
+    //         quote_asset,
+    //     })?,
+    // }))?;
+    // deps.querier.query_wasm_smart(state.cw721, &NumTokens {});
+    // deps.querier.query_wasm_smart(state.cw721, NumTokens)
+    // let querier = QuerierWrapper::new(&deps.querier);
+    // querier::query_wasm_smart(state.cw721);
+    // STATE.update(deps.storage, |mut state| -> Result<_, ContractError> {
+    //     state.count += 1;
+    //     Ok(state)
+    // })?;
+    // Ok(balance);
+    Ok(Response::new().add_attribute("method", "try_increment"))
+}
+
 //
-// pub fn try_increment(deps: DepsMut) -> Result<Response, ContractError> {
-//     STATE.update(deps.storage, |mut state| -> Result<_, ContractError> {
-//         state.count += 1;
-//         Ok(state)
-//     })?;
+// pub fn add_nfc_tag(deps: DepsMut, info: MessageInfo, tag: Addr) -> Result<Response, ContractError> {
+//     let nft_owner = info.sender;
+//     // STATE.update(deps.storage, |mut state| -> Result<_, ContractError> {
+//     //     state.count += 1;
+//     //     Ok(state)
+//     // })?;
 //
 //     Ok(Response::new().add_attribute("method", "try_increment"))
 // }
@@ -68,12 +94,22 @@ pub fn instantiate(
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetCw721Address {} => to_binary(&query_cw721_address(deps)?),
+        QueryMsg::GetCw721TokenNum {} => to_binary(&query_cw721_token_num(deps)?),
     }
 }
 
 fn query_cw721_address(deps: Deps) -> StdResult<Cw721AddressResponse> {
     let state = STATE.load(deps.storage)?;
     Ok(Cw721AddressResponse { cw721: state.cw721 })
+}
+
+fn query_cw721_token_num(deps: Deps) -> StdResult<GetCw721TokenNumResponse> {
+    let state = STATE.load(deps.storage)?;
+    let num_tokens = deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
+        contract_addr: state.cw721.to_string(),
+        msg: to_binary(&NumTokens{})?,
+    }))?;
+    Ok(GetCw721TokenNumResponse { count: num_tokens })
 }
 
 #[cfg(test)]
@@ -99,26 +135,32 @@ mod tests {
         let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCw721Address {}).unwrap();
         let value: Cw721AddressResponse = from_binary(&res).unwrap();
         assert_eq!(cw721_address, value.cw721);
+
+        // it worked, let's query the state
+        let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCw721TokenNum {}).unwrap();
+        let value: GetCw721TokenNumResponse = from_binary(&res).unwrap();
+        println!("{} days", value.count);
+        assert_eq!(1, value.count);
     }
 
-    // #[test]
-    // fn increment() {
-    //     let mut deps = mock_dependencies(&coins(2, "token"));
-    //
-    //     let msg = InstantiateMsg { count: 17 };
-    //     let info = mock_info("creator", &coins(2, "token"));
-    //     let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
-    //
-    //     // beneficiary can release it
-    //     let info = mock_info("anyone", &coins(2, "token"));
-    //     let msg = ExecuteMsg::Increment {};
-    //     let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
-    //
-    //     // should increase counter by 1
-    //     let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCount {}).unwrap();
-    //     let value: CountResponse = from_binary(&res).unwrap();
-    //     assert_eq!(18, value.count);
-    // }
+    #[test]
+    fn create_order() {
+        // let mut deps = mock_dependencies(&coins(2, "token"));
+
+        // let msg = CreateOrder {};
+        // let info = mock_info("creator", &coins(2, "token"));
+        // let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
+
+        // beneficiary can release it
+        // let info = mock_info("anyone", &coins(2, "token"));
+        // let msg = ExecuteMsg::Increment {};
+        // let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+        //
+        // // should increase counter by 1
+        // let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCount {}).unwrap();
+        // let value: CountResponse = from_binary(&res).unwrap();
+        // assert_eq!(18, value.count);
+    }
 
     // #[test]
     // fn reset() {
