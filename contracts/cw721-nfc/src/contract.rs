@@ -1,14 +1,12 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery};
+use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
-use cw721_base::msg::QueryMsg::NumTokens;
-use cw721::{
-    NumTokensResponse
-};
+use cw721_base::msg::QueryMsg::{OwnerOf};
+use cw721::{OwnerOfResponse};
 
 use crate::error::ContractError;
-use crate::msg::{Cw721AddressResponse, ExecuteMsg, GetCw721TokenNumResponse, InstantiateMsg, QueryMsg};
+use crate::msg::{Cw721AddressResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{State, STATE};
 
 // version info for migration info
@@ -43,10 +41,22 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::CreateOrder {} => create_order(deps, info)
+        ExecuteMsg::CreateOrder { token_id } => create_order(deps, info, token_id)
     }
 }
-pub fn create_order(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractError> {
+pub fn create_order(deps: DepsMut, info: MessageInfo, token_id: String) -> Result<Response, ContractError> {
+    let state = STATE.load(deps.storage)?;
+    let owner: OwnerOfResponse = deps.querier.query_wasm_smart(
+        state.cw721.to_string(),
+        &OwnerOf {
+            token_id,
+            include_expired: None
+        }).unwrap();
+
+    if owner.owner != info.sender {
+        return Err(ContractError::Unauthorized {})
+    }
+
     Ok(Response::new().add_attribute("method", "try_increment"))
 }
 
@@ -55,7 +65,6 @@ pub fn create_order(deps: DepsMut, info: MessageInfo) -> Result<Response, Contra
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetCw721Address {} => to_binary(&query_cw721_address(deps)?),
-        QueryMsg::GetCw721TokenNum {} => to_binary(&query_cw721_token_num(deps)?),
     }
 }
 
@@ -64,22 +73,21 @@ fn query_cw721_address(deps: Deps) -> StdResult<Cw721AddressResponse> {
     Ok(Cw721AddressResponse { cw721: state.cw721 })
 }
 
-fn query_cw721_token_num(deps: Deps) -> StdResult<NumTokensResponse> {
-    let state = STATE.load(deps.storage)?;
-
-    // THIS WORKS
-    // let res: NumTokensResponse = deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
-    //     contract_addr: state.cw721.to_string(),
-    //     msg: to_binary(&NumTokens {})?,
-    // }))?;
-    // ----------------------
-
-    let res: NumTokensResponse = deps.querier.query_wasm_smart(
-        state.cw721.to_string(),
-        &NumTokens {}).unwrap();
-
-    Ok(res)
-}
+// fn query_cw721_token_num(deps: Deps) -> StdResult<NumTokensResponse> {
+//     let state = STATE.load(deps.storage)?;
+//
+//     // THIS WORKS
+//     // let res: NumTokensResponse = deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
+//     //     contract_addr: state.cw721.to_string(),
+//     //     msg: to_binary(&NumTokens {})?,
+//     // }))?;
+//     // ----------------------
+//
+//     // let res: NumTokensResponse = deps.querier.query_wasm_smart(
+//     //     state.cw721.to_string(),
+//     //     &NumTokens {}).unwrap();
+//     Ok(NumTokensResponse{count: 5})
+// }
 
 #[cfg(test)]
 mod tests {
@@ -87,11 +95,38 @@ mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cosmwasm_std::{Addr, coins, from_binary};
 
+    // use cw721::{Cw721Contract, Cw721ExecuteMsg};
+    //
+    const CW721_ADDRESS: &str = "cw721-contract";
+    // const SYMBOL: &str = "ART";
+    // const MINTER: &str = "minter";
+
+    // fn setup_cw721_contract(deps: DepsMut<'_>){
+    //     let contract = cw721_base::Cw721Contract::default();
+    //     // let msg = cw721_base::msg::InstantiateMsg {
+    //     //     name: CONTRACT_NAME.to_string(),
+    //     //     symbol: SYMBOL.to_string(),
+    //     //     minter: String::from(MINTER),
+    //     // };
+    //     // let info = mock_info("creator", &[]);
+    //     // let res = contract.instantiate(deps, mock_env(), info, msg).unwrap();
+    //     // assert_eq!(0, res.messages.len());
+    // }
+
+    fn setup_contract(deps: DepsMut<'_>){
+        let msg = InstantiateMsg {
+            cw721: Addr::unchecked(CW721_ADDRESS),
+        };
+        let info = mock_info("creator", &[]);
+        let res = instantiate(deps, mock_env(), info, msg).unwrap();
+        assert_eq!(0, res.messages.len());
+    }
+
     #[test]
     fn proper_initialization() {
         let mut deps = mock_dependencies(&[]);
 
-        let cw721_address = Addr::unchecked("terra1vdwz6zlrk6ptsxu97dk43uup9frchuwse8s6d8");
+        let cw721_address = Addr::unchecked(CW721_ADDRESS);
 
         let msg = InstantiateMsg { cw721:  cw721_address.clone()};
         let info = mock_info("creator", &coins(1000, "earth"));
@@ -104,16 +139,18 @@ mod tests {
         let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCw721Address {}).unwrap();
         let value: Cw721AddressResponse = from_binary(&res).unwrap();
         assert_eq!(cw721_address, value.cw721);
-
-        // it worked, let's query the state
-        let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCw721TokenNum {}).unwrap();
-        let value: GetCw721TokenNumResponse = from_binary(&res).unwrap();
-        println!("{} days", value.count);
-        assert_eq!(1, value.count);
     }
 
     #[test]
     fn create_order() {
+        // let mut deps = mock_dependencies(&[]);
+        // // setup_contract(deps.as_mut());
+        //
+        // let create_order_msg = CreateOrder {
+        //     token_id: "1".to_string()
+        // };
+        // let cw712_contract = setup_cw721_contract(deps.as_mut());
+
         // let mut deps = mock_dependencies(&coins(2, "token"));
 
         // let msg = CreateOrder {};
