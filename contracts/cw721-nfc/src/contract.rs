@@ -3,6 +3,9 @@ use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery};
 use cw2::set_contract_version;
 use cw721_base::msg::QueryMsg::NumTokens;
+use cw721::{
+    NumTokensResponse
+};
 
 use crate::error::ContractError;
 use crate::msg::{Cw721AddressResponse, ExecuteMsg, GetCw721TokenNumResponse, InstantiateMsg, QueryMsg};
@@ -44,51 +47,9 @@ pub fn execute(
     }
 }
 pub fn create_order(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractError> {
-    // let state = STATE.load(deps.storage)?;
-    // // let nft_owner = info.sender;
-    // let num_tokens = deps.querier.query(&Wasm(WasmQuery::Smart {
-    //     contract_addr: state.cw721.to_string(),
-    //     msg: to_binary(&NumTokens{})?,
-    // }))?;
-    // let res: PriceResponse = deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
-    //     contract_addr: oracle.to_string(),
-    //     msg: to_binary(&OracleQueryMsg::Price {
-    //         base_asset,
-    //         quote_asset,
-    //     })?,
-    // }))?;
-    // deps.querier.query_wasm_smart(state.cw721, &NumTokens {});
-    // deps.querier.query_wasm_smart(state.cw721, NumTokens)
-    // let querier = QuerierWrapper::new(&deps.querier);
-    // querier::query_wasm_smart(state.cw721);
-    // STATE.update(deps.storage, |mut state| -> Result<_, ContractError> {
-    //     state.count += 1;
-    //     Ok(state)
-    // })?;
-    // Ok(balance);
     Ok(Response::new().add_attribute("method", "try_increment"))
 }
 
-//
-// pub fn add_nfc_tag(deps: DepsMut, info: MessageInfo, tag: Addr) -> Result<Response, ContractError> {
-//     let nft_owner = info.sender;
-//     // STATE.update(deps.storage, |mut state| -> Result<_, ContractError> {
-//     //     state.count += 1;
-//     //     Ok(state)
-//     // })?;
-//
-//     Ok(Response::new().add_attribute("method", "try_increment"))
-// }
-// pub fn try_reset(deps: DepsMut, info: MessageInfo, count: i32) -> Result<Response, ContractError> {
-//     STATE.update(deps.storage, |mut state| -> Result<_, ContractError> {
-//         if info.sender != state.owner {
-//             return Err(ContractError::Unauthorized {});
-//         }
-//         state.count = count;
-//         Ok(state)
-//     })?;
-//     Ok(Response::new().add_attribute("method", "reset"))
-// }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
@@ -103,13 +64,21 @@ fn query_cw721_address(deps: Deps) -> StdResult<Cw721AddressResponse> {
     Ok(Cw721AddressResponse { cw721: state.cw721 })
 }
 
-fn query_cw721_token_num(deps: Deps) -> StdResult<GetCw721TokenNumResponse> {
+fn query_cw721_token_num(deps: Deps) -> StdResult<NumTokensResponse> {
     let state = STATE.load(deps.storage)?;
-    let num_tokens = deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
-        contract_addr: state.cw721.to_string(),
-        msg: to_binary(&NumTokens{})?,
-    }))?;
-    Ok(GetCw721TokenNumResponse { count: num_tokens })
+
+    // THIS WORKS
+    // let res: NumTokensResponse = deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
+    //     contract_addr: state.cw721.to_string(),
+    //     msg: to_binary(&NumTokens {})?,
+    // }))?;
+    // ----------------------
+
+    let res: NumTokensResponse = deps.querier.query_wasm_smart(
+        state.cw721.to_string(),
+        &NumTokens {}).unwrap();
+
+    Ok(res)
 }
 
 #[cfg(test)]
