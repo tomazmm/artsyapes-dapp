@@ -1,5 +1,5 @@
 import { useWallet, WalletStatus } from '@terra-dev/use-wallet'
-import {useEffect} from "react";
+import React, {useEffect} from "react";
 
 export const ConnectWallet = () => {
   const {
@@ -12,9 +12,9 @@ export const ConnectWallet = () => {
     disconnect,
   } = useWallet()
 
-  useEffect(() => {
-
-  }, [])
+  // useEffect(() => {
+  //
+  // }, [])
 
 
   switch (status) {

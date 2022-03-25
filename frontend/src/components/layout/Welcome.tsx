@@ -1,16 +1,4 @@
-
-// import { useEffect, useState } from 'react'
-// import {
-//     useWallet,
-//     useConnectedWallet,
-//     WalletStatus,
-// } from '@terra-money/wallet-provider'
-//
-// import * as execute from './contract/execute'
-// import * as query from './contract/query'
-// import { ConnectWallet } from './components/ConnectWallet'
-// import backgroundImg from '../../../public/assets/space-background.png';
-
+import React from "react";
 import styled from 'styled-components';
 import {Button, Col, Container, Row} from "react-bootstrap";
 import {ConnectWallet} from "../ConnectWallet";

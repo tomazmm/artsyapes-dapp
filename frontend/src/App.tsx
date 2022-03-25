@@ -1,14 +1,9 @@
-
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   useWallet,
   useConnectedWallet,
-  WalletStatus,
 } from '@terra-money/wallet-provider'
-
-import * as execute from './contract/execute'
 import * as query from './contract/query'
-import { ConnectWallet } from './components/ConnectWallet'
 import {Welcome} from "./components/layout/Welcome";
 
 
