@@ -4,7 +4,7 @@ import {
   useConnectedWallet,
 } from '@terra-money/wallet-provider'
 import * as query from './contract/query'
-import {Welcome} from "./components/layout/Welcome";
+import {Home} from "./components/layout/Home";
 
 
 function App() {
@@ -28,11 +28,11 @@ function App() {
 
   return (
     <div className="ArtsyApesApp">
-      <Welcome/>
+      <Home/>
       {/*<ConnectWallet/>*/}
-      {/*<Welcome>*/}
+      {/*<Home>*/}
 
-      {/*</Welcome>*/}
+      {/*</Home>*/}
     </div>
   )
 }
