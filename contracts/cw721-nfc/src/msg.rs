@@ -11,7 +11,8 @@ pub struct InstantiateMsg {
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
     CreateOrder {
-        token_id: String
+        token_id: String,
+        tier: String
     }
 }
 
