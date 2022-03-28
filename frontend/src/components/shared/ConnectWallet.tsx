@@ -1,6 +1,9 @@
 import { useWallet, WalletStatus } from '@terra-dev/use-wallet'
 import React from "react";
 import styled from "styled-components";
+import {Button} from "react-bootstrap";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import {faWallet} from "@fortawesome/free-solid-svg-icons";
 
 interface ConnectWalletProps {
   className?: string;
@@ -41,13 +44,14 @@ export const ConnectWalletBase = (props: ConnectWalletProps) => {
             <div className={className}>
               {terraStationWallet !== undefined ?
                 (
-                  <button
+                  <Button variant="light"
                     key={`connect-${terraStationWallet}`}
                     onClick={() => connect(terraStationWallet)}
                     type="button"
                   >
-                    Connect {terraStationWallet}
-                  </button>) :
+                    Connect wallet
+                      <FontAwesomeIcon className="icon" icon={faWallet}  />
+                  </Button>) :
                 (
                   <div className="text-white">
                     Please install terra station wallet.
@@ -71,5 +75,16 @@ export const ConnectWalletBase = (props: ConnectWalletProps) => {
 }
 
 export const ConnectWallet = styled(ConnectWalletBase)`
-    
+    > .btn{
+        display: inline-flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 11rem;
+        white-space: nowrap;
+        font-size: 1.1rem;
+      .icon{
+        margin: 0 5%;
+        display: flex;
+      }
+    }
 `;
