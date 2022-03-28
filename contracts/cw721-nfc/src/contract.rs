@@ -1,6 +1,6 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery};
+use cosmwasm_std::{to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, QuerierWrapper};
 use cw2::set_contract_version;
 use cw721_base::msg::QueryMsg::{OwnerOf};
 use cw721::{OwnerOfResponse};
@@ -56,7 +56,7 @@ pub fn create_order(deps: DepsMut, info: MessageInfo, token_id: String) -> Resul
         }))?;
 
     if owner.owner != info.sender {
-        return Err(ContractError::Unauthorized {})
+        return Err(ContractError::Unauthorized {});
     }
 
     Ok(Response::new().add_attribute("method", "try_increment"))
@@ -96,6 +96,7 @@ mod tests {
     use cosmwasm_std::testing::{mock_env, mock_info};
     use super::super::testing::mock_dependencies;
     use cosmwasm_std::{Addr, coins, from_binary};
+    use crate::msg::ExecuteMsg::CreateOrder;
 
     // use cw721::{Cw721Contract, Cw721ExecuteMsg};
     //
@@ -134,11 +135,10 @@ mod tests {
     #[test]
     fn querying_token_ownership() {
         let mut deps = mock_dependencies();
+        setup_contract(deps.as_mut());
 
         deps.querier.set_cw721_token("alice", 1);
         deps.querier.set_cw721_token("bob", 2);
-
-        setup_contract(deps.as_mut());
 
         let res = query(deps.as_ref(), mock_env(),
                         QueryMsg::GetCw721TokenOwner {
@@ -153,5 +153,20 @@ mod tests {
                         }).unwrap();
         let value: OwnerOfResponse = from_binary(&res).unwrap();
         assert_eq!("bob", value.owner);
+    }
+
+    #[test]
+    fn creating_order() {
+        let mut deps = mock_dependencies();
+        setup_contract(deps.as_mut());
+
+        deps.querier.set_cw721_token("alice", 1);
+        deps.querier.set_cw721_token("bob", 2);
+
+        // random cannot create order
+        let info = mock_info("chuck", &[]);
+        let msg = CreateOrder { token_id: "1".to_string()};
+        let err = execute(deps.as_mut(), mock_env(), info, msg.clone()).unwrap_err();
+        assert_eq!(err, ContractError::Unauthorized {});
     }
 }
