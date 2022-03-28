@@ -1,6 +1,6 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery};
 use cw2::set_contract_version;
 use cw721_base::msg::QueryMsg::{OwnerOf};
 use cw721::{OwnerOfResponse};
@@ -46,12 +46,14 @@ pub fn execute(
 }
 pub fn create_order(deps: DepsMut, info: MessageInfo, token_id: String) -> Result<Response, ContractError> {
     let state = STATE.load(deps.storage)?;
-    let owner: OwnerOfResponse = deps.querier.query_wasm_smart(
-        state.cw721.to_string(),
-        &OwnerOf {
-            token_id,
-            include_expired: None
-        }).unwrap();
+    let owner: OwnerOfResponse =
+        deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
+            contract_addr: state.cw721.to_string(),
+            msg: to_binary(&OwnerOf {
+                token_id,
+                include_expired: None
+            })?,
+        }))?;
 
     if owner.owner != info.sender {
         return Err(ContractError::Unauthorized {})
@@ -65,6 +67,7 @@ pub fn create_order(deps: DepsMut, info: MessageInfo, token_id: String) -> Resul
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetCw721Address {} => to_binary(&query_cw721_address(deps)?),
+        QueryMsg::GetCw721TokenOwner {token_id} => to_binary(&query_cw721_token_owner(deps, token_id)?),
     }
 }
 
@@ -73,26 +76,25 @@ fn query_cw721_address(deps: Deps) -> StdResult<Cw721AddressResponse> {
     Ok(Cw721AddressResponse { cw721: state.cw721 })
 }
 
-// fn query_cw721_token_num(deps: Deps) -> StdResult<NumTokensResponse> {
-//     let state = STATE.load(deps.storage)?;
-//
-//     // THIS WORKS
-//     // let res: NumTokensResponse = deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
-//     //     contract_addr: state.cw721.to_string(),
-//     //     msg: to_binary(&NumTokens {})?,
-//     // }))?;
-//     // ----------------------
-//
-//     // let res: NumTokensResponse = deps.querier.query_wasm_smart(
-//     //     state.cw721.to_string(),
-//     //     &NumTokens {}).unwrap();
-//     Ok(NumTokensResponse{count: 5})
-// }
+fn query_cw721_token_owner(deps: Deps, token_id: String) -> StdResult<OwnerOfResponse> {
+    let state = STATE.load(deps.storage)?;
+    let owner: OwnerOfResponse =
+        deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
+            contract_addr: state.cw721.to_string(),
+            msg: to_binary(&OwnerOf {
+                token_id,
+                include_expired: None
+            })?,
+        }))?;
+    Ok(owner)
+}
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
-    use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+    use cosmwasm_std::testing::{mock_env, mock_info};
+    use super::super::testing::mock_dependencies;
     use cosmwasm_std::{Addr, coins, from_binary};
 
     // use cw721::{Cw721Contract, Cw721ExecuteMsg};
@@ -124,7 +126,7 @@ mod tests {
 
     #[test]
     fn proper_initialization() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_dependencies();
 
         let cw721_address = Addr::unchecked(CW721_ADDRESS);
 
@@ -142,57 +144,24 @@ mod tests {
     }
 
     #[test]
-    fn create_order() {
-        // let mut deps = mock_dependencies(&[]);
-        // // setup_contract(deps.as_mut());
-        //
-        // let create_order_msg = CreateOrder {
-        //     token_id: "1".to_string()
-        // };
-        // let cw712_contract = setup_cw721_contract(deps.as_mut());
+    fn querying_token_ownership() {
+        let mut deps = mock_dependencies();
 
-        // let mut deps = mock_dependencies(&coins(2, "token"));
+        deps.querier.set_cw721_token("alice", 1);
+        deps.querier.set_cw721_token("bob", 2);
 
-        // let msg = CreateOrder {};
-        // let info = mock_info("creator", &coins(2, "token"));
-        // let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
+        let res = query(deps.as_ref(), mock_env(),
+                        QueryMsg::GetCw721TokenOwner {
+                            token_id: "1".to_string()
+                        }).unwrap();
+        let value: OwnerOfResponse = from_binary(&res).unwrap();
+        assert_eq!("alice", value.owner);
 
-        // beneficiary can release it
-        // let info = mock_info("anyone", &coins(2, "token"));
-        // let msg = ExecuteMsg::Increment {};
-        // let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
-        //
-        // // should increase counter by 1
-        // let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCount {}).unwrap();
-        // let value: CountResponse = from_binary(&res).unwrap();
-        // assert_eq!(18, value.count);
+        let res = query(deps.as_ref(), mock_env(),
+                        QueryMsg::GetCw721TokenOwner {
+                            token_id: "2".to_string()
+                        }).unwrap();
+        let value: OwnerOfResponse = from_binary(&res).unwrap();
+        assert_eq!("bob", value.owner);
     }
-
-    // #[test]
-    // fn reset() {
-    //     let mut deps = mock_dependencies(&coins(2, "token"));
-    //
-    //     let msg = InstantiateMsg { count: 17 };
-    //     let info = mock_info("creator", &coins(2, "token"));
-    //     let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
-    //
-    //     // beneficiary can release it
-    //     let unauth_info = mock_info("anyone", &coins(2, "token"));
-    //     let msg = ExecuteMsg::Reset { count: 5 };
-    //     let res = execute(deps.as_mut(), mock_env(), unauth_info, msg);
-    //     match res {
-    //         Err(ContractError::Unauthorized {}) => {}
-    //         _ => panic!("Must return unauthorized error"),
-    //     }
-    //
-    //     // only the original creator can reset the counter
-    //     let auth_info = mock_info("creator", &coins(2, "token"));
-    //     let msg = ExecuteMsg::Reset { count: 5 };
-    //     let _res = execute(deps.as_mut(), mock_env(), auth_info, msg).unwrap();
-    //
-    //     // should now be 5
-    //     let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCount {}).unwrap();
-    //     let value: CountResponse = from_binary(&res).unwrap();
-    //     assert_eq!(5, value.count);
-    // }
 }
