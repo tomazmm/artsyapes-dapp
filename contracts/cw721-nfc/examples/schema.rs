@@ -4,7 +4,7 @@ use std::fs::create_dir_all;
 use cosmwasm_schema::{export_schema, remove_schemas, schema_for};
 
 use cw721_nfc::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use cw721_nfc::state::State;
+use cw721_nfc::state::ContractInfo;
 
 fn main() {
     let mut out_dir = current_dir().unwrap();
@@ -15,5 +15,5 @@ fn main() {
     export_schema(&schema_for!(InstantiateMsg), &out_dir);
     export_schema(&schema_for!(ExecuteMsg), &out_dir);
     export_schema(&schema_for!(QueryMsg), &out_dir);
-    export_schema(&schema_for!(State), &out_dir);
+    export_schema(&schema_for!(ContractInfo), &out_dir);
 }

@@ -1,13 +1,13 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, QuerierWrapper};
+use cosmwasm_std::{to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, QuerierWrapper, Uint128};
 use cw2::set_contract_version;
 use cw721_base::msg::QueryMsg::{OwnerOf};
 use cw721::{OwnerOfResponse};
 
 use crate::error::ContractError;
 use crate::msg::{Cw721AddressResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
-use crate::state::{State, STATE};
+use crate::state::{ContractInfo, CONTRACT_INFO, OrderInfo, ORDERS};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw721-nfc";
@@ -20,17 +20,17 @@ pub fn instantiate(
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
-    let state = State {
+    let contract_info = ContractInfo {
         owner: info.sender.clone(),
         cw721: msg.cw721
     };
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-    STATE.save(deps.storage, &state)?;
+    CONTRACT_INFO.save(deps.storage, &contract_info)?;
 
     Ok(Response::new()
         .add_attribute("method", "instantiate")
         .add_attribute("owner", info.sender)
-        .add_attribute("cw721", state.cw721.as_str()))
+        .add_attribute("cw721", contract_info.cw721.as_str()))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -41,11 +41,11 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::CreateOrder { token_id } => create_order(deps, info, token_id)
+        ExecuteMsg::CreateOrder { token_id, tier} => create_order(deps, info, token_id, tier)
     }
 }
-pub fn create_order(deps: DepsMut, info: MessageInfo, token_id: String) -> Result<Response, ContractError> {
-    let state = STATE.load(deps.storage)?;
+pub fn create_order(deps: DepsMut, info: MessageInfo, token_id: String, tier: String) -> Result<Response, ContractError> {
+    let state = CONTRACT_INFO.load(deps.storage)?;
     let owner: OwnerOfResponse =
         deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
             contract_addr: state.cw721.to_string(),
@@ -58,8 +58,19 @@ pub fn create_order(deps: DepsMut, info: MessageInfo, token_id: String) -> Resul
     if owner.owner != info.sender {
         return Err(ContractError::Unauthorized {});
     }
+    //
+    // let order = OrderInfo{
+    //     token_id: Uint128::from(&token_id),
+    //     owner: info.sender,
+    //     tier
+    // };
 
-    Ok(Response::new().add_attribute("method", "try_increment"))
+    // ORDERS.
+
+
+
+
+    Ok(Response::new().add_attribute("Ok", "Order Created"))
 }
 
 
@@ -72,12 +83,12 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 fn query_cw721_address(deps: Deps) -> StdResult<Cw721AddressResponse> {
-    let state = STATE.load(deps.storage)?;
+    let state = CONTRACT_INFO.load(deps.storage)?;
     Ok(Cw721AddressResponse { cw721: state.cw721 })
 }
 
 fn query_cw721_token_owner(deps: Deps, token_id: String) -> StdResult<OwnerOfResponse> {
-    let state = STATE.load(deps.storage)?;
+    let state = CONTRACT_INFO.load(deps.storage)?;
     let owner: OwnerOfResponse =
         deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
             contract_addr: state.cw721.to_string(),
@@ -164,9 +175,13 @@ mod tests {
         deps.querier.set_cw721_token("bob", 2);
 
         // random cannot create order
-        let info = mock_info("chuck", &[]);
-        let msg = CreateOrder { token_id: "1".to_string()};
-        let err = execute(deps.as_mut(), mock_env(), info, msg.clone()).unwrap_err();
-        assert_eq!(err, ContractError::Unauthorized {});
+        let mut info = mock_info("chuck", &[]);
+        let msg = CreateOrder { token_id: "1".to_string(), tier: "3".to_string()};
+        let err =
+            execute(deps.as_mut(), mock_env(), info, msg.clone())
+            .unwrap_err();
+        // assert_eq!(err, ContractError::Unauthorized {});
+
+        // owner can create order
     }
 }

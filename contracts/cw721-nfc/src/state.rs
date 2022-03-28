@@ -1,13 +1,21 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::Addr;
-use cw_storage_plus::Item;
+use cosmwasm_std::{Addr, Uint128, Uint64};
+use cw_storage_plus::{Item, Map};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct State {
+pub struct ContractInfo {
     pub owner: Addr,
     pub cw721: Addr
 }
 
-pub const STATE: Item<State> = Item::new("state");
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct OrderInfo {
+    pub token_id: Uint128,
+    pub owner: Addr,
+    pub tier: String,
+}
+
+pub const CONTRACT_INFO: Item<ContractInfo> = Item::new("contract_info");
+pub const ORDERS: Map<Uint128, OrderInfo> = Map::new("orders");
