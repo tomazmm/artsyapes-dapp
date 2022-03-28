@@ -103,18 +103,6 @@ mod tests {
     // const SYMBOL: &str = "ART";
     // const MINTER: &str = "minter";
 
-    // fn setup_cw721_contract(deps: DepsMut<'_>){
-    //     let contract = cw721_base::Cw721Contract::default();
-    //     // let msg = cw721_base::msg::InstantiateMsg {
-    //     //     name: CONTRACT_NAME.to_string(),
-    //     //     symbol: SYMBOL.to_string(),
-    //     //     minter: String::from(MINTER),
-    //     // };
-    //     // let info = mock_info("creator", &[]);
-    //     // let res = contract.instantiate(deps, mock_env(), info, msg).unwrap();
-    //     // assert_eq!(0, res.messages.len());
-    // }
-
     fn setup_contract(deps: DepsMut<'_>){
         let msg = InstantiateMsg {
             cw721: Addr::unchecked(CW721_ADDRESS),
@@ -149,6 +137,8 @@ mod tests {
 
         deps.querier.set_cw721_token("alice", 1);
         deps.querier.set_cw721_token("bob", 2);
+
+        setup_contract(deps.as_mut());
 
         let res = query(deps.as_ref(), mock_env(),
                         QueryMsg::GetCw721TokenOwner {
