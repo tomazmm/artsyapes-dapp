@@ -26,6 +26,7 @@ export const ConnectWalletBase = (props: ConnectWalletProps) => {
 
 
   const terraStationWallet = availableConnectTypes.find((value) => value === "CHROME_EXTENSION")
+  const installTerraStationWalletExt = availableInstallTypes.find((value) => value === "CHROME_EXTENSION");
   // useEffect(() => {
   //
   // }, [])
@@ -49,13 +50,24 @@ export const ConnectWalletBase = (props: ConnectWalletProps) => {
                     onClick={() => connect(terraStationWallet)}
                     type="button"
                   >
-                    Connect wallet
+                      <span className="button-text">Connect wallet</span>
                       <FontAwesomeIcon className="icon" icon={faWallet}  />
                   </Button>) :
                 (
-                  <div className="text-white">
-                    Please install terra station wallet.
-                  </div>
+                  installTerraStationWalletExt !== undefined ? (
+                    <Button variant="primary"
+                            key={`install-${installTerraStationWalletExt}`}
+                            onClick={() => install(installTerraStationWalletExt)}
+                            type="button"
+                    >
+                      <span className="button-text ">Install</span>
+                      <span className="button-text bold-text">Terra Station Wallet</span>
+                    </Button>
+                  ) : (
+                    <div className="text-white">
+                      Please use a web browser that is compatible with terra station extension.
+                    </div>
+                  )
               )}
             </div>
       )
@@ -78,13 +90,21 @@ export const ConnectWallet = styled(ConnectWalletBase)`
     > .btn{
         display: inline-flex;
         align-items: center;
-        justify-content: space-between;
-        width: 11rem;
-        white-space: nowrap;
-        font-size: 1.1rem;
-      .icon{
-        margin: 0 5%;
-        display: flex;
-      }
+        justify-content: center;
+        width: auto;
+        max-width: 100%;
+        font-size: 0.9rem;
+        .icon{
+          display: flex;
+        }
+        .button-text{
+          margin-right: 0.5rem!important;
+          width: auto!important;
+          justify-content: center !important;
+        }
+        .bold-text{
+          font-weight: 700;
+          margin: 0 !important;
+        }
     }
 `;

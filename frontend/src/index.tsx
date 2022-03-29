@@ -1,5 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
+import { BrowserRouter } from "react-router-dom";
 
 import { getChainOptions, WalletProvider } from '@terra-money/wallet-provider'
 
@@ -10,7 +11,10 @@ getChainOptions().then((chainOptions) => {
   ReactDOM.render(
     <React.StrictMode>
       <WalletProvider {...chainOptions}>
-        <App />
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>,
+        rootElement
       </WalletProvider>
     </React.StrictMode>,
     document.getElementById('root'),
