@@ -8,7 +8,7 @@ use cw721::{OwnerOfResponse};
 
 use crate::error::ContractError;
 use crate::msg::{Cw721AddressResponse, ExecuteMsg, InstantiateMsg, OrderResponse, QueryMsg};
-use crate::state::{ContractInfo, CONTRACT_INFO, OrderInfo, ORDERS};
+use crate::state::{ContractInfo, CONTRACT_INFO, OrderInfo, ORDERS, ORDERS_COUNT};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw721-nfc";
@@ -60,13 +60,21 @@ pub fn create_order(deps: DepsMut, info: MessageInfo, token_id: String, tier: St
         return Err(ContractError::Unauthorized {});
     }
 
+    // validate order
+
+    // let count = ORDERS_COUNT.update(deps.storage, |mut c| -> StdResult<_> {
+    //     c.checked_add(Uint128::from(1.));
+    //     Ok(c)
+    // })?;
+
     let order = OrderInfo{
         token_id: token_id.clone(),
-        owner: info.sender,
-        tier
+        owner: info.sender.clone(),
+        tier,
+        status: "PENDING".to_string()
     };
 
-    ORDERS.save(deps.storage, token_id, &order);
+    ORDERS.save(deps.storage, info.sender.to_string(), &order);
 
     Ok(Response::default())
 }
@@ -113,8 +121,6 @@ mod tests {
     use cosmwasm_std::{Addr, coins, from_binary, StdError};
     use crate::msg::ExecuteMsg::CreateOrder;
 
-    // use cw721::{Cw721Contract, Cw721ExecuteMsg};
-    //
     const CW721_ADDRESS: &str = "cw721-contract";
 
     fn setup_contract(deps: DepsMut<'_>){
@@ -198,15 +204,21 @@ mod tests {
         assert_eq!(0, res.messages.len());
 
         // order info is correct
-        let res = query(
-            deps.as_ref(),
-            mock_env(),
-            QueryMsg::GetOrder {token_id: "1".to_string()}).unwrap();
+        let query_order_msg = QueryMsg::GetOrder {token_id: "1".to_string()};
+        let res = query(deps.as_ref(),mock_env(), query_order_msg).unwrap();
         let order: OrderResponse = from_binary(&res).unwrap();
         assert_eq!(OrderInfo{
             token_id: "1".to_string(),
             owner: Addr::unchecked("alice"),
-            tier: "3".to_string()
+            tier: "3".to_string(),
+            status: "PENDING".to_string()
         }, order.order);
+
+        // create a duplicate order
+        let info = mock_info("alice", &[]);
+        let msg = CreateOrder { token_id: "1".to_string(), tier: "3".to_string()};
+        let res = execute(deps.as_mut(), mock_env(), info, msg.clone())
+            .unwrap();
+        assert_eq!(0, res.messages.len());
     }
 }
