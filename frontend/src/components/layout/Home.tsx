@@ -24,9 +24,11 @@ export const HomeBase = (props: HomeProps) => {
                        className="d-flex flex-column justify-content-center align-content-center align-items-center col">
                       <img className="w-75 mb-5 logo" src={'/assets/logo.png'}/>
                       <ConnectWallet/>
-                      <span className="text-white fa-solid fa-user" > TO ENTER THE APESHOP
-                        <FontAwesomeIcon className="logo" icon={faChevronRight} />
-                      </span>
+                      <div className="enter-text">
+                        <span className="text-white button-text" > TO ENTER THE APESHOP
+                        </span>
+                        <FontAwesomeIcon className="icon" icon={faChevronRight} />
+                      </div>
                   </Col>
               </Row>
           </Container>
@@ -42,16 +44,22 @@ export const Home = styled(HomeBase)`
     > .container-fluid{
         .row{
           .col{
-            span{
+            .enter-text{
               display: inline-flex;
               align-items: center;
-              justify-content: space-between;
-              width: 11rem;
-              white-space: nowrap;
+              justify-content: center;
+              width: auto;
+              max-width: 100%;
               font-size: 0.9rem;
               margin: 2% 0;
-              .logo{
-                padding: 0 2%;
+              .button-text{
+                margin-right: 0.5rem!important;
+                width: auto!important;
+                justify-content: center !important;
+              }
+              .icon{
+                color: white;
+                display: flex;
               }
             }
           }
