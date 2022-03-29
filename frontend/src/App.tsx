@@ -5,9 +5,14 @@ import {
 } from '@terra-money/wallet-provider'
 import * as query from './contract/query'
 import {Home} from "./components/layout/Home";
+import {Routes, Route, useNavigate, useLocation, Navigate} from "react-router-dom";
+import {MyAccount} from "./components/layout/MyAccount";
 
 
 function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [count, setCount] = useState(null)
   const [updating, setUpdating] = useState(true)
   const [resetValue, setResetValue] = useState(0)
@@ -28,11 +33,28 @@ function App() {
 
   return (
     <div className="ArtsyApesApp">
-      <Home/>
-      {/*<ConnectWallet/>*/}
-      {/*<Home>*/}
+      <Routes>
+        {connectedWallet !== undefined ? (
+          <>
+            <Route path={"/profile/"+connectedWallet?.walletAddress} element={<MyAccount />}/>
+            {["/home", "/"].map((path, index) =>
+              <Route path={path} element={<Navigate to={"/profile/"+connectedWallet?.walletAddress} />} key={index} />
+            )}
+          </>
+        ) :(
+          <>
+            <Route path="/home" element={<Home />}/>
+            <Route
+              path="*"
+              element={<Navigate to="/home" />}
+            />
+          </>
+        )}
 
-      {/*</Home>*/}
+        {/*<Route path="about" element={<About />} />*/}
+      </Routes>
+
+    {/*  TODO: add wallet to the right upper corner*/}
     </div>
   )
 }

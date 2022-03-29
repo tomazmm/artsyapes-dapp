@@ -5,13 +5,13 @@ import {ConnectWallet} from "../shared/ConnectWallet";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {faChevronRight} from "@fortawesome/free-solid-svg-icons";
 
-interface HomeProps {
+interface MyAccountProps {
   className?: string;
 }
 
-export const HomeBase = (props: HomeProps) => {
+export const MyAccountBase = (props: MyAccountProps) => {
   const {
-      className
+    className
   } = props;
 
 
@@ -37,7 +37,7 @@ export const HomeBase = (props: HomeProps) => {
 }
 
 
-export const Home = styled(HomeBase)`
+export const MyAccount = styled(MyAccountBase)`
     background: url("/assets/space-background-new.png");
     background-size: cover;
     height: 100vh;
@@ -66,7 +66,3 @@ export const Home = styled(HomeBase)`
       }
     }
 `;
-
-
-
-

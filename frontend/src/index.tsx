@@ -14,7 +14,6 @@ getChainOptions().then((chainOptions) => {
         <BrowserRouter>
           <App />
         </BrowserRouter>,
-        rootElement
       </WalletProvider>
     </React.StrictMode>,
     document.getElementById('root'),
