@@ -1,0 +1,18 @@
+{
+  "testnet": {
+    "cw721-metadata-onchain": {
+      "codeId": "49318",
+      "contractAddresses": {
+        "default": "terra182jsw32m93v8jxj2wj2lnrk4z43gvh944zkj5h"
+      }
+    }
+  },
+  "mainnet": {
+    "cw721-metadata-onchain": {
+      "codeId": "1870",
+      "contractAddresses": {
+        "default": "terra1vdwz6zlrk6ptsxu97dk43uup9frchuwse8s6d8"
+      }
+    }
+  }
+}
