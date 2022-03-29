@@ -1,6 +1,7 @@
 use cosmwasm_std::Addr;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use crate::state::OrderInfo;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
@@ -22,17 +23,19 @@ pub enum QueryMsg {
     GetCw721Address {},
     GetCw721TokenOwner {
         token_id: String
+    },
+    GetOrder {
+        token_id: String
     }
 }
 
-// We define a custom struct for each query response
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Cw721AddressResponse {
     pub cw721: Addr,
 }
 
-// // We define a custom struct for each query response
-// #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-// pub struct  {
-//     pub count: u64,
-// }
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct OrderResponse {
+    pub order: OrderInfo,
+}
+

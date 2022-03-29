@@ -1,12 +1,13 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, QuerierWrapper, Uint128};
+use cosmwasm_std::OverflowOperation::Add;
 use cw2::set_contract_version;
 use cw721_base::msg::QueryMsg::{OwnerOf};
 use cw721::{OwnerOfResponse};
 
 use crate::error::ContractError;
-use crate::msg::{Cw721AddressResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{Cw721AddressResponse, ExecuteMsg, InstantiateMsg, OrderResponse, QueryMsg};
 use crate::state::{ContractInfo, CONTRACT_INFO, OrderInfo, ORDERS};
 
 // version info for migration info
@@ -50,7 +51,7 @@ pub fn create_order(deps: DepsMut, info: MessageInfo, token_id: String, tier: St
         deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
             contract_addr: state.cw721.to_string(),
             msg: to_binary(&OwnerOf {
-                token_id,
+                token_id: token_id.clone(),
                 include_expired: None
             })?,
         }))?;
@@ -58,19 +59,16 @@ pub fn create_order(deps: DepsMut, info: MessageInfo, token_id: String, tier: St
     if owner.owner != info.sender {
         return Err(ContractError::Unauthorized {});
     }
-    //
-    // let order = OrderInfo{
-    //     token_id: Uint128::from(&token_id),
-    //     owner: info.sender,
-    //     tier
-    // };
 
-    // ORDERS.
+    let order = OrderInfo{
+        token_id: token_id.clone(),
+        owner: info.sender,
+        tier
+    };
 
+    ORDERS.save(deps.storage, token_id, &order);
 
-
-
-    Ok(Response::new().add_attribute("Ok", "Order Created"))
+    Ok(Response::default())
 }
 
 
@@ -79,6 +77,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetCw721Address {} => to_binary(&query_cw721_address(deps)?),
         QueryMsg::GetCw721TokenOwner {token_id} => to_binary(&query_cw721_token_owner(deps, token_id)?),
+        QueryMsg::GetOrder {token_id} => to_binary(&query_order(deps, token_id)?),
     }
 }
 
@@ -100,20 +99,23 @@ fn query_cw721_token_owner(deps: Deps, token_id: String) -> StdResult<OwnerOfRes
     Ok(owner)
 }
 
+fn query_order(deps: Deps, token_id: String) -> StdResult<OrderResponse> {
+    let order = ORDERS.load(deps.storage, token_id)?;
+    Ok(OrderResponse{order})
+}
+
 #[cfg(test)]
 mod tests {
 
     use super::*;
     use cosmwasm_std::testing::{mock_env, mock_info};
     use super::super::testing::mock_dependencies;
-    use cosmwasm_std::{Addr, coins, from_binary};
+    use cosmwasm_std::{Addr, coins, from_binary, StdError};
     use crate::msg::ExecuteMsg::CreateOrder;
 
     // use cw721::{Cw721Contract, Cw721ExecuteMsg};
     //
     const CW721_ADDRESS: &str = "cw721-contract";
-    // const SYMBOL: &str = "ART";
-    // const MINTER: &str = "minter";
 
     fn setup_contract(deps: DepsMut<'_>){
         let msg = InstantiateMsg {
@@ -166,6 +168,7 @@ mod tests {
         assert_eq!("bob", value.owner);
     }
 
+
     #[test]
     fn creating_order() {
         let mut deps = mock_dependencies();
@@ -174,8 +177,13 @@ mod tests {
         deps.querier.set_cw721_token("alice", 1);
         deps.querier.set_cw721_token("bob", 2);
 
+        // query not created order
+        let err = query(deps.as_ref(), mock_env(),
+                        QueryMsg::GetOrder {token_id: "3".to_string()}).unwrap_err();
+        assert_eq!(err, StdError::not_found("cw721_nfc::state::OrderInfo"));
+
         // random cannot create order
-        let mut info = mock_info("chuck", &[]);
+        let info = mock_info("chuck", &[]);
         let msg = CreateOrder { token_id: "1".to_string(), tier: "3".to_string()};
         let err =
             execute(deps.as_mut(), mock_env(), info, msg.clone())
@@ -183,5 +191,22 @@ mod tests {
         // assert_eq!(err, ContractError::Unauthorized {});
 
         // owner can create order
+        let info = mock_info("alice", &[]);
+        let msg = CreateOrder { token_id: "1".to_string(), tier: "3".to_string()};
+        let res = execute(deps.as_mut(), mock_env(), info, msg.clone())
+            .unwrap();
+        assert_eq!(0, res.messages.len());
+
+        // order info is correct
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetOrder {token_id: "1".to_string()}).unwrap();
+        let order: OrderResponse = from_binary(&res).unwrap();
+        assert_eq!(OrderInfo{
+            token_id: "1".to_string(),
+            owner: Addr::unchecked("alice"),
+            tier: "3".to_string()
+        }, order.order);
     }
 }
