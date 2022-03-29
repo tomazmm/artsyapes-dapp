@@ -12,10 +12,10 @@ pub struct ContractInfo {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct OrderInfo {
-    pub token_id: Uint128,
+    pub token_id: String,
     pub owner: Addr,
     pub tier: String,
 }
 
 pub const CONTRACT_INFO: Item<ContractInfo> = Item::new("contract_info");
-pub const ORDERS: Map<Uint128, OrderInfo> = Map::new("orders");
+pub const ORDERS: Map<String, OrderInfo> = Map::new("orders");
