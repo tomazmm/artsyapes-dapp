@@ -1,12 +1,11 @@
-import React, { useEffect, useState } from 'react'
-import {
-  useWallet,
-  useConnectedWallet,
-} from '@terra-money/wallet-provider'
+import React, {useEffect, useState} from 'react'
+import {useConnectedWallet, useWallet, WalletStatus,} from '@terra-money/wallet-provider'
 import * as query from './contract/query'
 import {Home} from "./components/layout/Home";
-import {Routes, Route, useNavigate, useLocation, Navigate} from "react-router-dom";
+import {Navigate, Route, Routes, useLocation, useNavigate} from "react-router-dom";
 import {MyAccount} from "./components/layout/MyAccount";
+import {LoadingPage} from "./components/shared/LoadingPage";
+
 
 
 function App() {
@@ -31,32 +30,71 @@ function App() {
     prefetch()
   }, [connectedWallet])
 
-  return (
-    <div className="ArtsyApesApp">
-      <Routes>
-        {connectedWallet !== undefined ? (
-          <>
-            <Route path={"/profile/"+connectedWallet?.walletAddress} element={<MyAccount />}/>
+  switch (status){
+    case WalletStatus.INITIALIZING:
+      return (
+        <>
+          <div className="ArtsyApesApp">
+            <LoadingPage />
+          </div>
+        </>
+      )
+    case WalletStatus.WALLET_CONNECTED:
+      return (
+        <div className="ArtsyApesApp">
+          <Routes>
+            <Route path={"/"+connectedWallet?.walletAddress} element={<MyAccount />}/>
+
             {["/home", "/"].map((path, index) =>
-              <Route path={path} element={<Navigate to={"/profile/"+connectedWallet?.walletAddress} />} key={index} />
+              <Route path={path} element={<Navigate to={"/"+connectedWallet?.walletAddress} />} key={index} />
             )}
-          </>
-        ) :(
-          <>
+          </Routes>
+
+          {/*  TODO: add wallet to the right upper corner*/}
+        </div>
+      )
+    case WalletStatus.WALLET_NOT_CONNECTED:
+      return (
+        <div className="ArtsyApesApp">
+          <Routes>
             <Route path="/home" element={<Home />}/>
+
             <Route
               path="*"
               element={<Navigate to="/home" />}
             />
-          </>
-        )}
-
-        {/*<Route path="about" element={<About />} />*/}
-      </Routes>
-
-    {/*  TODO: add wallet to the right upper corner*/}
-    </div>
-  )
+          </Routes>
+        </div>
+      )
+  }
+  // return (
+  //   <div className="ArtsyApesApp">
+  //     <Routes>
+  //       {connectedWallet !== undefined ? (
+  //         <>
+  //           <Route path={"/"+connectedWallet?.walletAddress} element={<MyAccount />}/>
+  //
+  //           {["/home", "/"].map((path, index) =>
+  //             <Route path={path} element={<Navigate to={"/"+connectedWallet?.walletAddress} />} key={index} />
+  //           )}
+  //         </>
+  //       ) :(
+  //         <>
+  //           <Route path="/home" element={<Home />}/>
+  //
+  //           <Route
+  //             path="*"
+  //             element={<Navigate to="/home" />}
+  //           />
+  //         </>
+  //       )}
+  //
+  //       {/*<Route path="about" element={<About />} />*/}
+  //     </Routes>
+  //
+  //   {/*  TODO: add wallet to the right upper corner*/}
+  //   </div>
+  // )
 }
 
 
