@@ -1,9 +1,9 @@
 import React, {useEffect, useState} from 'react'
 import {useConnectedWallet, useWallet, WalletStatus,} from '@terra-money/wallet-provider'
 import * as query from './contract/query'
-import {Home} from "./components/layout/Home";
+import {Home} from "./components/layout/Home/Home";
 import {Navigate, Route, Routes, useLocation, useNavigate} from "react-router-dom";
-import {MyAccount} from "./components/layout/MyAccount";
+import {MyAccount} from "./components/layout/MyAccount/MyAccount";
 import {LoadingPage} from "./components/shared/LoadingPage";
 
 
