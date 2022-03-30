@@ -67,34 +67,6 @@ function App() {
         </div>
       )
   }
-  // return (
-  //   <div className="ArtsyApesApp">
-  //     <Routes>
-  //       {connectedWallet !== undefined ? (
-  //         <>
-  //           <Route path={"/"+connectedWallet?.walletAddress} element={<MyAccount />}/>
-  //
-  //           {["/home", "/"].map((path, index) =>
-  //             <Route path={path} element={<Navigate to={"/"+connectedWallet?.walletAddress} />} key={index} />
-  //           )}
-  //         </>
-  //       ) :(
-  //         <>
-  //           <Route path="/home" element={<Home />}/>
-  //
-  //           <Route
-  //             path="*"
-  //             element={<Navigate to="/home" />}
-  //           />
-  //         </>
-  //       )}
-  //
-  //       {/*<Route path="about" element={<About />} />*/}
-  //     </Routes>
-  //
-  //   {/*  TODO: add wallet to the right upper corner*/}
-  //   </div>
-  // )
 }
 
 
