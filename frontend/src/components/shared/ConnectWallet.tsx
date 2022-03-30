@@ -37,7 +37,7 @@ export const ConnectWalletBase = (props: ConnectWalletProps) => {
     case WalletStatus.INITIALIZING:
       return (
           <div className={className}>
-            Initializing Wallet
+
           </div>
       );
     case WalletStatus.WALLET_NOT_CONNECTED:
@@ -73,14 +73,15 @@ export const ConnectWalletBase = (props: ConnectWalletProps) => {
       )
     case WalletStatus.WALLET_CONNECTED:
       return (
-          <div>
-            {wallets[0].terraAddress}
-            <button
+          <div className={className}>
+            {/*{wallets[0].terraAddress}*/}
+            <Button variant="light" className="wallet"
                 onClick={() => disconnect()}
                 type="button"
             >
-              Disconnect
-            </button>
+              <span className="button-text">{wallets[0].terraAddress}</span>
+              <FontAwesomeIcon className="icon" icon={faWallet}  />
+            </Button>
           </div>
       )
   }
@@ -94,6 +95,10 @@ export const ConnectWallet = styled(ConnectWalletBase)`
         width: auto;
         max-width: 100%;
         font-size: 0.9rem;
+      &.wallet {
+        width: 13rem;
+      }
+      
         .icon{
           display: flex;
         }
@@ -101,6 +106,8 @@ export const ConnectWallet = styled(ConnectWalletBase)`
           margin-right: 0.5rem!important;
           width: auto!important;
           justify-content: center !important;
+          overflow:hidden;
+          text-overflow: ellipsis;
         }
         .bold-text{
           font-weight: 700;

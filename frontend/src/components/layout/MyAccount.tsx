@@ -18,17 +18,18 @@ export const MyAccountBase = (props: MyAccountProps) => {
   return (
     <div className={className}>
       <Container fluid className="h-100">
-        <Row className="h-100">
-          <Col xl={{span: 6, offset: 6}}
-               lg={{span: 12}}
-               className="d-flex flex-column justify-content-center align-content-center align-items-center col">
-            <img className="w-75 mb-5 logo" src={'/assets/logo.png'}/>
-            <ConnectWallet/>
-            <div className="enter-text">
-              <span className="text-white button-text" > TO ENTER THE APESHOP
-              </span>
-              <FontAwesomeIcon className="icon" icon={faChevronRight} />
-            </div>
+        <Row className="h-auto mx-3">
+          <Col className="d-flex mt-3 flex-column justify-content-start align-self-center align-content-center align-items-start col">
+            <img className="w-25 logo" src={'/assets/logo.png'}/>
+          </Col>
+          <Col  className="d-flex mt-3 flex-column justify-content-start align-self-center align-content-center align-items-end col">
+            {/*<img className="w-75 mb-5 logo" src={'/assets/logo.png'}/>*/}
+            <ConnectWallet />
+            {/*<div className="enter-text">*/}
+            {/*  <span className="text-white button-text" > TO ENTER THE APESHOP*/}
+            {/*  </span>*/}
+            {/*  <FontAwesomeIcon className="icon" icon={faChevronRight} />*/}
+            {/*</div>*/}
           </Col>
         </Row>
       </Container>
@@ -38,7 +39,7 @@ export const MyAccountBase = (props: MyAccountProps) => {
 
 
 export const MyAccount = styled(MyAccountBase)`
-    background: url("/assets/space-background-new.png");
+    background-color: black;
     background-size: cover;
     height: 100vh;
     > .container-fluid{

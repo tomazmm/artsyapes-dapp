@@ -13,7 +13,7 @@ getChainOptions().then((chainOptions) => {
       <WalletProvider {...chainOptions}>
         <BrowserRouter>
           <App />
-        </BrowserRouter>,
+        </BrowserRouter>
       </WalletProvider>
     </React.StrictMode>,
     document.getElementById('root'),
