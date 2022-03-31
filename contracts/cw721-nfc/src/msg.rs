@@ -1,7 +1,7 @@
 use cosmwasm_std::Addr;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use crate::state::OrderInfo;
+use crate::state::PhysicalInfo;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
@@ -30,6 +30,11 @@ pub enum QueryMsg {
     AllOrders {
         start_after: Option<String>,
         limit: Option<u32>,
+    },
+    Physicals {
+        token_id: String,
+        start_after: Option<String>,
+        limit: Option<u32>,
     }
 }
 
@@ -39,12 +44,16 @@ pub struct Cw721AddressResponse {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct OrderResponse {
-    pub order: OrderInfo,
+pub struct PhysicalResponse {
+    pub physical: PhysicalInfo,
+}
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct PhysicalsResponse {
+    pub physicals: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct AllOrdersResponse {
-    pub orders: Vec<String>,
+pub struct AllPhysicalsResponse {
+    pub physicals: Vec<String>,
 }
 
