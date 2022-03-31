@@ -72,8 +72,8 @@ fn create_order(deps: DepsMut, info: MessageInfo, token_id: String, tier: String
         status: "PENDING".to_string()
     };
 
-    // physicals().save(deps.storage, &U32Key::from(order.id).joined_key(), &order).unwrap();
     physicals().save(deps.storage, &U32Key::from(order.id).joined_key(), &order).unwrap();
+    // physicals().save(deps.storage, &U32Key::from(order.id).joined_key(), &order).unwrap();
 
     Ok(Response::new().add_attribute("Order ID", order.id.to_string()))
 }
