@@ -1,19 +1,56 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
 import styled from 'styled-components';
 import {Col, Container, Row} from "react-bootstrap";
 import {Header} from "../shared/Header";
 import {ContentGrid} from "./MyAccountsContent/ContentGrid";
 import {SideMenu} from "./MyAccountsContent/SideMenu";
+import {useConnectedWallet} from "@terra-money/wallet-provider";
+import * as query from "../../../contract/query";
+import {ConnectedWallet} from "@terra-dev/use-wallet/useConnectedWallet";
 
 interface MyAccountProps {
   className?: string;
+  connectedWallet?: ConnectedWallet;
 }
 
 export const MyAccountBase = (props: MyAccountProps) => {
   const {
-    className
+    className,
+    connectedWallet
   } = props;
 
+  const [tokens, setTokens] = useState<any>([])
+  const [nftInfo, setNftInfo] = useState<any>([])
+
+  // let nftInfo: any[] = [];
+
+
+  // const connectedWallet = useConnectedWallet()
+
+  useEffect(() => {
+    const fetch = async () :Promise<any> => {
+      if (connectedWallet) {
+        setTokens(await query.tokens(connectedWallet));
+      }
+      if(tokens.length !== 0 && connectedWallet){
+        // console.error(tokens);
+        for(const it of tokens.tokens){
+          // console.error(it);
+          const test = await query.nftInfo(connectedWallet, it)
+
+          setNftInfo( (prevState: any) => {
+            return [...prevState, test]
+          })
+          // setNftInfo(await query.allNftInfo(connectedWallet, it));
+          // nftInfo = [...nftInfo, await query.allNftInfo(connectedWallet, it)]
+          // console.log(nftInfo);
+        }
+      }
+    }
+    fetch()
+  }, [tokens.length, connectedWallet])
+
+  // console.log(nftInfo)
 
   return (
     <div className={className}>
@@ -47,7 +84,7 @@ export const MyAccountBase = (props: MyAccountProps) => {
                  lg={{span: 12}}
                  xs={{span: 12}}
               className="d-flex flex-column justify-content-center align-self-end align-content-center align-items-end col my-account-col">
-              <ContentGrid/>
+              <ContentGrid className={className} nftInfo={nftInfo}/>
             </Col>
           </Row>
       </Container>
