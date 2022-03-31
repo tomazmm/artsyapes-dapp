@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -11,40 +12,51 @@ pub struct ContractInfo {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct OrderInfo {
+pub struct PhysicalInfo {
     pub id: u32,
     pub token_id: String,
     pub owner: Addr,
     pub tier: String,
     pub status: String
+    // pub nfc_tag: String
 }
 
-pub struct OrderIndexes<'a> {
-    pub id: UniqueIndex<'a, U32Key, OrderInfo>,
-    pub token_id: MultiIndex<'a, String, OrderInfo>
+// pub struct NFCLists {
+//     // pub physical_items: HashMap<String, Vec<OrderInfo>>
+//     // pub tier1: Vec<String>,
+//     // pub tier2: Vec<String>,
+//     // pub tier3: Vec<String>
+// }
+
+pub struct PhysicalIndexes<'a> {
+    pub id: UniqueIndex<'a, U32Key, PhysicalInfo>,
+    pub token_id: MultiIndex<'a, (String, Vec<u8>), PhysicalInfo>
 }
 
-impl<'a> IndexList<OrderInfo> for OrderIndexes<'a> {
-    fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<OrderInfo>> + '_> {
-        let v: Vec<&dyn Index<OrderInfo>> = vec![&self.id];
+impl<'a> IndexList<PhysicalInfo> for PhysicalIndexes<'a> {
+    fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<PhysicalInfo>> + '_> {
+        let v: Vec<&dyn Index<PhysicalInfo>> = vec![&self.id];
         Box::new(v.into_iter())
     }
 }
 
-pub fn orders<'a>() -> IndexedMap<'a, &'a [u8], OrderInfo, OrderIndexes<'a>> {
-    let indexes = OrderIndexes {
+pub fn physicals<'a>() -> IndexedMap<'a, &'a [u8], PhysicalInfo, PhysicalIndexes<'a>> {
+    let indexes = PhysicalIndexes {
         id: UniqueIndex::new(
             |d| U32Key::new(d.id),
-            "order_id"),
+            "physical_id"),
         token_id: MultiIndex::new(
-            |d, pk | d.token_id.clone(),
-            "orders",
-            "orders__token_id",
+            |d, pk | (d.token_id.clone(), pk),
+            "physicals",
+            "physicals__token_id",
         ),
     };
-    IndexedMap::new("orders", indexes)
+    IndexedMap::new("physicals", indexes)
 }
 
+
 pub const CONTRACT_INFO: Item<ContractInfo> = Item::new("contract_info");
-pub const ORDERS: Map<String, OrderInfo> = Map::new("orders");
+pub const ORDERS: Map<String, PhysicalInfo> = Map::new("orders");
 pub const ORDER_COUNT: Item<u32> = Item::new("order_count");
+// pub const PHYSICAL_ITEMS: Map<String, NFCLists> = Map::new("physical_items");
+

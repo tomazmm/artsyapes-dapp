@@ -1,15 +1,15 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, QuerierWrapper, Uint128, Storage, Order};
-use cosmwasm_std::OverflowOperation::Add;
+use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, Storage, Order};
+use cw0::maybe_addr;
 use cw2::set_contract_version;
 use cw721_base::msg::QueryMsg::{OwnerOf};
 use cw721::{OwnerOfResponse};
-use cw_storage_plus::{Bound, PrimaryKey, U32Key};
+use cw_storage_plus::{Bound, index_string, PrimaryKey, U32Key};
 
 use crate::error::ContractError;
-use crate::msg::{AllOrdersResponse, Cw721AddressResponse, ExecuteMsg, InstantiateMsg, OrderResponse, QueryMsg};
-use crate::state::{ContractInfo, CONTRACT_INFO, OrderInfo, ORDERS, ORDER_COUNT, orders};
+use crate::msg::{AllPhysicalsResponse, Cw721AddressResponse, ExecuteMsg, InstantiateMsg, PhysicalResponse, PhysicalsResponse, QueryMsg};
+use crate::state::{ContractInfo, CONTRACT_INFO, PhysicalInfo, ORDER_COUNT, physicals};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw721-nfc";
@@ -64,7 +64,7 @@ fn create_order(deps: DepsMut, info: MessageInfo, token_id: String, tier: String
         return Err(ContractError::Unauthorized {});
     }
 
-    let order = OrderInfo{
+    let order = PhysicalInfo {
         id: increment_orders(deps.storage).unwrap(),
         token_id: token_id.clone(),
         owner: info.sender.clone(),
@@ -72,7 +72,8 @@ fn create_order(deps: DepsMut, info: MessageInfo, token_id: String, tier: String
         status: "PENDING".to_string()
     };
 
-    orders().save(deps.storage, &U32Key::from(order.id).joined_key(), &order).unwrap();
+    // physicals().save(deps.storage, &U32Key::from(order.id).joined_key(), &order).unwrap();
+    physicals().save(deps.storage, &U32Key::from(order.id).joined_key(), &order).unwrap();
 
     Ok(Response::new().add_attribute("Order ID", order.id.to_string()))
 }
@@ -93,8 +94,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetCw721Address {} => to_binary(&query_cw721_address(deps)?),
         QueryMsg::GetCw721TokenOwner {token_id} => to_binary(&query_cw721_token_owner(deps, token_id)?),
-        QueryMsg::GetOrderInfo {token_id} => to_binary(&query_order(deps, token_id)?),
+        QueryMsg::GetOrderInfo {token_id} => to_binary(&query_physical_info(deps, token_id)?),
         QueryMsg::AllOrders {start_after, limit} => to_binary(&query_all_orders(deps, start_after, limit)?),
+        QueryMsg::Physicals {token_id, start_after, limit} => to_binary(&query_physicals(deps, token_id, start_after, limit)?),
     }
 }
 
@@ -116,27 +118,48 @@ fn query_cw721_token_owner(deps: Deps, token_id: String) -> StdResult<OwnerOfRes
     Ok(owner)
 }
 
-fn query_order(deps: Deps, order_id: String) -> StdResult<OrderResponse> {
-    let order_id_int: u32 = order_id.parse().unwrap();
-    let order = orders().load(deps.storage, &U32Key::from(order_id_int).joined_key())?;
-    Ok(OrderResponse{order})
+fn query_physical_info(deps: Deps, physical_id: String) -> StdResult<PhysicalResponse> {
+    let order_id_int: u32 = physical_id.parse().unwrap();
+    let physical = physicals().load(deps.storage, &U32Key::from(order_id_int).joined_key())?;
+    Ok(PhysicalResponse { physical })
+}
+
+fn query_physicals(
+    deps: Deps,
+    token_id: String,
+    start_after: Option<String>,
+    limit: Option<u32>
+) -> StdResult<PhysicalsResponse> {
+    let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
+    let start_id = maybe_addr(deps.api, start_after)?;
+    let start = start_id.map(|id| Bound::exclusive(id.as_ref()));
+
+    let physicals:  StdResult<Vec<String>> = physicals()
+        .idx
+        .token_id
+        .prefix(token_id)
+        .range(deps.storage, start, None, Order::Ascending)
+        .map(|item| item.map(|(k, v)| v.id.to_string()))
+        .take(limit)
+        .collect();
+
+    Ok(PhysicalsResponse { physicals: physicals? })
 }
 
 fn query_all_orders(deps: Deps,
                     start_after: Option<String>,
                     limit: Option<u32>
-) -> StdResult<AllOrdersResponse> {
+) -> StdResult<AllPhysicalsResponse> {
     let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
     let start_id = maybe_addr(deps.api, start_after)?;
     let start = start_id.map(|id| Bound::exclusive(id.as_ref()));
 
-    let orders: StdResult<Vec<String>> =
-        orders
+    let physicals: StdResult<Vec<String>> = physicals()
         .range(deps.storage, start, None, Order::Ascending)
         .take(limit)
-        .map(|item| item.map(|(k, _)| String::from_utf8_lossy(&k).to_string()))
+        .map(|item| item.map(|(k, v)| v.id.to_string()))
         .collect();
-    Ok(AllOrdersResponse{orders: orders?})
+    Ok(AllPhysicalsResponse {physicals: physicals?})
 }
 
 #[cfg(test)]
@@ -201,11 +224,24 @@ mod tests {
         assert_eq!("bob", value.owner);
     }
 
-
-
-
     #[test]
     fn creating_order() {
+        // physical items data
+        let physical1 = PhysicalInfo {
+            id: 1,
+            token_id: "1".to_string(),
+            owner: Addr::unchecked("alice"),
+            tier: "3".to_string(),
+            status: "PENDING".to_string()
+        };
+        let physical2 = PhysicalInfo {
+            id: 2,
+            token_id: "2".to_string(),
+            owner: Addr::unchecked("bob"),
+            tier: "3".to_string(),
+            status: "PENDING".to_string()
+        };
+
         let mut deps = mock_dependencies();
         setup_contract(deps.as_mut());
 
@@ -214,8 +250,8 @@ mod tests {
 
         // query not created order
         let err = query(deps.as_ref(), mock_env(),
-                        QueryMsg::GetOrder {token_id: "3".to_string()}).unwrap_err();
-        assert_eq!(err, StdError::not_found("cw721_nfc::state::OrderInfo"));
+                        QueryMsg::GetOrderInfo {token_id: "3".to_string()}).unwrap_err();
+        assert_eq!(err, StdError::not_found("cw721_nfc::state::PhysicalInfo"));
 
         // random cannot create order
         let info = mock_info("chuck", &[]);
@@ -225,33 +261,83 @@ mod tests {
             .unwrap_err();
         // assert_eq!(err, ContractError::Unauthorized {});
 
-        // owner can create order
+        // alice can create order
         let info = mock_info("alice", &[]);
         let msg = CreateOrder { token_id: "1".to_string(), tier: "3".to_string()};
         let res = execute(deps.as_mut(), mock_env(), info, msg.clone())
             .unwrap();
         assert_eq!(0, res.messages.len());
 
+        // bob can create order
+        let info = mock_info("bob", &[]);
+        let msg = CreateOrder { token_id: "2".to_string(), tier: "3".to_string()};
+        let res = execute(deps.as_mut(), mock_env(), info, msg.clone())
+            .unwrap();
+        assert_eq!(0, res.messages.len());
+
         // order info is correct
-        let query_order_msg = QueryMsg::GetOrder {token_id: "1".to_string()};
+        let query_order_msg = QueryMsg::GetOrderInfo {token_id: "1".to_string()};
         let res = query(deps.as_ref(),mock_env(), query_order_msg).unwrap();
-        let order: OrderResponse = from_binary(&res).unwrap();
-        assert_eq!(OrderInfo{
+        let pyhsical: PhysicalResponse = from_binary(&res).unwrap();
+        assert_eq!(physical1, pyhsical.physical);
+
+        let query_order_msg = QueryMsg::GetOrderInfo {token_id: "2".to_string()};
+        let res = query(deps.as_ref(),mock_env(), query_order_msg).unwrap();
+        let pyhsical: PhysicalResponse = from_binary(&res).unwrap();
+        assert_eq!(physical2, pyhsical.physical);
+
+        // query all orders
+        let query_order_msg = QueryMsg::AllOrders { start_after: None, limit: None };
+        let res = query(deps.as_ref(),mock_env(), query_order_msg).unwrap();
+        let physicals: AllPhysicalsResponse = from_binary(&res).unwrap();
+        assert_eq!(2, physicals.physicals.len());
+        assert_eq!(vec![physical1.id.to_string(), physical2.id.to_string()], physicals.physicals);
+    }
+
+    #[test]
+    fn query_physicals_by_token_id() {
+        // physical items data
+        let physical1 = PhysicalInfo {
             id: 1,
             token_id: "1".to_string(),
             owner: Addr::unchecked("alice"),
             tier: "3".to_string(),
             status: "PENDING".to_string()
-        }, order.order);
+        };
+        let physical2 = PhysicalInfo {
+            id: 2,
+            token_id: "1".to_string(),
+            owner: Addr::unchecked("alice"),
+            tier: "3".to_string(),
+            status: "PENDING".to_string()
+        };
+
+        let mut deps = mock_dependencies();
+        setup_contract(deps.as_mut());
+
+        deps.querier.set_cw721_token("alice", 1);
+
+        // alice orders 2 physical items
+        let info = mock_info("alice", &[]);
+        let msg = CreateOrder { token_id: "1".to_string(), tier: "3".to_string()};
+        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
+        assert_eq!(0, res.messages.len());
+        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
+        assert_eq!(0, res.messages.len());
+
+
+        // query physical orders by token ID
+        let query_physicals_msg = QueryMsg::Physicals {token_id: "1".to_string(), start_after: None, limit: None };
+        let res = query(deps.as_ref(),mock_env(), query_physicals_msg).unwrap();
+        let physicals: PhysicalsResponse = from_binary(&res).unwrap();
+        assert_eq!(2, physicals.physicals.len());
+        assert_eq!(vec![physical1.id.to_string(), physical2.id.to_string()], physicals.physicals);
 
         // query all orders
-        let query_order_msg = QueryMsg::AllOrders {};
-
-        // create a duplicate order
-        // let info = mock_info("alice", &[]);
-        // let msg = CreateOrder { token_id: "1".to_string(), tier: "3".to_string()};
-        // let res = execute(deps.as_mut(), mock_env(), info, msg.clone())
-        //     .unwrap();
-        // assert_eq!(0, res.messages.len());
+        // let query_order_msg = QueryMsg::AllOrders { start_after: None, limit: None };
+        // let res = query(deps.as_ref(),mock_env(), query_order_msg).unwrap();
+        // let physicals: AllPhysicalsResponse = from_binary(&res).unwrap();
+        // assert_eq!(2, physicals.physicals.len());
+        // assert_eq!(vec![physical1.id.to_string(), physical2.id.to_string()], physicals.physicals);
     }
 }
