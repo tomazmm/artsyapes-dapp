@@ -296,7 +296,7 @@ mod tests {
 
     #[test]
     fn query_physicals_by_token_id() {
-        // physical items data
+        // physical items data responses
         let physical1 = PhysicalInfo {
             id: 1,
             token_id: "1".to_string(),
@@ -311,11 +311,19 @@ mod tests {
             tier: "3".to_string(),
             status: "PENDING".to_string()
         };
+        let physical3 = PhysicalInfo {
+            id: 3,
+            token_id: "2".to_string(),
+            owner: Addr::unchecked("bob"),
+            tier: "3".to_string(),
+            status: "PENDING".to_string()
+        };
 
         let mut deps = mock_dependencies();
         setup_contract(deps.as_mut());
 
         deps.querier.set_cw721_token("alice", 1);
+        deps.querier.set_cw721_token("bob", 2);
 
         // alice orders 2 physical items
         let info = mock_info("alice", &[]);
@@ -325,19 +333,24 @@ mod tests {
         let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
         assert_eq!(0, res.messages.len());
 
+        // bob orders 1 physical items
+        let info = mock_info("bob", &[]);
+        let msg = CreateOrder { token_id: "2".to_string(), tier: "3".to_string()};
+        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
+        assert_eq!(0, res.messages.len());
 
-        // query physical orders by token ID
+        // query alice's physical orders by token ID
         let query_physicals_msg = QueryMsg::Physicals {token_id: "1".to_string(), start_after: None, limit: None };
         let res = query(deps.as_ref(),mock_env(), query_physicals_msg).unwrap();
         let physicals: PhysicalsResponse = from_binary(&res).unwrap();
         assert_eq!(2, physicals.physicals.len());
         assert_eq!(vec![physical1.id.to_string(), physical2.id.to_string()], physicals.physicals);
 
-        // query all orders
-        // let query_order_msg = QueryMsg::AllOrders { start_after: None, limit: None };
-        // let res = query(deps.as_ref(),mock_env(), query_order_msg).unwrap();
-        // let physicals: AllPhysicalsResponse = from_binary(&res).unwrap();
-        // assert_eq!(2, physicals.physicals.len());
-        // assert_eq!(vec![physical1.id.to_string(), physical2.id.to_string()], physicals.physicals);
+        // query bob's physical orders by token ID
+        let query_physicals_msg = QueryMsg::Physicals {token_id: "2".to_string(), start_after: None, limit: None };
+        let res = query(deps.as_ref(),mock_env(), query_physicals_msg).unwrap();
+        let physicals: PhysicalsResponse = from_binary(&res).unwrap();
+        assert_eq!(1, physicals.physicals.len());
+        assert_eq!(vec![physical3.id.to_string()], physicals.physicals);
     }
 }

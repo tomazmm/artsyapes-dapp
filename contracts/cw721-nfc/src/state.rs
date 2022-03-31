@@ -21,13 +21,6 @@ pub struct PhysicalInfo {
     // pub nfc_tag: String
 }
 
-// pub struct NFCLists {
-//     // pub physical_items: HashMap<String, Vec<OrderInfo>>
-//     // pub tier1: Vec<String>,
-//     // pub tier2: Vec<String>,
-//     // pub tier3: Vec<String>
-// }
-
 pub struct PhysicalIndexes<'a> {
     pub id: UniqueIndex<'a, U32Key, PhysicalInfo>,
     pub token_id: MultiIndex<'a, (String, Vec<u8>), PhysicalInfo>
@@ -35,7 +28,7 @@ pub struct PhysicalIndexes<'a> {
 
 impl<'a> IndexList<PhysicalInfo> for PhysicalIndexes<'a> {
     fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<PhysicalInfo>> + '_> {
-        let v: Vec<&dyn Index<PhysicalInfo>> = vec![&self.id];
+        let v: Vec<&dyn Index<PhysicalInfo>> = vec![&self.id, &self.token_id];
         Box::new(v.into_iter())
     }
 }
@@ -58,5 +51,4 @@ pub fn physicals<'a>() -> IndexedMap<'a, &'a [u8], PhysicalInfo, PhysicalIndexes
 pub const CONTRACT_INFO: Item<ContractInfo> = Item::new("contract_info");
 pub const ORDERS: Map<String, PhysicalInfo> = Map::new("orders");
 pub const ORDER_COUNT: Item<u32> = Item::new("order_count");
-// pub const PHYSICAL_ITEMS: Map<String, NFCLists> = Map::new("physical_items");
 
