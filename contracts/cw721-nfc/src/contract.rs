@@ -1,18 +1,22 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, QuerierWrapper, Uint128};
+use cosmwasm_std::{to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, QuerierWrapper, Uint128, Storage, Order};
 use cosmwasm_std::OverflowOperation::Add;
 use cw2::set_contract_version;
 use cw721_base::msg::QueryMsg::{OwnerOf};
 use cw721::{OwnerOfResponse};
+use cw_storage_plus::{Bound, PrimaryKey, U32Key};
 
 use crate::error::ContractError;
-use crate::msg::{Cw721AddressResponse, ExecuteMsg, InstantiateMsg, OrderResponse, QueryMsg};
-use crate::state::{ContractInfo, CONTRACT_INFO, OrderInfo, ORDERS, ORDERS_COUNT};
+use crate::msg::{AllOrdersResponse, Cw721AddressResponse, ExecuteMsg, InstantiateMsg, OrderResponse, QueryMsg};
+use crate::state::{ContractInfo, CONTRACT_INFO, OrderInfo, ORDERS, ORDER_COUNT, orders};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw721-nfc";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+const DEFAULT_LIMIT: u32 = 10;
+const MAX_LIMIT: u32 = 30;
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -45,7 +49,7 @@ pub fn execute(
         ExecuteMsg::CreateOrder { token_id, tier} => create_order(deps, info, token_id, tier)
     }
 }
-pub fn create_order(deps: DepsMut, info: MessageInfo, token_id: String, tier: String) -> Result<Response, ContractError> {
+fn create_order(deps: DepsMut, info: MessageInfo, token_id: String, tier: String) -> Result<Response, ContractError> {
     let state = CONTRACT_INFO.load(deps.storage)?;
     let owner: OwnerOfResponse =
         deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
@@ -60,23 +64,27 @@ pub fn create_order(deps: DepsMut, info: MessageInfo, token_id: String, tier: St
         return Err(ContractError::Unauthorized {});
     }
 
-    // validate order
-
-    // let count = ORDERS_COUNT.update(deps.storage, |mut c| -> StdResult<_> {
-    //     c.checked_add(Uint128::from(1.));
-    //     Ok(c)
-    // })?;
-
     let order = OrderInfo{
+        id: increment_orders(deps.storage).unwrap(),
         token_id: token_id.clone(),
         owner: info.sender.clone(),
         tier,
         status: "PENDING".to_string()
     };
 
-    ORDERS.save(deps.storage, info.sender.to_string(), &order);
+    orders().save(deps.storage, &U32Key::from(order.id).joined_key(), &order).unwrap();
 
-    Ok(Response::default())
+    Ok(Response::new().add_attribute("Order ID", order.id.to_string()))
+}
+
+fn order_count(storage: &dyn Storage) -> StdResult<u32> {
+    Ok(ORDER_COUNT.may_load(storage)?.unwrap_or_default())
+}
+
+fn increment_orders(storage: &mut dyn Storage) -> StdResult<u32> {
+    let val = order_count(storage)? + 1;
+    ORDER_COUNT.save(storage, &val)?;
+    Ok(val)
 }
 
 
@@ -85,7 +93,8 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetCw721Address {} => to_binary(&query_cw721_address(deps)?),
         QueryMsg::GetCw721TokenOwner {token_id} => to_binary(&query_cw721_token_owner(deps, token_id)?),
-        QueryMsg::GetOrder {token_id} => to_binary(&query_order(deps, token_id)?),
+        QueryMsg::GetOrderInfo {token_id} => to_binary(&query_order(deps, token_id)?),
+        QueryMsg::AllOrders {start_after, limit} => to_binary(&query_all_orders(deps, start_after, limit)?),
     }
 }
 
@@ -107,9 +116,27 @@ fn query_cw721_token_owner(deps: Deps, token_id: String) -> StdResult<OwnerOfRes
     Ok(owner)
 }
 
-fn query_order(deps: Deps, token_id: String) -> StdResult<OrderResponse> {
-    let order = ORDERS.load(deps.storage, token_id)?;
+fn query_order(deps: Deps, order_id: String) -> StdResult<OrderResponse> {
+    let order_id_int: u32 = order_id.parse().unwrap();
+    let order = orders().load(deps.storage, &U32Key::from(order_id_int).joined_key())?;
     Ok(OrderResponse{order})
+}
+
+fn query_all_orders(deps: Deps,
+                    start_after: Option<String>,
+                    limit: Option<u32>
+) -> StdResult<AllOrdersResponse> {
+    let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
+    let start_id = maybe_addr(deps.api, start_after)?;
+    let start = start_id.map(|id| Bound::exclusive(id.as_ref()));
+
+    let orders: StdResult<Vec<String>> =
+        orders
+        .range(deps.storage, start, None, Order::Ascending)
+        .take(limit)
+        .map(|item| item.map(|(k, _)| String::from_utf8_lossy(&k).to_string()))
+        .collect();
+    Ok(AllOrdersResponse{orders: orders?})
 }
 
 #[cfg(test)]
@@ -175,6 +202,8 @@ mod tests {
     }
 
 
+
+
     #[test]
     fn creating_order() {
         let mut deps = mock_dependencies();
@@ -208,17 +237,21 @@ mod tests {
         let res = query(deps.as_ref(),mock_env(), query_order_msg).unwrap();
         let order: OrderResponse = from_binary(&res).unwrap();
         assert_eq!(OrderInfo{
+            id: 1,
             token_id: "1".to_string(),
             owner: Addr::unchecked("alice"),
             tier: "3".to_string(),
             status: "PENDING".to_string()
         }, order.order);
 
+        // query all orders
+        let query_order_msg = QueryMsg::AllOrders {};
+
         // create a duplicate order
-        let info = mock_info("alice", &[]);
-        let msg = CreateOrder { token_id: "1".to_string(), tier: "3".to_string()};
-        let res = execute(deps.as_mut(), mock_env(), info, msg.clone())
-            .unwrap();
-        assert_eq!(0, res.messages.len());
+        // let info = mock_info("alice", &[]);
+        // let msg = CreateOrder { token_id: "1".to_string(), tier: "3".to_string()};
+        // let res = execute(deps.as_mut(), mock_env(), info, msg.clone())
+        //     .unwrap();
+        // assert_eq!(0, res.messages.len());
     }
 }
