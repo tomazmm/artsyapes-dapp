@@ -1,11 +1,19 @@
-import React, {useEffect, useState} from 'react'
+import React, {lazy, useEffect, useState} from 'react'
 import {useConnectedWallet, useWallet, WalletStatus,} from '@terra-money/wallet-provider'
 import * as query from './contract/query'
-import {Home} from "./components/layout/Home/Home";
 import {Navigate, Route, Routes, useLocation, useNavigate} from "react-router-dom";
-import {MyAccount} from "./components/layout/MyAccount/MyAccount";
 import {LoadingPage} from "./components/shared/LoadingPage";
 
+
+const Home = lazy(() =>
+  import('./components/layout/Home/Home')
+    .then(({ Home }) => ({ default: Home })),
+);
+
+const MyAccount = lazy(() =>
+  import('./components/layout/MyAccount/MyAccount')
+    .then(({ MyAccount }) => ({ default: MyAccount })),
+);
 
 
 function App() {
@@ -42,13 +50,15 @@ function App() {
     case WalletStatus.WALLET_CONNECTED:
       return (
         <div className="ArtsyApesApp">
-          <Routes>
-            <Route path={"/"+connectedWallet?.walletAddress} element={<MyAccount />}/>
+          <React.Suspense fallback={<LoadingPage/>}>
+            <Routes>
+              <Route path={"/"+connectedWallet?.walletAddress} element={<MyAccount />}/>
 
-            {["/home", "/"].map((path, index) =>
-              <Route path={path} element={<Navigate to={"/"+connectedWallet?.walletAddress} />} key={index} />
-            )}
-          </Routes>
+              {["/home", "/"].map((path, index) =>
+                <Route path={path} element={<Navigate to={"/"+connectedWallet?.walletAddress} />} key={index} />
+              )}
+            </Routes>
+          </React.Suspense>
 
           {/*  TODO: add wallet to the right upper corner*/}
         </div>
@@ -56,14 +66,16 @@ function App() {
     case WalletStatus.WALLET_NOT_CONNECTED:
       return (
         <div className="ArtsyApesApp">
-          <Routes>
-            <Route path="/home" element={<Home />}/>
+          <React.Suspense fallback={<LoadingPage/>}>
+            <Routes>
+              <Route path="/home" element={<Home />}/>
 
-            <Route
-              path="*"
-              element={<Navigate to="/home" />}
-            />
-          </Routes>
+              <Route
+                path="*"
+                element={<Navigate to="/home" />}
+              />
+            </Routes>
+          </React.Suspense>
         </div>
       )
   }

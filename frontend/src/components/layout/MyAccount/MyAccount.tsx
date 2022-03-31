@@ -2,6 +2,8 @@ import React from "react";
 import styled from 'styled-components';
 import {Col, Container, Row} from "react-bootstrap";
 import {Header} from "../shared/Header";
+import {ContentGrid} from "./MyAccountsContent/ContentGrid";
+import {SideMenu} from "./MyAccountsContent/SideMenu";
 
 interface MyAccountProps {
   className?: string;
@@ -17,26 +19,45 @@ export const MyAccountBase = (props: MyAccountProps) => {
     <div className={className}>
       <Header/>
       <Container fluid className="h-100 fixed-top">
-          <Row className="h-auto about">
-            <Col xs={3} className="d-flex flex-column justify-content-center align-self-end align-content-center align-items-center col">
+          <Row className="h-auto about mb-4">
+            <Col xl={{span: 3}}
+                 lg={{span: 12}}
+                 xs={{span: 12}}
+                 className="d-flex flex-column justify-content-center align-self-end align-content-center align-items-center col">
               <span className="owned-text">Owned</span>
               <div className="white-line"></div>
             </Col>
-            <Col className="d-flex flex-column justify-content-center align-self-end align-content-center align-items-end col my-account-col">
+            <Col xl={{span: 9}}
+                 lg={{span: 12}}
+                 xs={{span: 12}}
+                 className="d-flex flex-column justify-content-center align-self-end align-content-center align-items-end col my-account-col">
               <span className="my-account-text">My Account</span>
               <div className="white-line"></div>
             </Col>
           </Row>
+
+          <Row className="h-auto">
+            <Col xl={{span: 3}}
+                 lg={{span: 12}}
+                 xs={{span: 12}}
+              className="d-flex flex-column justify-content-center align-self-end align-content-center align-items-center col">
+              <SideMenu/>
+            </Col>
+            <Col xl={{span: 9}}
+                 lg={{span: 12}}
+                 xs={{span: 12}}
+              className="d-flex flex-column justify-content-center align-self-end align-content-center align-items-end col my-account-col">
+              <ContentGrid/>
+            </Col>
+          </Row>
       </Container>
+
     </div>
   )
 }
 
 
 export const MyAccount = styled(MyAccountBase)`
-    //background-color: aliceblue;
-    //background-size: cover;
-    //height: 100vh;
     > .container-fluid{
         z-index: 1;
         background: url("/assets/my-account-background.png");
@@ -44,11 +65,11 @@ export const MyAccount = styled(MyAccountBase)`
         padding: 10rem 4rem;
         .row{
           &.about{
-            margin: 9rem 0;
+            margin-top: 7rem;
           }
           .col{
             &.my-account-col{
-              margin-left: 2rem;
+              //margin-left: 2rem;
             }
             .owned-text{
               color: white;
