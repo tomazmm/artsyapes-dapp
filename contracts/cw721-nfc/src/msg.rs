@@ -24,8 +24,12 @@ pub enum QueryMsg {
     GetCw721TokenOwner {
         token_id: String
     },
-    GetOrder {
+    GetOrderInfo {
         token_id: String
+    },
+    AllOrders {
+        start_after: Option<String>,
+        limit: Option<u32>,
     }
 }
 
@@ -37,5 +41,10 @@ pub struct Cw721AddressResponse {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct OrderResponse {
     pub order: OrderInfo,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct AllOrdersResponse {
+    pub orders: Vec<String>,
 }
 

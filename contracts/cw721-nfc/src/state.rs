@@ -2,7 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::{Addr, Uint128, Uint64};
-use cw_storage_plus::{Item, Map, IndexedMap};
+use cw_storage_plus::{Item, Map, IndexedMap, MultiIndex, IndexList, UniqueIndex, U32Key, U8Key, Index};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ContractInfo {
@@ -12,44 +12,39 @@ pub struct ContractInfo {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct OrderInfo {
+    pub id: u32,
     pub token_id: String,
     pub owner: Addr,
     pub tier: String,
     pub status: String
 }
 
-// pub struct OrderInfo {
-//     pub token_id: String,
-//     pub owner: Addr,
-//     pub tier: String,
-//     pub status: String
-// }
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct PhysicalItem {
-    nfc_tag: String,
-    tier: String,
-    owner: Addr
+pub struct OrderIndexes<'a> {
+    pub id: UniqueIndex<'a, U32Key, OrderInfo>,
+    pub token_id: MultiIndex<'a, String, OrderInfo>
 }
-//
-// #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-// pub struct NFTWrapper {
-//     token_id: String,
-//     tier: string,
-//     owner: Addr,
-//
-// }
 
+impl<'a> IndexList<OrderInfo> for OrderIndexes<'a> {
+    fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<OrderInfo>> + '_> {
+        let v: Vec<&dyn Index<OrderInfo>> = vec![&self.id];
+        Box::new(v.into_iter())
+    }
+}
 
-
-
-
+pub fn orders<'a>() -> IndexedMap<'a, &'a [u8], OrderInfo, OrderIndexes<'a>> {
+    let indexes = OrderIndexes {
+        id: UniqueIndex::new(
+            |d| U32Key::new(d.id),
+            "order_id"),
+        token_id: MultiIndex::new(
+            |d, pk | d.token_id.clone(),
+            "orders",
+            "orders__token_id",
+        ),
+    };
+    IndexedMap::new("orders", indexes)
+}
 
 pub const CONTRACT_INFO: Item<ContractInfo> = Item::new("contract_info");
-// mapping: (token_id, tier) --> OrderInfo
 pub const ORDERS: Map<String, OrderInfo> = Map::new("orders");
-pub const ORDERS_COUNT: Item<Uint128> = Item::new("orders_count");
-//
-// pub const PHYSICAL_ITEMS: Map<String, > = Map::new("physical_items");
-// mapping: token_id --> PhysicalItem
-pub const PHYSICAL_ITEMS: Map<Addr, Map<String, String>> = Map::new("physical_items");
+pub const ORDER_COUNT: Item<u32> = Item::new("order_count");
