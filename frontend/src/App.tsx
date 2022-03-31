@@ -38,6 +38,7 @@ function App() {
     prefetch()
   }, [connectedWallet])
 
+  console.log()
   switch (status){
     case WalletStatus.INITIALIZING:
       return (
@@ -52,7 +53,7 @@ function App() {
         <div className="ArtsyApesApp">
           <React.Suspense fallback={<LoadingPage/>}>
             <Routes>
-              <Route path={"/"+connectedWallet?.walletAddress} element={<MyAccount />}/>
+              <Route path={"/"+connectedWallet?.walletAddress} element={<MyAccount connectedWallet={connectedWallet} />}/>
 
               {["/home", "/"].map((path, index) =>
                 <Route path={path} element={<Navigate to={"/"+connectedWallet?.walletAddress} />} key={index} />

@@ -7,6 +7,11 @@ import { getChainOptions, WalletProvider } from '@terra-money/wallet-provider'
 import App from './App'
 import reportWebVitals from './reportWebVitals'
 
+
+interface Tokens {
+  tokens?: string[];
+}
+
 getChainOptions().then((chainOptions) => {
   ReactDOM.render(
     <React.StrictMode>

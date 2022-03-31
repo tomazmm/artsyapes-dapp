@@ -23,7 +23,7 @@ export const ContentBase = (props: ContentProps) => {
 
 
 export const Content = styled(ContentBase)`
-  background-color: red;
+  background-color: rgba(33, 30, 26, 0.7);
   display: block;
   width: 100%;
   margin: auto;
