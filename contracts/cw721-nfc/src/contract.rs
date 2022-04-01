@@ -68,14 +68,46 @@ fn create_order(deps: DepsMut, info: MessageInfo, token_id: String, tier: String
         id: increment_orders(deps.storage).unwrap(),
         token_id: token_id.clone(),
         owner: info.sender.clone(),
-        tier,
+        tier: tier.parse().unwrap(),
         status: "PENDING".to_string()
     };
 
-    physicals().save(deps.storage, &U32Key::from(order.id).joined_key(), &order).unwrap();
-    // physicals().save(deps.storage, &U32Key::from(order.id).joined_key(), &order).unwrap();
+    // validate order
+    let physical_vec : Vec<PhysicalInfo> = physicals()
+        .idx.token_id
+        .prefix(token_id.to_string())
+        .range(deps.storage, None, None, Order::Ascending)
+        .map(|item| item.map(|(_, v)| v))
+        .collect::<StdResult<_>>().unwrap();
+    if physical_vec.len() == 14 {
+        // TODO: Create custom error. Max physicals reached
+        return Err(ContractError::Unauthorized {})
+    }
+    let mut tier2_count = 0;
+    let mut tier3_count = 0;
+    for i in physical_vec.iter(){
+        if i.tier == 1 {
+            // TODO: Custom error
+            return Err(ContractError::Unauthorized {})
+        }
+        else if i.tier == 2 {
+            tier2_count += 1;
+        }
+        else if i.tier == 2 {
+            tier3_count += 1;
+        }
+        if tier3_count == 10 || tier2_count == 3 {
+            // TODO: Custom error
+            return Err(ContractError::Unauthorized {});
+        }
+        if i.tier == order.tier && i.owner == order.owner {
+            // TODO: Custom error. Cannot order same item twice by same owner
+            return Err(ContractError::Unauthorized {});
+        }
+    }
 
-    Ok(Response::new().add_attribute("Order ID", order.id.to_string()))
+    physicals().save(deps.storage, &U32Key::from(order.id).joined_key(), &order).unwrap();
+    Ok(Response::default())
 }
 
 fn order_count(storage: &dyn Storage) -> StdResult<u32> {
@@ -87,7 +119,6 @@ fn increment_orders(storage: &mut dyn Storage) -> StdResult<u32> {
     ORDER_COUNT.save(storage, &val)?;
     Ok(val)
 }
-
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
@@ -135,8 +166,7 @@ fn query_physicals(
     let start = start_id.map(|id| Bound::exclusive(id.as_ref()));
 
     let physicals:  StdResult<Vec<String>> = physicals()
-        .idx
-        .token_id
+        .idx.token_id
         .prefix(token_id)
         .range(deps.storage, start, None, Order::Ascending)
         .map(|item| item.map(|(k, v)| v.id.to_string()))
@@ -231,14 +261,14 @@ mod tests {
             id: 1,
             token_id: "1".to_string(),
             owner: Addr::unchecked("alice"),
-            tier: "3".to_string(),
+            tier: 3,
             status: "PENDING".to_string()
         };
         let physical2 = PhysicalInfo {
             id: 2,
             token_id: "2".to_string(),
             owner: Addr::unchecked("bob"),
-            tier: "3".to_string(),
+            tier: 3,
             status: "PENDING".to_string()
         };
 
@@ -275,7 +305,7 @@ mod tests {
             .unwrap();
         assert_eq!(0, res.messages.len());
 
-        // order info is correct
+        // orders info is correct
         let query_order_msg = QueryMsg::GetOrderInfo {token_id: "1".to_string()};
         let res = query(deps.as_ref(),mock_env(), query_order_msg).unwrap();
         let pyhsical: PhysicalResponse = from_binary(&res).unwrap();
@@ -301,21 +331,21 @@ mod tests {
             id: 1,
             token_id: "1".to_string(),
             owner: Addr::unchecked("alice"),
-            tier: "3".to_string(),
+            tier: 3,
             status: "PENDING".to_string()
         };
         let physical2 = PhysicalInfo {
             id: 2,
             token_id: "1".to_string(),
             owner: Addr::unchecked("alice"),
-            tier: "3".to_string(),
+            tier: 3,
             status: "PENDING".to_string()
         };
         let physical3 = PhysicalInfo {
             id: 3,
             token_id: "2".to_string(),
             owner: Addr::unchecked("bob"),
-            tier: "3".to_string(),
+            tier: 3,
             status: "PENDING".to_string()
         };
 
