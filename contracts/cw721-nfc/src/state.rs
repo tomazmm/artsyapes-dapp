@@ -16,7 +16,7 @@ pub struct PhysicalInfo {
     pub id: u32,
     pub token_id: String,
     pub owner: Addr,
-    pub tier: String,
+    pub tier: u8,
     pub status: String
     // pub nfc_tag: String
 }
