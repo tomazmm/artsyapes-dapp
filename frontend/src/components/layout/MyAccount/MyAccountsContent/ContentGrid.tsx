@@ -42,7 +42,7 @@ export const ContentGrid = styled(ContentGridBase)`
   width: 100%;
   margin: auto;
   height: 65vh;
-  overflow-y: scroll;
+  overflow-y: auto;
   overflow-x: hidden;
   ::-webkit-scrollbar {
     width: 10px;
