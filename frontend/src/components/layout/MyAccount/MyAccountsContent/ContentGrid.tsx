@@ -27,7 +27,7 @@ export const ContentGridBase = (props: ContentGridProps) => {
             md={{span: 6}}
             xs={{span: 12}}
             className="d-flex flex-column justify-content-start align-self-start align-content-center align-items-center col mb-4">
-            <Content/>
+            <Content nftValue={value}/>
           </Col>
         })}
         {/*<Col*/}
