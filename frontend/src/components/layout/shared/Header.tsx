@@ -16,11 +16,11 @@ export const HeaderBase = (props: HeaderProps) => {
   return (
     <div className={className}>
       <Container fluid className="fixed-top h-auto">
-        <Row className="h-auto">
-          <Col xs={3} className="d-flex mt-3 flex-column justify-content-start align-self-center align-content-center align-items-start col">
+        <Row className="h-25 d-flex flex-row align-items-center">
+          <Col>
             <img className="logo" src={'/assets/logo.png'}/>
           </Col>
-          <Col className="d-flex mt-3 flex-column justify-content-start align-self-center align-content-center align-items-end col">
+          <Col className="d-flex justify-content-end">
             <ConnectWallet />
           </Col>
         </Row>
@@ -34,14 +34,11 @@ export const Header = styled(HeaderBase)`
   >.container-fluid{
     z-index: 2;
     background-color: black;
-    padding: 2rem 4rem;
+    padding: .5rem 4rem;
     .row{
       .col{
         .logo{
-          //max-width:100%;
-          //max-height:100%;
-          height: 10vh;
-          margin: auto;
+          width: 20%;
         }
       }
     }
