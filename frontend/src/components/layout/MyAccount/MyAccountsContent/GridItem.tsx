@@ -2,12 +2,12 @@ import React, {useEffect, useState} from "react";
 import styled from 'styled-components';
 import {Col, Container, Row, Spinner} from "react-bootstrap";
 
-interface ContentProps {
+interface GridItemProps {
   className?: string;
   nftValue?: any;
 }
 
-export const ContentBase = (props: ContentProps) => {
+export const GridItemBase = (props: GridItemProps) => {
   const {
     className,
     nftValue
@@ -45,7 +45,7 @@ export const ContentBase = (props: ContentProps) => {
 }
 
 
-export const Content = styled(ContentBase)`
+export const GridItem = styled(GridItemBase)`
   background-color: rgba(33, 30, 26, 0.7);
   .row{
     .col{
