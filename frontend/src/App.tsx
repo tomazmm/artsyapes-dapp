@@ -53,10 +53,10 @@ function App() {
         <div className="ArtsyApesApp">
           <React.Suspense fallback={<LoadingPage/>}>
             <Routes>
-              <Route path={"/"+connectedWallet?.walletAddress} element={<MyAccount connectedWallet={connectedWallet} />}/>
+              <Route path={"/my-profile"} element={<MyAccount connectedWallet={connectedWallet} />}/>
 
               {["/home", "/"].map((path, index) =>
-                <Route path={path} element={<Navigate to={"/"+connectedWallet?.walletAddress} />} key={index} />
+                <Route path={path} element={<Navigate to={"/my-profile"} />} key={index} />
               )}
             </Routes>
           </React.Suspense>

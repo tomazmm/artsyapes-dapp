@@ -18,7 +18,7 @@ export const ContentGridBase = (props: ContentGridProps) => {
 
   return (
     <div className={className}>
-      <Row className="h-auto">
+      <Row className="h-auto grid-row">
         {/*<Content/>*/}
         {nftInfo.map((value: any, index: any) => {
           return <Col key={index}
@@ -30,62 +30,6 @@ export const ContentGridBase = (props: ContentGridProps) => {
             <Content nftValue={value}/>
           </Col>
         })}
-        {/*<Col*/}
-        {/*  xl={{span:4}}*/}
-        {/*    lg={{span: 6}}*/}
-        {/*    md={{span: 6}}*/}
-        {/*    xs={{span: 12}}*/}
-        {/*     className="d-flex flex-column justify-content-start align-self-start align-content-center align-items-center col mb-4">*/}
-        {/*  <Content/>*/}
-        {/*</Col>*/}
-        {/*<Col*/}
-        {/*  xl={{span:4}}*/}
-        {/*  lg={{span: 6}}*/}
-        {/*  md={{span: 6}}*/}
-        {/*  xs={{span: 12}}*/}
-        {/*     className="d-flex flex-column justify-content-start align-self-end align-content-center align-items-end col my-account-col mb-4">*/}
-        {/*  <Content/>*/}
-        {/*</Col>*/}
-        {/*<Col*/}
-        {/*  xl={{span:4}}*/}
-        {/*  lg={{span: 6}}*/}
-        {/*  md={{span: 6}}*/}
-        {/*  xs={{span: 12}}*/}
-        {/*     className="d-flex flex-column justify-content-start align-self-end align-content-center align-items-end col my-account-col mb-4">*/}
-        {/*  <Content/>*/}
-        {/*</Col>*/}
-        {/*<Col*/}
-        {/*  xl={{span:4}}*/}
-        {/*  lg={{span: 6}}*/}
-        {/*  md={{span: 6}}*/}
-        {/*  xs={{span: 12}}*/}
-        {/*  className="d-flex flex-column justify-content-start align-self-end align-content-center align-items-end col my-account-col mb-4">*/}
-        {/*  <Content/>*/}
-        {/*</Col>*/}
-        {/*<Col*/}
-        {/*  xl={{span:4}}*/}
-        {/*  lg={{span: 6}}*/}
-        {/*  md={{span: 6}}*/}
-        {/*  xs={{span: 12}}*/}
-        {/*  className="d-flex flex-column justify-content-start align-self-end align-content-center align-items-end col my-account-col mb-4">*/}
-        {/*  <Content/>*/}
-        {/*</Col>*/}
-        {/*<Col*/}
-        {/*  xl={{span:4}}*/}
-        {/*  lg={{span: 6}}*/}
-        {/*  md={{span: 6}}*/}
-        {/*  xs={{span: 12}}*/}
-        {/*  className="d-flex flex-column justify-content-start align-self-end align-content-center align-items-end col my-account-col mb-4">*/}
-        {/*  <Content/>*/}
-        {/*</Col>*/}
-        {/*<Col*/}
-        {/*  xl={{span:4}}*/}
-        {/*  lg={{span: 6}}*/}
-        {/*  md={{span: 6}}*/}
-        {/*  xs={{span: 12}}*/}
-        {/*  className="d-flex flex-column justify-content-start align-self-end align-content-center align-items-end col my-account-col mb-4">*/}
-        {/*  <Content/>*/}
-        {/*</Col>*/}
       </Row>
 
     </div>
@@ -119,7 +63,7 @@ export const ContentGrid = styled(ContentGridBase)`
     background: #555;
   }
   
-  .row{
+  .grid-row{
     margin-right: 0.1rem;
   }
   

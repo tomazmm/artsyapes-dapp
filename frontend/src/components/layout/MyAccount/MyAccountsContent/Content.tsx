@@ -1,8 +1,6 @@
 import React, {useEffect, useState} from "react";
 import styled from 'styled-components';
 import {Col, Container, Row, Spinner} from "react-bootstrap";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {faChevronRight} from "@fortawesome/free-solid-svg-icons";
 
 interface ContentProps {
   className?: string;
@@ -20,10 +18,9 @@ export const ContentBase = (props: ContentProps) => {
 
   useEffect(() => {
     const tempImageName = nftValue.extension.image.split("//");
-    console.log(tempImageName);
+    console.log(nftValue);
     setImageName("https://ipfs.io/ipfs/" + tempImageName[1]);
     console.log(imageName)
-    // imageName = "https://ipfs.io/ipfs/" + tempImageName[1];
   }, []);
 
 
@@ -40,11 +37,9 @@ export const ContentBase = (props: ContentProps) => {
       <Row className="h-auto">
         <Col xs={{span: 12}}
              className="d-flex flex-column justify-content-start align-self-center align-content-center align-items-start col">
-          <span>Name</span>
+          <span>{nftValue.extension.name}</span>
         </Col>
       </Row>
-
-        {/*<span>Name</span>*/}
     </div>
   )
 }
@@ -52,10 +47,6 @@ export const ContentBase = (props: ContentProps) => {
 
 export const Content = styled(ContentBase)`
   background-color: rgba(33, 30, 26, 0.7);
-  //display: block;
-  //width: 100%;
-  //margin: auto;
-  //height: 35vh;
   .row{
     .col{
       img{
@@ -73,15 +64,4 @@ export const Content = styled(ContentBase)`
       }
     }
   }
-  //>img{
-  //  display: block;
-  //  margin: 1rem auto;
-  //  max-width: 100%;
-  //  max-height: 100%;
-  //  height: auto;
-  //}
-  //>span{
-  //  display: block;
-  //  margin: auto;
-  //}
 `;
