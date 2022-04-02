@@ -50,64 +50,69 @@ pub fn execute(
     }
 }
 fn create_order(deps: DepsMut, info: MessageInfo, token_id: String, tier: String) -> Result<Response, ContractError> {
-    let state = CONTRACT_INFO.load(deps.storage)?;
+    // check tier
+    let tier : u8= tier.parse().unwrap();
+    if tier < 1 || tier > 3{
+        return Err(ContractError::InvalidOrder {})
+    }
+    // check token ownership
     let owner: OwnerOfResponse =
         deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
-            contract_addr: state.cw721.to_string(),
+            contract_addr: CONTRACT_INFO.load(deps.storage)?.cw721.to_string(),
             msg: to_binary(&OwnerOf {
                 token_id: token_id.clone(),
                 include_expired: None
             })?,
         }))?;
-
     if owner.owner != info.sender {
         return Err(ContractError::Unauthorized {});
     }
 
+    // create and validate order
     let order = PhysicalInfo {
-        id: increment_orders(deps.storage).unwrap(),
+        id: order_count(deps.storage).unwrap() + 1,
         token_id: token_id.clone(),
         owner: info.sender.clone(),
-        tier: tier.parse().unwrap(),
+        tier,
         status: "PENDING".to_string()
     };
-
-    // validate order
+    // validate_order(order);
     let physical_vec : Vec<PhysicalInfo> = physicals()
         .idx.token_id
         .prefix(token_id.to_string())
         .range(deps.storage, None, None, Order::Ascending)
         .map(|item| item.map(|(_, v)| v))
         .collect::<StdResult<_>>().unwrap();
+
     if physical_vec.len() == 14 {
-        // TODO: Create custom error. Max physicals reached
-        return Err(ContractError::Unauthorized {})
+        return Err(ContractError::InvalidOrder {})
     }
     let mut tier2_count = 0;
     let mut tier3_count = 0;
     for i in physical_vec.iter(){
-        if i.tier == 1 {
-            // TODO: Custom error
-            return Err(ContractError::Unauthorized {})
+        if i.tier == order.tier && i.owner == order.owner {
+            return Err(ContractError::InvalidOrder {});
         }
-        else if i.tier == 2 {
+        if i.tier == 1  && order.tier == 1{
+            return Err(ContractError::InvalidOrder {})
+        } else if i.tier == 2 {
             tier2_count += 1;
-        }
-        else if i.tier == 2 {
+        } else if i.tier == 2 {
             tier3_count += 1;
         }
         if tier3_count == 10 || tier2_count == 3 {
-            // TODO: Custom error
-            return Err(ContractError::Unauthorized {});
-        }
-        if i.tier == order.tier && i.owner == order.owner {
-            // TODO: Custom error. Cannot order same item twice by same owner
-            return Err(ContractError::Unauthorized {});
+            return Err(ContractError::InvalidOrder {});
         }
     }
 
+    // changes to store
     physicals().save(deps.storage, &U32Key::from(order.id).joined_key(), &order).unwrap();
+    increment_orders(deps.storage).unwrap();
+
     Ok(Response::default())
+}
+fn validate_order(order: PhysicalInfo) {
+
 }
 
 fn order_count(storage: &dyn Storage) -> StdResult<u32> {
@@ -130,6 +135,15 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::Physicals {token_id, start_after, limit} => to_binary(&query_physicals(deps, token_id, start_after, limit)?),
     }
 }
+
+// fn physicals_by_token_id(storage: &dyn Storage, token_id: String) {
+//     Vec<PhysicalInfo> = physicals()
+//         .idx.token_id
+//         .prefix(token_id.to_string())
+//         .range(deps.storage, None, None, Order::Ascending)
+//         .map(|item| item.map(|(_, v)| v))
+//         .collect::<StdResult<_>>().unwrap();
+// }
 
 fn query_cw721_address(deps: Deps) -> StdResult<Cw721AddressResponse> {
     let state = CONTRACT_INFO.load(deps.storage)?;
@@ -154,6 +168,8 @@ fn query_physical_info(deps: Deps, physical_id: String) -> StdResult<PhysicalRes
     let physical = physicals().load(deps.storage, &U32Key::from(order_id_int).joined_key())?;
     Ok(PhysicalResponse { physical })
 }
+
+
 
 fn query_physicals(
     deps: Deps,
@@ -255,19 +271,48 @@ mod tests {
     }
 
     #[test]
+    fn creating_order_with_wrong_tier() {
+        let mut deps = mock_dependencies();
+        setup_contract(deps.as_mut());
+
+        // cannot create order with wrong tier(=0)
+        let info = mock_info("alice", &[]);
+        let msg = CreateOrder { token_id: 1.to_string(), tier: 0.to_string()};
+        let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap_err();
+        assert_eq!(err, ContractError::InvalidOrder {});
+
+        // tier = 4
+        let msg = CreateOrder { token_id: 1.to_string(), tier: 4.to_string()};
+        let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap_err();
+        assert_eq!(err, ContractError::InvalidOrder {});
+    }
+
+    // // #[test]
+    // fn creating_max_possible_orders_per_nft() {
+    //     // let mut deps = mock_dependencies();
+    //     // setup_contract(deps.as_mut());
+    //     //
+    //     // deps.querier.set_cw721_token("alice", 1);
+    //     //
+    //     // let info = mock_info("alice", &[]);
+    //     // let mut count = 1u32;
+    //     // // alice can create
+    //     // loop {
+    //     //     let msg = CreateOrder { token_id: "1".to_string(), tier: "3".to_string()};
+    //     //     let res = execute(deps.as_mut(), mock_env(), info, msg.clone())
+    //     //         .unwrap();
+    //     //     assert_eq!(0, res.messages.len());
+    //     //     count += 1;
+    //     // }
+    // }
+
+    #[test]
     fn creating_order() {
         // physical items data
-        let physical1 = PhysicalInfo {
+        let physical = PhysicalInfo {
             id: 1,
             token_id: "1".to_string(),
             owner: Addr::unchecked("alice"),
-            tier: 3,
-            status: "PENDING".to_string()
-        };
-        let physical2 = PhysicalInfo {
-            id: 2,
-            token_id: "2".to_string(),
-            owner: Addr::unchecked("bob"),
             tier: 3,
             status: "PENDING".to_string()
         };
@@ -276,7 +321,6 @@ mod tests {
         setup_contract(deps.as_mut());
 
         deps.querier.set_cw721_token("alice", 1);
-        deps.querier.set_cw721_token("bob", 2);
 
         // query not created order
         let err = query(deps.as_ref(), mock_env(),
@@ -289,7 +333,7 @@ mod tests {
         let err =
             execute(deps.as_mut(), mock_env(), info, msg.clone())
             .unwrap_err();
-        // assert_eq!(err, ContractError::Unauthorized {});
+        assert_eq!(err, ContractError::Unauthorized {});
 
         // alice can create order
         let info = mock_info("alice", &[]);
@@ -298,30 +342,37 @@ mod tests {
             .unwrap();
         assert_eq!(0, res.messages.len());
 
-        // bob can create order
-        let info = mock_info("bob", &[]);
-        let msg = CreateOrder { token_id: "2".to_string(), tier: "3".to_string()};
-        let res = execute(deps.as_mut(), mock_env(), info, msg.clone())
-            .unwrap();
-        assert_eq!(0, res.messages.len());
-
         // orders info is correct
         let query_order_msg = QueryMsg::GetOrderInfo {token_id: "1".to_string()};
         let res = query(deps.as_ref(),mock_env(), query_order_msg).unwrap();
         let pyhsical: PhysicalResponse = from_binary(&res).unwrap();
-        assert_eq!(physical1, pyhsical.physical);
+        assert_eq!(physical, pyhsical.physical);
 
-        let query_order_msg = QueryMsg::GetOrderInfo {token_id: "2".to_string()};
-        let res = query(deps.as_ref(),mock_env(), query_order_msg).unwrap();
-        let pyhsical: PhysicalResponse = from_binary(&res).unwrap();
-        assert_eq!(physical2, pyhsical.physical);
+        // alice cannot order physical item of same tier twice
+        let info = mock_info("alice", &[]);
+        let msg = CreateOrder { token_id: 1.to_string(), tier: "3".to_string()};
+        let err = execute(deps.as_mut(), mock_env(), info, msg.clone())
+            .unwrap_err();
+        assert_eq!(err, ContractError::InvalidOrder {});
+
+        // alice can still order physical item of tier 1 and 2
+        let info = mock_info("alice", &[]);
+        let msg = CreateOrder { token_id: 1.to_string(), tier: "1".to_string()};
+        let res = execute(deps.as_mut(), mock_env(), info, msg.clone())
+            .unwrap();
+        assert_eq!(0, res.messages.len());
+        let info = mock_info("alice", &[]);
+        let msg = CreateOrder { token_id: 1.to_string(), tier: "2".to_string()};
+        let res = execute(deps.as_mut(), mock_env(), info, msg.clone())
+            .unwrap();
+        assert_eq!(0, res.messages.len());
 
         // query all orders
         let query_order_msg = QueryMsg::AllOrders { start_after: None, limit: None };
         let res = query(deps.as_ref(),mock_env(), query_order_msg).unwrap();
         let physicals: AllPhysicalsResponse = from_binary(&res).unwrap();
-        assert_eq!(2, physicals.physicals.len());
-        assert_eq!(vec![physical1.id.to_string(), physical2.id.to_string()], physicals.physicals);
+        assert_eq!(3, physicals.physicals.len());
+        assert_eq!(vec!["1", "2", "3"], physicals.physicals);
     }
 
     #[test]
@@ -329,21 +380,21 @@ mod tests {
         // physical items data responses
         let physical1 = PhysicalInfo {
             id: 1,
-            token_id: "1".to_string(),
+            token_id: 1.to_string(),
             owner: Addr::unchecked("alice"),
             tier: 3,
             status: "PENDING".to_string()
         };
         let physical2 = PhysicalInfo {
             id: 2,
-            token_id: "1".to_string(),
+            token_id: 1.to_string(),
             owner: Addr::unchecked("alice"),
             tier: 3,
             status: "PENDING".to_string()
         };
         let physical3 = PhysicalInfo {
             id: 3,
-            token_id: "2".to_string(),
+            token_id: 2.to_string(),
             owner: Addr::unchecked("bob"),
             tier: 3,
             status: "PENDING".to_string()
@@ -360,6 +411,7 @@ mod tests {
         let msg = CreateOrder { token_id: "1".to_string(), tier: "3".to_string()};
         let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
         assert_eq!(0, res.messages.len());
+        let msg = CreateOrder { token_id: "1".to_string(), tier: "2".to_string()};
         let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
         assert_eq!(0, res.messages.len());
 
