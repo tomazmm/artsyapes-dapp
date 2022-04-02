@@ -12,13 +12,13 @@ pub struct ContractInfo {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct PhysicalInfo {
+pub struct PhysicalInfo { // Rename to: Cw721Physical
     pub id: u32,
     pub token_id: String,
     pub owner: Addr,
     pub tier: u8,
     pub status: String
-    // pub nfc_tag: String
+    // pub nfc_tag: Option<String>
 }
 
 pub struct PhysicalIndexes<'a> {
