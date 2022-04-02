@@ -1,6 +1,6 @@
 use cosmwasm_std::testing::MockQuerier;
 use cosmwasm_std::{
-    from_binary, from_slice,  Coin, Empty, Querier, QuerierResult, QueryRequest, StdResult,
+    from_binary, from_slice, Empty, Querier, QuerierResult, QueryRequest, StdResult,
     SystemError, WasmQuery,
 };
 use cw721::Cw721QueryMsg;

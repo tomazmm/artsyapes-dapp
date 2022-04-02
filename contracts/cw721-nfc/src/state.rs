@@ -1,9 +1,8 @@
-use std::collections::HashMap;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Addr, Uint128, Uint64};
-use cw_storage_plus::{Item, Map, IndexedMap, MultiIndex, IndexList, UniqueIndex, U32Key, U8Key, Index};
+use cosmwasm_std::{Addr};
+use cw_storage_plus::{Item, Map, IndexedMap, MultiIndex, IndexList, UniqueIndex, U32Key,  Index};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ContractInfo {
@@ -23,7 +22,7 @@ pub struct PhysicalInfo { // Rename to: Cw721Physical
 
 pub struct PhysicalIndexes<'a> {
     pub id: UniqueIndex<'a, U32Key, PhysicalInfo>,
-    pub token_id: MultiIndex<'a, (String, Vec<u8>), PhysicalInfo>
+    pub token_id: MultiIndex<'a, (String, Vec<u8>), PhysicalInfo>,
 }
 
 impl<'a> IndexList<PhysicalInfo> for PhysicalIndexes<'a> {
@@ -42,7 +41,7 @@ pub fn physicals<'a>() -> IndexedMap<'a, &'a [u8], PhysicalInfo, PhysicalIndexes
             |d, pk | (d.token_id.clone(), pk),
             "physicals",
             "physicals__token_id",
-        ),
+        )
     };
     IndexedMap::new("physicals", indexes)
 }
