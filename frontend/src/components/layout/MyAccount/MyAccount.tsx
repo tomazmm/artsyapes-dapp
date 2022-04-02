@@ -7,6 +7,7 @@ import {SideMenu} from "./MyAccountsContent/SideMenu";
 import {useConnectedWallet} from "@terra-money/wallet-provider";
 import * as query from "../../../contract/query";
 import {ConnectedWallet} from "@terra-dev/use-wallet/useConnectedWallet";
+import {LoadingContent} from "../../shared/LoadingContent";
 
 interface MyAccountProps {
   className?: string;
@@ -21,6 +22,7 @@ export const MyAccountBase = (props: MyAccountProps) => {
 
   const [tokens, setTokens] = useState<any>([])
   const [nftInfo, setNftInfo] = useState<any>([])
+  const [nftsCount, setNftsCount] = useState<any>(0)
 
 
   useEffect(() => {
@@ -30,11 +32,22 @@ export const MyAccountBase = (props: MyAccountProps) => {
       }
       if(tokens.length !== 0 && connectedWallet){
         for(const it of tokens.tokens){
-          const test = await query.nftInfo(connectedWallet, it)
+          const token = await query.nftInfo(connectedWallet, it)
 
           setNftInfo( (prevState: any) => {
-            return [...prevState, test]
+            return [...prevState, token]
           })
+
+          // download images
+          const img = new Image();
+          img.onload = () => {
+            setNftsCount( (prevState: number) => {
+              return prevState + 1
+            })
+
+          }
+          const tempImageName = token.extension.image.split("//");
+          img.src = "https://ipfs.io/ipfs/" + tempImageName[1];
         }
       }
     }
@@ -72,8 +85,16 @@ export const MyAccountBase = (props: MyAccountProps) => {
             <Col xl={{span: 9}}
                  lg={{span: 12}}
                  xs={{span: 12}}
-              className="d-flex flex-column justify-content-center align-self-end align-content-center align-items-end col my-account-col">
-              <ContentGrid className={className} nftInfo={nftInfo}/>
+              className="d-flex flex-column justify-content-center align-self-center align-content-center align-items-center col my-account-col">
+              { tokens.tokens !== undefined ? (
+                  nftInfo.length === tokens.tokens.length ? (
+                      <ContentGrid className={className} nftInfo={nftInfo}/>
+                    ) :
+                    <LoadingContent ammountNfts={tokens.tokens.length} ammountNftsLoaded={nftsCount}/>
+                ) : (
+                  <></>
+                )
+              }
             </Col>
           </Row>
       </Container>

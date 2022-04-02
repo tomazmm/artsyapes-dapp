@@ -1,9 +1,8 @@
-import React from "react";
+import React, {useEffect} from "react";
 import styled from 'styled-components';
 import {Col, Container, Row} from "react-bootstrap";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {faChevronRight} from "@fortawesome/free-solid-svg-icons";
 import {Content} from "./Content";
+
 
 interface ContentGridProps {
   className?: string;

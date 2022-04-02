@@ -18,9 +18,7 @@ export const ContentBase = (props: ContentProps) => {
 
   useEffect(() => {
     const tempImageName = nftValue.extension.image.split("//");
-    console.log(nftValue);
     setImageName("https://ipfs.io/ipfs/" + tempImageName[1]);
-    console.log(imageName)
   }, []);
 
 
@@ -47,6 +45,7 @@ export const ContentBase = (props: ContentProps) => {
 
 export const Content = styled(ContentBase)`
   background-color: rgba(33, 30, 26, 0.7);
+  border-radius: 0.5rem;
   .row{
     .col{
       img{
