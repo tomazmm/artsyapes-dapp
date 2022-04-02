@@ -1,8 +1,9 @@
-import React, {useEffect} from "react";
+import React from "react";
 import styled from 'styled-components';
 import {Col, Container, Row} from "react-bootstrap";
-import {Content} from "./Content";
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import {faChevronRight} from "@fortawesome/free-solid-svg-icons";
+import {GridItem} from "./GridItem";
 
 interface ContentGridProps {
   className?: string;
@@ -26,7 +27,7 @@ export const ContentGridBase = (props: ContentGridProps) => {
             md={{span: 6}}
             xs={{span: 12}}
             className="d-flex flex-column justify-content-start align-self-start align-content-center align-items-center col mb-4">
-            <Content nftValue={value}/>
+            <GridItem nftValue={value}/>
           </Col>
         })}
       </Row>
