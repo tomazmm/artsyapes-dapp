@@ -18,9 +18,7 @@ export const GridItemBase = (props: GridItemProps) => {
 
   useEffect(() => {
     const tempImageName = nftValue.extension.image.split("//");
-    console.log(nftValue);
     setImageName("https://ipfs.io/ipfs/" + tempImageName[1]);
-    console.log(imageName)
   }, []);
 
 

@@ -5,12 +5,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {faChevronRight} from "@fortawesome/free-solid-svg-icons";
 import {GridItem} from "./GridItem";
 
-interface ContentGridProps {
+interface GridProps {
   className?: string;
   nftInfo?: any;
 }
 
-export const ContentGridBase = (props: ContentGridProps) => {
+export const GridBase = (props: GridProps) => {
   const {
     className,
     nftInfo
@@ -19,7 +19,6 @@ export const ContentGridBase = (props: ContentGridProps) => {
   return (
     <div className={className}>
       <Row className="h-auto grid-row">
-        {/*<Content/>*/}
         {nftInfo.map((value: any, index: any) => {
           return <Col key={index}
             xl={{span:4}}
@@ -31,13 +30,12 @@ export const ContentGridBase = (props: ContentGridProps) => {
           </Col>
         })}
       </Row>
-
     </div>
   )
 }
 
 
-export const ContentGrid = styled(ContentGridBase)`
+export const Grid = styled(GridBase)`
   display: block;
   width: 100%;
   margin: auto;
