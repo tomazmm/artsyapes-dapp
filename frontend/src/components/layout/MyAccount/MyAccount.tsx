@@ -22,10 +22,6 @@ export const MyAccountBase = (props: MyAccountProps) => {
   const [tokens, setTokens] = useState<any>([])
   const [nftInfo, setNftInfo] = useState<any>([])
 
-  // let nftInfo: any[] = [];
-
-
-  // const connectedWallet = useConnectedWallet()
 
   useEffect(() => {
     const fetch = async () :Promise<any> => {
@@ -33,24 +29,17 @@ export const MyAccountBase = (props: MyAccountProps) => {
         setTokens(await query.tokens(connectedWallet));
       }
       if(tokens.length !== 0 && connectedWallet){
-        // console.error(tokens);
         for(const it of tokens.tokens){
-          // console.error(it);
           const test = await query.nftInfo(connectedWallet, it)
 
           setNftInfo( (prevState: any) => {
             return [...prevState, test]
           })
-          // setNftInfo(await query.allNftInfo(connectedWallet, it));
-          // nftInfo = [...nftInfo, await query.allNftInfo(connectedWallet, it)]
-          // console.log(nftInfo);
         }
       }
     }
     fetch()
   }, [tokens.length, connectedWallet])
-
-  // console.log(nftInfo)
 
   return (
     <div className={className}>
