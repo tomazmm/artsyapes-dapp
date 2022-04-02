@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import styled from 'styled-components';
-import {Col, Modal, Button } from "react-bootstrap";
+import {Row, Col, Modal, Button } from "react-bootstrap";
 
 interface GridItemProps {
   className?: string;
@@ -22,36 +22,41 @@ export const GridItemBase = (props: GridItemProps) => {
     setImageName("https://ipfs.io/ipfs/" + tempImageName[1]);
   }, []);
 
-  const toggleModal = (e: any) => {
-    setShow(!show);
-  }
+  const toggleModal = () => setShow(!show);
 
   return (
-    <div className={className} onClick={toggleModal}>
-      <div className="grid-item-wrapper d-flex flex-column">
+    <div className={className}>
+      {/*Card View*/}
+      <div className="grid-item-wrapper d-flex flex-column" onClick={toggleModal}>
         <img src={imageName} />
         <span>{nftValue.extension.name}</span>
       </div>
 
-      <Modal show={show} size="lg">
+      {/*Detailed Modal View*/}
+      <Modal show={show} onHide={toggleModal} size="lg" centered>
         <Modal.Header closeButton>
           <Modal.Title># {nftValue.extension.name}</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-          <div className="modal-body-inner d-flex flex-row">
-
-          </div>
+        <Modal.Body className="nft-details">
+          <Row>
+            <Col xs={6}>
+              <img src={imageName} style={{width: "100%"}}/>
+            </Col>
+            <Col xs={6} className="d-flex flex-column justify-content-between">
+              {JSON.stringify(nftValue.extension.attributes)}
+              <Button onClick={() => {console.log(123)}}>
+                Order physical Item
+              </Button>
+            </Col>
+          </Row>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={toggleModal}>
-            Close
-          </Button>
+
         </Modal.Footer>
       </Modal>
     </div>
   )
 }
-
 
 export const GridItem = styled(GridItemBase)`
   background-color: rgba(33, 30, 26, 0.7);
@@ -66,12 +71,6 @@ export const GridItem = styled(GridItemBase)`
       color: white;
       padding-bottom: 2rem ;
       padding-left: 1rem;
-    }
-  }
-  
-  .modal-content{
-    img{
-      display: none;
     }
   }
 `;
