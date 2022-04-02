@@ -1,6 +1,6 @@
 import React from "react";
 import styled from 'styled-components';
-import {Col, Container, Row} from "react-bootstrap";
+import {Col, Container, Modal, Row,} from "react-bootstrap";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {faChevronRight} from "@fortawesome/free-solid-svg-icons";
 import {GridItem} from "./GridItem";
@@ -15,6 +15,7 @@ export const GridBase = (props: GridProps) => {
     className,
     nftInfo
   } = props;
+
 
   return (
     <div className={className}>
