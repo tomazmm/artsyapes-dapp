@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import styled from 'styled-components';
 import {Col, Container, Row} from "react-bootstrap";
 import {Header} from "../shared/Header";
-import {ContentGrid} from "./MyAccountsContent/ContentGrid";
+import {Grid} from "./MyAccountsContent/Grid";
 import {SideMenu} from "./MyAccountsContent/SideMenu";
 import {useConnectedWallet} from "@terra-money/wallet-provider";
 import * as query from "../../../contract/query";
@@ -73,7 +73,7 @@ export const MyAccountBase = (props: MyAccountProps) => {
                  lg={{span: 12}}
                  xs={{span: 12}}
               className="d-flex flex-column justify-content-center align-self-end align-content-center align-items-end col my-account-col">
-              <ContentGrid className={className} nftInfo={nftInfo}/>
+              <Grid className={className} nftInfo={nftInfo}/>
             </Col>
           </Row>
       </Container>
@@ -91,7 +91,7 @@ export const MyAccount = styled(MyAccountBase)`
         padding: 10rem 4rem;
         .row{
           &.about{
-            margin-top: 7rem;
+            margin-top: 3rem;
           }
           .col{
             &.my-account-col{

@@ -1,25 +1,25 @@
 import React from "react";
 import styled from 'styled-components';
-import {Col, Container, Row} from "react-bootstrap";
+import {Col, Container, Modal, Row,} from "react-bootstrap";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {faChevronRight} from "@fortawesome/free-solid-svg-icons";
-import {Content} from "./Content";
+import {GridItem} from "./GridItem";
 
-interface ContentGridProps {
+interface GridProps {
   className?: string;
   nftInfo?: any;
 }
 
-export const ContentGridBase = (props: ContentGridProps) => {
+export const GridBase = (props: GridProps) => {
   const {
     className,
     nftInfo
   } = props;
 
+
   return (
     <div className={className}>
       <Row className="h-auto grid-row">
-        {/*<Content/>*/}
         {nftInfo.map((value: any, index: any) => {
           return <Col key={index}
             xl={{span:4}}
@@ -27,17 +27,16 @@ export const ContentGridBase = (props: ContentGridProps) => {
             md={{span: 6}}
             xs={{span: 12}}
             className="d-flex flex-column justify-content-start align-self-start align-content-center align-items-center col mb-4">
-            <Content nftValue={value}/>
+            <GridItem nftValue={value}/>
           </Col>
         })}
       </Row>
-
     </div>
   )
 }
 
 
-export const ContentGrid = styled(ContentGridBase)`
+export const Grid = styled(GridBase)`
   display: block;
   width: 100%;
   margin: auto;

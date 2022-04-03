@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import {Col, Container, Row} from "react-bootstrap";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {faChevronRight} from "@fortawesome/free-solid-svg-icons";
-import {ContentGrid} from "./ContentGrid";
+import {Grid} from "./Grid";
 
 interface SideMenuProps {
   className?: string;
