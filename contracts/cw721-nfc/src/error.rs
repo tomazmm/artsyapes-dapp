@@ -11,6 +11,18 @@ pub enum ContractError {
     // Add any other custom errors you like here.
     // Look at https://docs.rs/thiserror/1.0.21/thiserror/ for details.
 
-    #[error("InvalidOrder")]
-    InvalidOrder {},
+    #[error("You already own this physical item")]
+    AlreadyOwned {},
+
+    #[error("You need to provide correct tier parameter")]
+    InvalidTier {},
+
+    #[error("Max number of Tier 1 Physical Items")]
+    MaxTier1Items {},
+
+    #[error("Max number of Tier 2 Physical Items")]
+    MaxTier2Items {},
+
+    #[error("Max number of Tier 3 Physical Items")]
+    MaxTier3Items {},
 }

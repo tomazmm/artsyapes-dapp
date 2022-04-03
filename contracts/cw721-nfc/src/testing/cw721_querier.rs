@@ -45,4 +45,8 @@ impl Cw721Querier {
         let user_addr = Addr::unchecked(user);
         self.token_owner.insert(token_id.to_string(), user_addr);
     }
+
+    pub fn remove_token_owner(&mut self, token_id: u128) {
+        self.token_owner.remove(token_id.to_string().as_str());
+    }
 }
