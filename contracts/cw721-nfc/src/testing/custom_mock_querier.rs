@@ -57,11 +57,12 @@ impl CustomMockQuerier {
         }
     }
 
-    // pub fn set_base_balances(&mut self, address: &str, balances: &[Coin]) {
-    //     self.base.update_balance(address, balances.to_vec());
-    // }
-
     pub fn set_cw721_token(&mut self, user: &str, token_id: u128) {
+        self.cw721_querier.set_token_owner(user, token_id);
+    }
+
+    pub fn transfer_cw721_token(&mut self, user: &str, token_id: u128) {
+        self.cw721_querier.remove_token_owner(token_id);
         self.cw721_querier.set_token_owner(user, token_id);
     }
 }
