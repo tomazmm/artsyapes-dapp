@@ -16,6 +16,7 @@ export const GridItemBase = (props: GridItemProps) => {
 
   const [imageName, setImageName] = useState<any>("")
   const [show, setShow] = useState(false);
+  const [showCardText, setShowCardText] = useState(false);
 
   useEffect(() => {
     const tempImageName = nftValue.extension.image.split("//");
@@ -24,12 +25,17 @@ export const GridItemBase = (props: GridItemProps) => {
 
   const toggleModal = () => setShow(!show);
 
+  const onLoadShowText = () => setShowCardText(true);
+
   return (
     <div className={className}>
       {/*Card View*/}
       <div className="grid-item-wrapper d-flex flex-column" onClick={toggleModal}>
-        <img src={imageName} />
-        <span>{nftValue.extension.name}</span>
+        <img src={imageName} onLoad={onLoadShowText} />
+        {showCardText ? (
+          <span>{nftValue.extension.name}</span>
+        ) : (<></>)
+        }
       </div>
 
       {/*Detailed Modal View*/}
