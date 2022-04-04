@@ -8,8 +8,8 @@ use cw721::{OwnerOfResponse};
 use cw_storage_plus::{Bound, PrimaryKey, U32Key, U8Key};
 
 use crate::error::ContractError;
-use crate::msg::{AllPhysicalsResponse, Cw721AddressResponse, ExecuteMsg, InstantiateMsg, PhysicalResponse, PhysicalsResponse, QueryMsg};
-use crate::state::{ContractInfo, CONTRACT_INFO, PhysicalInfo, ORDER_COUNT, physicals, TIER_LIMIT};
+use crate::msg::{AllPhysicalsResponse, Cw721AddressResponse, ExecuteMsg, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg};
+use crate::state::{ContractInfo, CONTRACT_INFO, Cw721PhysicalInfo, ORDER_COUNT, physicals, TIER_LIMIT};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw721-nfc";
@@ -51,10 +51,10 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::CreateOrder { token_id, tier} => create_order(deps, info, token_id, tier)
+        ExecuteMsg::OrderCw721Physical { token_id, tier} => order_cw721_physical(deps, info, token_id, tier)
     }
 }
-fn create_order(deps: DepsMut, info: MessageInfo, token_id: String, tier: String) -> Result<Response, ContractError> {
+fn order_cw721_physical(deps: DepsMut, info: MessageInfo, token_id: String, tier: String) -> Result<Response, ContractError> {
     // check tier
     let tier : u8= tier.parse().unwrap();
     if tier < 1 || tier > 3{
@@ -74,7 +74,7 @@ fn create_order(deps: DepsMut, info: MessageInfo, token_id: String, tier: String
     }
 
     // create and validate order
-    let order = PhysicalInfo {
+    let order = Cw721PhysicalInfo {
         id: order_count(deps.storage).unwrap() + 1,
         token_id: token_id.clone(),
         owner: info.sender.clone(),
@@ -83,7 +83,7 @@ fn create_order(deps: DepsMut, info: MessageInfo, token_id: String, tier: String
     };
 
     // Get physical items by 'token_id' and filter by 'tier'
-    let physical_vec : Vec<PhysicalInfo> = physicals()
+    let physical_vec : Vec<Cw721PhysicalInfo> = physicals()
         .idx.token_id
         .prefix(order.token_id.to_string())
         .range(deps.storage, None, None, Order::Ascending)
@@ -137,9 +137,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetCw721Address {} => to_binary(&query_cw721_address(deps)?),
         QueryMsg::GetCw721TokenOwner {token_id} => to_binary(&query_cw721_token_owner(deps, token_id)?),
-        QueryMsg::GetOrderInfo {token_id} => to_binary(&query_physical_info(deps, token_id)?),
-        QueryMsg::AllOrders {start_after, limit} => to_binary(&query_all_orders(deps, start_after, limit)?),
-        QueryMsg::Physicals {token_id, start_after, limit} => to_binary(&query_physicals(deps, token_id, start_after, limit)?),
+        QueryMsg::GetCw721PhysicalInfo {token_id} => to_binary(&query_physical_info(deps, token_id)?),
+        QueryMsg::Cw721Physicals {token_id, start_after, limit} => to_binary(&query_physicals(deps, token_id, start_after, limit)?),
+        QueryMsg::AllCw721Physicals {start_after, limit} => to_binary(&query_all_orders(deps, start_after, limit)?),
     }
 }
 
@@ -161,10 +161,10 @@ fn query_cw721_token_owner(deps: Deps, token_id: String) -> StdResult<OwnerOfRes
     Ok(owner)
 }
 
-fn query_physical_info(deps: Deps, physical_id: String) -> StdResult<PhysicalResponse> {
+fn query_physical_info(deps: Deps, physical_id: String) -> StdResult<Cw721PhysicalInfoResponse> {
     let order_id_int: u32 = physical_id.parse().unwrap();
     let physical = physicals().load(deps.storage, &U32Key::from(order_id_int).joined_key())?;
-    Ok(PhysicalResponse { physical })
+    Ok(Cw721PhysicalInfoResponse { physical })
 }
 
 fn query_physicals(
@@ -172,7 +172,7 @@ fn query_physicals(
     token_id: String,
     start_after: Option<String>,
     limit: Option<u32>
-) -> StdResult<PhysicalsResponse> {
+) -> StdResult<Cw721PhysicalsResponse> {
     let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
     let start_id = maybe_addr(deps.api, start_after)?;
     let start = start_id.map(|id| Bound::exclusive(id.as_ref()));
@@ -185,7 +185,7 @@ fn query_physicals(
         .take(limit)
         .collect();
 
-    Ok(PhysicalsResponse { physicals: physicals? })
+    Ok(Cw721PhysicalsResponse { physicals: physicals? })
 }
 
 fn query_all_orders(deps: Deps,
