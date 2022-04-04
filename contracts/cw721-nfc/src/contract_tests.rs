@@ -105,29 +105,6 @@ mod tests {
     }
 
     #[test]
-    fn querying_token_ownership() {
-        let mut deps = mock_dependencies();
-        setup_contract(deps.as_mut());
-
-        deps.querier.set_cw721_token("alice", 1);
-        deps.querier.set_cw721_token("bob", 2);
-
-        let res = query(deps.as_ref(), mock_env(),
-                        QueryMsg::GetCw721TokenOwner {
-                            token_id: "1".to_string()
-                        }).unwrap();
-        let value: OwnerOfResponse = from_binary(&res).unwrap();
-        assert_eq!("alice", value.owner);
-
-        let res = query(deps.as_ref(), mock_env(),
-                        QueryMsg::GetCw721TokenOwner {
-                            token_id: "2".to_string()
-                        }).unwrap();
-        let value: OwnerOfResponse = from_binary(&res).unwrap();
-        assert_eq!("bob", value.owner);
-    }
-
-    #[test]
     fn creating_order_with_wrong_tier() {
         let mut deps = mock_dependencies();
         setup_contract(deps.as_mut());
