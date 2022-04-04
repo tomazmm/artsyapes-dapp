@@ -427,13 +427,10 @@ mod tests {
             match result {
                 Ok(response)  => { assert_eq!(0, res.messages.len()); }
                 Err(error) => {
-                    assert_eq!(err, ContractError::MaxTier2Items {});
+                    assert_eq!(error, ContractError::MaxTier2Items {});
                     break;
                 }
             }
-            // if accounts.is_empty() {
-            //     break;
-            // }
         }
     }
 
