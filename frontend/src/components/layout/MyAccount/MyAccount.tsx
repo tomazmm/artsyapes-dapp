@@ -7,6 +7,7 @@ import {SideMenu} from "./MyAccountsContent/SideMenu";
 import {useConnectedWallet} from "@terra-money/wallet-provider";
 import * as query from "../../../contract/query";
 import {ConnectedWallet} from "@terra-dev/use-wallet/useConnectedWallet";
+import {LoadingContent} from "../../shared/LoadingContent";
 
 interface MyAccountProps {
   className?: string;
@@ -21,6 +22,7 @@ export const MyAccountBase = (props: MyAccountProps) => {
 
   const [tokens, setTokens] = useState<any>([])
   const [nftInfo, setNftInfo] = useState<any>([])
+  const [nftsCount, setNftsCount] = useState<any>(0)
 
 
   useEffect(() => {
@@ -30,10 +32,10 @@ export const MyAccountBase = (props: MyAccountProps) => {
       }
       if(tokens.length !== 0 && connectedWallet){
         for(const it of tokens.tokens){
-          const test = await query.nftInfo(connectedWallet, it)
+          const token = await query.nftInfo(connectedWallet, it)
 
           setNftInfo( (prevState: any) => {
-            return [...prevState, test]
+            return [...prevState, token]
           })
         }
       }

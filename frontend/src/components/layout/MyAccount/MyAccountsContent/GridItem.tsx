@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import styled from 'styled-components';
-import {Row, Col, Modal, Button } from "react-bootstrap";
+import {GridItemModal} from "./GridItemModal";
 
 interface GridItemProps {
   className?: string;
@@ -16,6 +16,7 @@ export const GridItemBase = (props: GridItemProps) => {
 
   const [imageName, setImageName] = useState<any>("")
   const [show, setShow] = useState(false);
+  const [showCardText, setShowCardText] = useState(false);
 
   useEffect(() => {
     const tempImageName = nftValue.extension.image.split("//");
@@ -24,36 +25,20 @@ export const GridItemBase = (props: GridItemProps) => {
 
   const toggleModal = () => setShow(!show);
 
+  const onLoadShowText = () => setShowCardText(true);
+
   return (
     <div className={className}>
       {/*Card View*/}
       <div className="grid-item-wrapper d-flex flex-column" onClick={toggleModal}>
-        <img src={imageName} />
-        <span>{nftValue.extension.name}</span>
+        <img src={imageName} onLoad={onLoadShowText} />
+        {showCardText ? (
+          <span>{nftValue.extension.name}</span>
+        ) : (<></>)
+        }
       </div>
 
-      {/*Detailed Modal View*/}
-      <Modal show={show} onHide={toggleModal} size="lg" centered>
-        <Modal.Header closeButton>
-          <Modal.Title># {nftValue.extension.name}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="nft-details">
-          <Row>
-            <Col xs={6}>
-              <img src={imageName} style={{width: "100%"}}/>
-            </Col>
-            <Col xs={6} className="d-flex flex-column justify-content-between">
-              {JSON.stringify(nftValue.extension.attributes)}
-              <Button onClick={() => {console.log(123)}}>
-                Order physical Item
-              </Button>
-            </Col>
-          </Row>
-        </Modal.Body>
-        <Modal.Footer>
-
-        </Modal.Footer>
-      </Modal>
+      <GridItemModal nftValue={nftValue} imageName={imageName} show={show} setShow={toggleModal}/>
     </div>
   )
 }

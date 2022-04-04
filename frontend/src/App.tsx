@@ -38,7 +38,6 @@ function App() {
     prefetch()
   }, [connectedWallet])
 
-  console.log()
   switch (status){
     case WalletStatus.INITIALIZING:
       return (
