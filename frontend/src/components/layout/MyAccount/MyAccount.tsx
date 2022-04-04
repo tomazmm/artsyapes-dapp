@@ -35,19 +35,8 @@ export const MyAccountBase = (props: MyAccountProps) => {
           const token = await query.nftInfo(connectedWallet, it)
 
           setNftInfo( (prevState: any) => {
-            return [...prevState, token]
+            return [...prevState, test]
           })
-
-          // download images
-          const img = new Image();
-          img.onload = () => {
-            setNftsCount( (prevState: number) => {
-              return prevState + 1
-            })
-
-          }
-          const tempImageName = token.extension.image.split("//");
-          img.src = "https://ipfs.io/ipfs/" + tempImageName[1];
         }
       }
     }
@@ -85,16 +74,7 @@ export const MyAccountBase = (props: MyAccountProps) => {
             <Col xl={{span: 9}}
                  lg={{span: 12}}
                  xs={{span: 12}}
-              className="d-flex flex-column justify-content-center align-self-center align-content-center align-items-center col my-account-col">
-              {/*{ tokens.tokens !== undefined ? (*/}
-              {/*    nftInfo.length === tokens.tokens.length ? (*/}
-              {/*        <Grid className={className} nftInfo={nftInfo}/>*/}
-              {/*      ) :*/}
-              {/*      <LoadingContent ammountNfts={tokens.tokens.length} ammountNftsLoaded={nftsCount}/>*/}
-              {/*  ) : (*/}
-              {/*    <></>*/}
-              {/*  )*/}
-              {/*}*/}
+              className="d-flex flex-column justify-content-center align-self-end align-content-center align-items-end col my-account-col">
               <Grid className={className} nftInfo={nftInfo}/>
             </Col>
           </Row>
