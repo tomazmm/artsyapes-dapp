@@ -35,7 +35,7 @@ export const MyAccountBase = (props: MyAccountProps) => {
           const token = await query.nftInfo(connectedWallet, it)
 
           setNftInfo( (prevState: any) => {
-            return [...prevState, test]
+            return [...prevState, token]
           })
         }
       }
