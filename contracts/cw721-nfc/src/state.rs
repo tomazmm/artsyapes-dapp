@@ -11,7 +11,7 @@ pub struct ContractInfo {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct PhysicalInfo { // Rename to: Cw721Physical
+pub struct Cw721PhysicalInfo {
     pub id: u32,
     pub token_id: String,
     pub owner: Addr,
@@ -21,18 +21,18 @@ pub struct PhysicalInfo { // Rename to: Cw721Physical
 }
 
 pub struct PhysicalIndexes<'a> {
-    pub id: UniqueIndex<'a, U32Key, PhysicalInfo>,
-    pub token_id: MultiIndex<'a, (String, Vec<u8>), PhysicalInfo>,
+    pub id: UniqueIndex<'a, U32Key, Cw721PhysicalInfo>,
+    pub token_id: MultiIndex<'a, (String, Vec<u8>), Cw721PhysicalInfo>,
 }
 
-impl<'a> IndexList<PhysicalInfo> for PhysicalIndexes<'a> {
-    fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<PhysicalInfo>> + '_> {
-        let v: Vec<&dyn Index<PhysicalInfo>> = vec![&self.id, &self.token_id];
+impl<'a> IndexList<Cw721PhysicalInfo> for PhysicalIndexes<'a> {
+    fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<Cw721PhysicalInfo>> + '_> {
+        let v: Vec<&dyn Index<Cw721PhysicalInfo>> = vec![&self.id, &self.token_id];
         Box::new(v.into_iter())
     }
 }
 
-pub fn physicals<'a>() -> IndexedMap<'a, &'a [u8], PhysicalInfo, PhysicalIndexes<'a>> {
+pub fn physicals<'a>() -> IndexedMap<'a, &'a [u8], Cw721PhysicalInfo, PhysicalIndexes<'a>> {
     let indexes = PhysicalIndexes {
         id: UniqueIndex::new(
             |d| U32Key::new(d.id),
@@ -49,7 +49,7 @@ pub fn physicals<'a>() -> IndexedMap<'a, &'a [u8], PhysicalInfo, PhysicalIndexes
 
 pub const CONTRACT_INFO: Item<ContractInfo> = Item::new("contract_info");
 pub const TIER_LIMIT: Map<U8Key, u8> = Map::new("tier_limit");
-pub const ORDERS: Map<String, PhysicalInfo> = Map::new("orders");
+pub const ORDERS: Map<String, Cw721PhysicalInfo> = Map::new("orders");
 pub const ORDER_COUNT: Item<u32> = Item::new("order_count");
 
 

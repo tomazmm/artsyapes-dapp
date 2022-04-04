@@ -1,7 +1,7 @@
 use cosmwasm_std::Addr;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use crate::state::PhysicalInfo;
+use crate::state::Cw721PhysicalInfo;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
@@ -11,7 +11,7 @@ pub struct InstantiateMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
-    CreateOrder {
+    OrderCw721Physical {
         token_id: String,
         tier: String
     }
@@ -24,15 +24,15 @@ pub enum QueryMsg {
     GetCw721TokenOwner {
         token_id: String
     },
-    GetOrderInfo {
+    GetCw721PhysicalInfo {
         token_id: String
     },
-    AllOrders {
+    Cw721Physicals {
+        token_id: String,
         start_after: Option<String>,
         limit: Option<u32>,
     },
-    Physicals {
-        token_id: String,
+    AllCw721Physicals {
         start_after: Option<String>,
         limit: Option<u32>,
     }
@@ -44,11 +44,12 @@ pub struct Cw721AddressResponse {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct PhysicalResponse {
-    pub physical: PhysicalInfo,
+pub struct Cw721PhysicalInfoResponse {
+    pub physical: Cw721PhysicalInfo,
 }
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct PhysicalsResponse {
+pub struct Cw721PhysicalsResponse {
     pub physicals: Vec<String>,
 }
 
