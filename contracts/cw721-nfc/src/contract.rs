@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, Storage, Order};
@@ -6,11 +5,11 @@ use cw0::maybe_addr;
 use cw2::set_contract_version;
 use cw721_base::msg::QueryMsg::{OwnerOf};
 use cw721::{OwnerOfResponse};
-use cw_storage_plus::{Bound, PrimaryKey, U32Key};
+use cw_storage_plus::{Bound, PrimaryKey, U32Key, U8Key};
 
 use crate::error::ContractError;
 use crate::msg::{AllPhysicalsResponse, Cw721AddressResponse, ExecuteMsg, InstantiateMsg, PhysicalResponse, PhysicalsResponse, QueryMsg};
-use crate::state::{ContractInfo, CONTRACT_INFO, PhysicalInfo, ORDER_COUNT, physicals};
+use crate::state::{ContractInfo, CONTRACT_INFO, PhysicalInfo, ORDER_COUNT, physicals, TIER_LIMIT};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw721-nfc";
@@ -32,6 +31,11 @@ pub fn instantiate(
     };
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     CONTRACT_INFO.save(deps.storage, &contract_info)?;
+
+    // Pass this as init message
+    TIER_LIMIT.save(deps.storage, U8Key::from(1),  &1);
+    TIER_LIMIT.save(deps.storage, U8Key::from(2), &10);
+    TIER_LIMIT.save(deps.storage, U8Key::from(3), &3);
 
     Ok(Response::new()
         .add_attribute("method", "instantiate")
@@ -77,36 +81,35 @@ fn create_order(deps: DepsMut, info: MessageInfo, token_id: String, tier: String
         tier,
         status: "PENDING".to_string()
     };
-    // Get all physical items by token_id
+
+    // Get physical items by 'token_id' and filter by 'tier'
     let physical_vec : Vec<PhysicalInfo> = physicals()
         .idx.token_id
         .prefix(order.token_id.to_string())
         .range(deps.storage, None, None, Order::Ascending)
         .map(|item| item.map(|(_, v)| v))
+        .filter(|item| item.as_ref().unwrap().tier == order.tier)
         .collect::<StdResult<_>>().unwrap();
 
-    let mut tier2_count = 0;
-    let mut tier3_count = 0;
+
+    let max_tier_limit = TIER_LIMIT.load(
+        deps.storage,
+        U8Key::from(U8Key::from(order.tier))).unwrap();
+
+    let mut tier_count = 0;
     for i in physical_vec.iter(){
         // Sender can not order same physical item
-        if i.tier == order.tier && i.owner == order.owner {
+        if i.owner == order.owner {
             return Err(ContractError::AlreadyOwned {});
         }
-        // Count tier-2/3 physical items per token
-        if i.tier == 2 {
-            tier2_count += 1;
-        } else if i.tier == 3 {
-            tier3_count += 1;
-        }
-
-        if i.tier == 1  && order.tier == 1{
-            return Err(ContractError::MaxTier1Items {})
-        }
-        else if tier2_count == 10  && order.tier == 2{
-            return Err(ContractError::MaxTier2Items {})
-        }
-        else if tier3_count == 3  && order.tier == 3{
-            return Err(ContractError::MaxTier3Items {})
+        tier_count += 1;
+        if tier_count == max_tier_limit{
+            return match order.tier {
+                1 => Err(ContractError::MaxTier1Items {}),
+                2 => Err(ContractError::MaxTier2Items {}),
+                3 => Err(ContractError::MaxTier3Items {}),
+                _ => panic!("Unexpected invalid tier"),
+            }
         }
     }
 
@@ -356,7 +359,6 @@ mod tests {
         deps.querier.set_cw721_token("alice", 1);
 
         let info = mock_info("alice", &[]);
-        let mut count = 1u32;
 
         // alice orders tier 1,2 and 3
         let msg = CreateOrder { token_id: 1.to_string(), tier: 3.to_string()};
@@ -420,14 +422,13 @@ mod tests {
         loop {
             let account = accounts.pop().unwrap();
             deps.querier.transfer_cw721_token(account, 1);
-            println!("{:?}", account);
             let info = mock_info(account, &[]);
             let msg = CreateOrder { token_id: 1.to_string(), tier: 2.to_string()};
             let result = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone());
             match result {
-                Ok(response)  => { assert_eq!(0, res.messages.len()); }
-                Err(error) => {
-                    assert_eq!(error, ContractError::MaxTier2Items {});
+                Ok(res)  => { assert_eq!(0, res.messages.len()); }
+                Err(err) => {
+                    assert_eq!(err, ContractError::MaxTier2Items {});
                     break;
                 }
             }
