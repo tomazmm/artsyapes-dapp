@@ -139,7 +139,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetCw721TokenOwner {token_id} => to_binary(&query_cw721_token_owner(deps, token_id)?),
         QueryMsg::GetCw721PhysicalInfo {token_id} => to_binary(&query_physical_info(deps, token_id)?),
         QueryMsg::Cw721Physicals {token_id, start_after, limit} => to_binary(&query_physicals(deps, token_id, start_after, limit)?),
-        QueryMsg::AllCw721Physicals {start_after, limit} => to_binary(&query_all_orders(deps, start_after, limit)?),
+        QueryMsg::AllCw721Physicals {start_after, limit} => to_binary(&query_all_physicals(deps, start_after, limit)?),
     }
 }
 
@@ -188,9 +188,9 @@ fn query_physicals(
     Ok(Cw721PhysicalsResponse { physicals: physicals? })
 }
 
-fn query_all_orders(deps: Deps,
-                    start_after: Option<String>,
-                    limit: Option<u32>
+fn query_all_physicals(deps: Deps,
+                       start_after: Option<String>,
+                       limit: Option<u32>
 ) -> StdResult<AllPhysicalsResponse> {
     let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
     let start_id = maybe_addr(deps.api, start_after)?;

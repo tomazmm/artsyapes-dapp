@@ -71,7 +71,7 @@ mod tests {
             .unwrap();
         assert_eq!(0, res.messages.len());
 
-        // orders info is correct
+        // order info is correct
         let query_order_msg = QueryMsg::GetCw721PhysicalInfo {token_id: "1".to_string()};
         let res = query(deps.as_ref(),mock_env(), query_order_msg).unwrap();
         let pyhsical: Cw721PhysicalInfoResponse = from_binary(&res).unwrap();
