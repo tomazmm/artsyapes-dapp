@@ -1,1 +1,1 @@
-e2218038fbf29a2b2e453b207f987ab21a6856d3b7b295a4624c11eba3e42918  ./target/wasm32-unknown-unknown/release/cw721_nfc.wasm
+8a7a39fdf0c302784ed95ab5903caf9cf5a4ae077c99ee7533d220b68b26d358  ./target/wasm32-unknown-unknown/release/cw721_nfc.wasm
