@@ -96,6 +96,7 @@ fn create_order(deps: DepsMut, info: MessageInfo, token_id: String, tier: String
         deps.storage,
         U8Key::from(U8Key::from(order.tier))).unwrap();
 
+
     let mut tier_count = 0;
     for i in physical_vec.iter(){
         // Sender can not order same physical item
@@ -258,11 +259,6 @@ mod tests {
 
         deps.querier.set_cw721_token("alice", 1);
 
-        // query not created order
-        let err = query(deps.as_ref(), mock_env(),
-                        QueryMsg::GetOrderInfo {token_id: "3".to_string()}).unwrap_err();
-        assert_eq!(err, StdError::not_found("cw721_nfc::state::PhysicalInfo"));
-
         // random cannot create order
         let info = mock_info("chuck", &[]);
         let msg = CreateOrder { token_id: "1".to_string(), tier: "3".to_string()};
@@ -357,70 +353,73 @@ mod tests {
         setup_contract(deps.as_mut());
 
         deps.querier.set_cw721_token("alice", 1);
-
         let info = mock_info("alice", &[]);
 
-        // alice orders tier 1,2 and 3
-        let msg = CreateOrder { token_id: 1.to_string(), tier: 3.to_string()};
-        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
-        assert_eq!(0, res.messages.len());
-        let msg = CreateOrder { token_id: 1.to_string(), tier: 2.to_string()};
-        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
-        assert_eq!(0, res.messages.len());
-        let msg = CreateOrder { token_id: 1.to_string(), tier: 1.to_string()};
-        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
-        assert_eq!(0, res.messages.len());
-
-        // alice cannot order any item anymore of same token_id
-        let msg = CreateOrder { token_id: 1.to_string(), tier: 3.to_string()};
-        let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap_err();
-        assert_eq!(err, ContractError::AlreadyOwned {});
-        let msg = CreateOrder { token_id: 1.to_string(), tier: 2.to_string()};
-        let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap_err();
-        assert_eq!(err, ContractError::AlreadyOwned {});
-        let msg = CreateOrder { token_id: 1.to_string(), tier: 1.to_string()};
-        let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap_err();
-        assert_eq!(err, ContractError::AlreadyOwned {});
+        // alice orders tier 1, 2 and 3
+        for x in 1..4 {
+            // creates an order
+            let msg = CreateOrder { token_id: 1.to_string(), tier: x.to_string()};
+            let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
+            assert_eq!(0, res.messages.len());
+            // can't have a duplicate physical item
+            let msg = CreateOrder { token_id: 1.to_string(), tier: x.to_string()};
+            let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap_err();
+            assert_eq!(err, ContractError::AlreadyOwned {});
+        }
 
         // alice sells/transfers NFT to bob
-        // bob orders 2 and 3
         deps.querier.transfer_cw721_token("bob", 1);
         let info = mock_info("bob", &[]);
-        let msg = CreateOrder { token_id: 1.to_string(), tier: 3.to_string()};
-        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
-        assert_eq!(0, res.messages.len());
-        let msg = CreateOrder { token_id: 1.to_string(), tier: 2.to_string()};
-        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
-        assert_eq!(0, res.messages.len());
+
         // bob cannot order tier 1
         let msg = CreateOrder { token_id: 1.to_string(), tier: 1.to_string()};
         let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap_err();
         assert_eq!(err, ContractError::MaxTier1Items {});
+        // bob orders tier 2 and 3
+        for x in 2..4 {
+            // creates an order
+            let msg = CreateOrder { token_id: 1.to_string(), tier: x.to_string()};
+            let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
+            assert_eq!(0, res.messages.len());
+            // can't have a duplicate physical item
+            let msg = CreateOrder { token_id: 1.to_string(), tier: x.to_string()};
+            let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap_err();
+            assert_eq!(err, ContractError::AlreadyOwned {});
+        }
 
         // bob sells/transfers NFT to chuck
-        // bob orders 2 and 3
         deps.querier.transfer_cw721_token("chuck", 1);
         let info = mock_info("chuck", &[]);
-        let msg = CreateOrder { token_id: 1.to_string(), tier: 3.to_string()};
-        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
-        assert_eq!(0, res.messages.len());
-        let msg = CreateOrder { token_id: 1.to_string(), tier: 2.to_string()};
-        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
-        assert_eq!(0, res.messages.len());
 
+        // chuck orders tier 2 and 3
+        for x in 2..4 {
+            let msg = CreateOrder { token_id: 1.to_string(), tier: x.to_string()};
+            let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
+            assert_eq!(0, res.messages.len());
+            // can't have a duplicate physical item
+            let msg = CreateOrder { token_id: 1.to_string(), tier: x.to_string()};
+            let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap_err();
+            assert_eq!(err, ContractError::AlreadyOwned {});
+        }
+
+        // chuck sells/transfers NFT to david
         deps.querier.transfer_cw721_token("david", 1);
         let info = mock_info("david", &[]);
-        let msg = CreateOrder { token_id: 1.to_string(), tier: 2.to_string()};
-        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
-        assert_eq!(0, res.messages.len());
-        // can't order tier 3 anymore
+
+        // david cannot order tier 3
         let msg = CreateOrder { token_id: 1.to_string(), tier: 3.to_string()};
         let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap_err();
         assert_eq!(err, ContractError::MaxTier3Items {});
 
+
+        // david orders tier 2
+        let msg = CreateOrder { token_id: 1.to_string(), tier: 2.to_string()};
+        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
+        assert_eq!(0, res.messages.len());
+
+        // token transfers to other accounts and all of the physical items are ordered out
         let mut accounts= Vec::from(["Eve", "Faythe", "Grace", "Heidi", "Ivan", "Judy", "Mike"]);
-        loop {
-            let account = accounts.pop().unwrap();
+        while let Some(account) = accounts.pop() {
             deps.querier.transfer_cw721_token(account, 1);
             let info = mock_info(account, &[]);
             let msg = CreateOrder { token_id: 1.to_string(), tier: 2.to_string()};
