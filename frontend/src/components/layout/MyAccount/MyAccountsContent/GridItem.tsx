@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import styled from 'styled-components';
-import {Row, Col, Modal, Button } from "react-bootstrap";
+import {GridItemModal} from "./GridItemModal";
 
 interface GridItemProps {
   className?: string;
@@ -38,28 +38,7 @@ export const GridItemBase = (props: GridItemProps) => {
         }
       </div>
 
-      {/*Detailed Modal View*/}
-      <Modal show={show} onHide={toggleModal} size="lg" centered>
-        <Modal.Header closeButton>
-          <Modal.Title># {nftValue.extension.name}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="nft-details">
-          <Row>
-            <Col xs={6}>
-              <img src={imageName} style={{width: "100%"}}/>
-            </Col>
-            <Col xs={6} className="d-flex flex-column justify-content-between">
-              {JSON.stringify(nftValue.extension.attributes)}
-              <Button onClick={() => {console.log(123)}}>
-                Order physical Item
-              </Button>
-            </Col>
-          </Row>
-        </Modal.Body>
-        <Modal.Footer>
-
-        </Modal.Footer>
-      </Modal>
+      <GridItemModal nftValue={nftValue} imageName={imageName} show={show} setShow={toggleModal}/>
     </div>
   )
 }

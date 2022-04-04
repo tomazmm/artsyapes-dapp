@@ -86,15 +86,16 @@ export const MyAccountBase = (props: MyAccountProps) => {
                  lg={{span: 12}}
                  xs={{span: 12}}
               className="d-flex flex-column justify-content-center align-self-center align-content-center align-items-center col my-account-col">
-              { tokens.tokens !== undefined ? (
-                  nftInfo.length === tokens.tokens.length ? (
-                      <Grid className={className} nftInfo={nftInfo}/>
-                    ) :
-                    <LoadingContent ammountNfts={tokens.tokens.length} ammountNftsLoaded={nftsCount}/>
-                ) : (
-                  <></>
-                )
-              }
+              {/*{ tokens.tokens !== undefined ? (*/}
+              {/*    nftInfo.length === tokens.tokens.length ? (*/}
+              {/*        <Grid className={className} nftInfo={nftInfo}/>*/}
+              {/*      ) :*/}
+              {/*      <LoadingContent ammountNfts={tokens.tokens.length} ammountNftsLoaded={nftsCount}/>*/}
+              {/*  ) : (*/}
+              {/*    <></>*/}
+              {/*  )*/}
+              {/*}*/}
+              <Grid className={className} nftInfo={nftInfo}/>
             </Col>
           </Row>
       </Container>
