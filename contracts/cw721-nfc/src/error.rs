@@ -25,4 +25,10 @@ pub enum ContractError {
 
     #[error("Max number of Tier 3 Physical Items")]
     MaxTier3Items {},
+
+    #[error("Trying to deposit several coins")]
+    MultipleTokensSent {},
+
+    #[error("Only UST among native tokens accepted")]
+    OnlyUSTAccepted {},
 }

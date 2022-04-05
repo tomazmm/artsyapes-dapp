@@ -1,6 +1,6 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, Storage, Order};
+use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, Storage, Order, Uint128};
 use cw0::maybe_addr;
 use cw2::set_contract_version;
 use cw721_base::msg::QueryMsg::{OwnerOf};
@@ -9,7 +9,7 @@ use cw_storage_plus::{Bound, PrimaryKey, U32Key, U8Key};
 
 use crate::error::ContractError;
 use crate::msg::{AllPhysicalsResponse, Cw721AddressResponse, ExecuteMsg, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg};
-use crate::state::{ContractInfo, CONTRACT_INFO, Cw721PhysicalInfo, ORDER_COUNT, physicals, TIER_LIMIT};
+use crate::state::{ContractInfo, CONTRACT_INFO, Cw721PhysicalInfo, ORDER_COUNT, physicals, TIERS, TierInfo};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw721-nfc";
@@ -17,6 +17,8 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const DEFAULT_LIMIT: u32 = 10;
 const MAX_LIMIT: u32 = 30;
+
+const UUSD_DENOM: &str = "uusd";
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -33,9 +35,9 @@ pub fn instantiate(
     CONTRACT_INFO.save(deps.storage, &contract_info)?;
 
     // Pass this as init message
-    TIER_LIMIT.save(deps.storage, U8Key::from(1),  &1)?;
-    TIER_LIMIT.save(deps.storage, U8Key::from(2), &10)?;
-    TIER_LIMIT.save(deps.storage, U8Key::from(3), &3)?;
+    TIERS.save(deps.storage, U8Key::from(1), &TierInfo { max_physical_limit: 1, cost: 2500 * 1_000_000 })?;
+    TIERS.save(deps.storage, U8Key::from(2), &TierInfo { max_physical_limit: 10, cost: 120 * 1_000_000 })?;
+    TIERS.save(deps.storage, U8Key::from(3), &TierInfo { max_physical_limit: 3, cost: 0 })?;
 
     Ok(Response::new()
         .add_attribute("method", "instantiate")
@@ -73,7 +75,7 @@ fn order_cw721_physical(deps: DepsMut, info: MessageInfo, token_id: String, tier
         return Err(ContractError::Unauthorized {});
     }
 
-    // create and validate order
+    // create order validate order
     let order = Cw721PhysicalInfo {
         id: order_count(deps.storage).unwrap() + 1,
         token_id: token_id.clone(),
@@ -92,11 +94,26 @@ fn order_cw721_physical(deps: DepsMut, info: MessageInfo, token_id: String, tier
         .collect::<StdResult<_>>().unwrap();
 
 
-    let max_tier_limit = TIER_LIMIT.load(
+    let tier_info = TIERS.load(
         deps.storage,
         U8Key::from(U8Key::from(order.tier))).unwrap();
 
 
+    // Check if funds empty or multiple native coins sent by the user
+    if info.funds.len() != 1 {
+        return Err(ContractError::MultipleTokensSent {});
+    }
+    // Only UST accepted
+    let native_token = info.funds.first().unwrap();
+    if native_token.denom != *UUSD_DENOM {
+        return Err(ContractError::OnlyUSTAccepted {});
+    }
+
+    if native_token.amount != Uint128::from(tier_info.costs_sum()) {
+        return Err(ContractError::OnlyUSTAccepted {});
+    }
+
+    // validate  order
     let mut tier_count = 0;
     for i in physical_vec.iter(){
         // Sender can not order same physical item
@@ -104,7 +121,7 @@ fn order_cw721_physical(deps: DepsMut, info: MessageInfo, token_id: String, tier
             return Err(ContractError::AlreadyOwned {});
         }
         tier_count += 1;
-        if tier_count == max_tier_limit{
+        if tier_count == tier_info.max_physical_limit{
             return match order.tier {
                 1 => Err(ContractError::MaxTier1Items {}),
                 2 => Err(ContractError::MaxTier2Items {}),

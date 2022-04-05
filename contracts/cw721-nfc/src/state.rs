@@ -20,6 +20,19 @@ pub struct Cw721PhysicalInfo {
     // pub nfc_tag: Option<String>
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct TierInfo {
+    pub max_physical_limit: u8,
+    pub cost: u64
+}
+
+impl TierInfo {
+    pub fn costs_sum(&self) -> u64 {
+        let shipping_cost = 10 * 1_000_000;
+        return self.cost + shipping_cost;
+    }
+}
+
 pub struct PhysicalIndexes<'a> {
     pub id: UniqueIndex<'a, U32Key, Cw721PhysicalInfo>,
     pub token_id: MultiIndex<'a, (String, Vec<u8>), Cw721PhysicalInfo>,
@@ -48,7 +61,7 @@ pub fn physicals<'a>() -> IndexedMap<'a, &'a [u8], Cw721PhysicalInfo, PhysicalIn
 
 
 pub const CONTRACT_INFO: Item<ContractInfo> = Item::new("contract_info");
-pub const TIER_LIMIT: Map<U8Key, u8> = Map::new("tier_limit");
+pub const TIERS: Map<U8Key, TierInfo> = Map::new("tiers");
 pub const ORDERS: Map<String, Cw721PhysicalInfo> = Map::new("orders");
 pub const ORDER_COUNT: Item<u32> = Item::new("order_count");
 
