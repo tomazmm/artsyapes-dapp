@@ -75,7 +75,7 @@ fn order_cw721_physical(deps: DepsMut, info: MessageInfo, token_id: String, tier
         return Err(ContractError::Unauthorized {});
     }
 
-    // create order validate order
+    // create order and validate order
     let order = Cw721PhysicalInfo {
         id: order_count(deps.storage).unwrap() + 1,
         token_id: token_id.clone(),
@@ -101,16 +101,18 @@ fn order_cw721_physical(deps: DepsMut, info: MessageInfo, token_id: String, tier
 
     // Check if funds empty or multiple native coins sent by the user
     if info.funds.len() != 1 {
-        return Err(ContractError::MultipleTokensSent {});
+        return Err(ContractError::OnlyUSTAccepted {});
     }
     // Only UST accepted
     let native_token = info.funds.first().unwrap();
     if native_token.denom != *UUSD_DENOM {
         return Err(ContractError::OnlyUSTAccepted {});
     }
-
+    // Only exact amount of UST accepted
     if native_token.amount != Uint128::from(tier_info.costs_sum()) {
-        return Err(ContractError::OnlyUSTAccepted {});
+        return Err(ContractError::InvalidUSTAmount {
+            required: tier_info.costs_sum() as u128,
+            sent: native_token.amount.u128()});
     }
 
     // validate  order
