@@ -34,7 +34,6 @@ pub fn instantiate(
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     CONTRACT_INFO.save(deps.storage, &contract_info)?;
 
-    // Pass this as init message
     TIERS.save(deps.storage, U8Key::from(1), &TierInfo { max_physical_limit: 1, cost: 2500 * 1_000_000 })?;
     TIERS.save(deps.storage, U8Key::from(2), &TierInfo { max_physical_limit: 10, cost: 120 * 1_000_000 })?;
     TIERS.save(deps.storage, U8Key::from(3), &TierInfo { max_physical_limit: 3, cost: 0 })?;
@@ -63,14 +62,7 @@ fn order_cw721_physical(deps: DepsMut, info: MessageInfo, token_id: String, tier
         return Err(ContractError::InvalidTier {})
     }
     // check token ownership
-    let owner: OwnerOfResponse =
-        deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
-            contract_addr: CONTRACT_INFO.load(deps.storage)?.cw721.to_string(),
-            msg: to_binary(&OwnerOf {
-                token_id: token_id.clone(),
-                include_expired: None
-            })?,
-        }))?;
+    let owner: OwnerOfResponse = query_cw721_token_owner(deps.as_ref(), token_id.clone()).unwrap();
     if owner.owner != info.sender {
         return Err(ContractError::Unauthorized {});
     }
@@ -155,7 +147,6 @@ fn increment_orders(storage: &mut dyn Storage) -> StdResult<u32> {
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetCw721Address {} => to_binary(&query_cw721_address(deps)?),
-        QueryMsg::GetCw721TokenOwner {token_id} => to_binary(&query_cw721_token_owner(deps, token_id)?),
         QueryMsg::GetCw721PhysicalInfo {token_id} => to_binary(&query_physical_info(deps, token_id)?),
         QueryMsg::Cw721Physicals {token_id, start_after, limit} => to_binary(&query_physicals(deps, token_id, start_after, limit)?),
         QueryMsg::AllCw721Physicals {start_after, limit} => to_binary(&query_all_physicals(deps, start_after, limit)?),
