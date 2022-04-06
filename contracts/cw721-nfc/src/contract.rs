@@ -52,7 +52,12 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::OrderCw721Physical { token_id, tier} => order_cw721_physical(deps, info, token_id, tier)
+        ExecuteMsg::OrderCw721Physical { token_id, tier} => {
+            order_cw721_physical(deps, info, token_id, tier)
+        },
+        ExecuteMsg::UpdateTierInfo { tier, max_physical_limit, cost} => {
+            update_tier_info(deps, info, tier, max_physical_limit, cost)
+        }
     }
 }
 fn order_cw721_physical(deps: DepsMut, info: MessageInfo, token_id: String, tier: String) -> Result<Response, ContractError> {
@@ -128,6 +133,32 @@ fn order_cw721_physical(deps: DepsMut, info: MessageInfo, token_id: String, tier
     // save order and increment counter
     physicals().save(deps.storage, &U32Key::from(order.id).joined_key(), &order).unwrap();
     increment_orders(deps.storage).unwrap();
+
+    Ok(Response::default())
+}
+
+fn update_tier_info(deps: DepsMut,
+                    info: MessageInfo,
+                    tier: u8,
+                    max_physical_limit: u8,
+                    cost: u64
+) -> Result<Response, ContractError> {
+    // TODO: check if wallet has the rights
+    // check tier
+    let tier : u8= tier.parse().unwrap();
+    if tier < 1 || tier > 3{
+        return Err(ContractError::InvalidTier {})
+    }
+    if max_physical_limit == 0 {
+        //TODO: add error
+    }
+    if cost == 0 {
+        //TODO: add error
+    }
+
+    // Save to state
+    let tier_info = TierInfo { max_physical_limit, cost };
+    TIERS.save(deps.storage, U8Key::from(tier), &tier_info);
 
     Ok(Response::default())
 }
