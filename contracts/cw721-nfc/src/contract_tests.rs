@@ -122,7 +122,48 @@ mod tests {
     }
 
     #[test]
-    fn creating_max_possible_orders_per_token() {
+    fn creating_order_with_invalid_funds() {
+        let mut deps = mock_dependencies();
+        setup_contract(deps.as_mut());
+
+        deps.querier.set_cw721_token("alice", 1);
+
+        // cannot create tier 3 order with non UST denom
+        let info = mock_info("alice", &[coin(10 * 1_000_000, "snow")]);
+        let msg = OrderCw721Physical { token_id: 1.to_string(), tier: 3.to_string() };
+        let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap_err();
+        assert_eq!(err, ContractError::OnlyUSTAccepted {});
+
+        // cannot create tier 3 order with sending multiple tokens
+        let info = mock_info("alice", &[
+            coin(10 * 1_000_000, "uusd"),
+            coin(1 * 1_000_000, "uluna")
+        ]);
+        let msg = OrderCw721Physical { token_id: 1.to_string(), tier: 3.to_string() };
+        let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap_err();
+        assert_eq!(err, ContractError::OnlyUSTAccepted {});
+
+        // cannot create tier 3 order with 1 UST
+        let info = mock_info("alice", &[coin(1 * 1_000_000, "uusd")]);
+        let msg = OrderCw721Physical { token_id: 1.to_string(), tier: 3.to_string() };
+        let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap_err();
+        assert_eq!(err, ContractError::InvalidUSTAmount {
+            required: 10 * 1_000_000,
+            sent: 1 * 1_000_000
+        });
+
+        // cannot create tier 3 order with 200 UST
+        let info = mock_info("alice", &[coin(200 * 1_000_000, "uusd")]);
+        let msg = OrderCw721Physical { token_id: 1.to_string(), tier: 3.to_string() };
+        let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap_err();
+        assert_eq!(err, ContractError::InvalidUSTAmount {
+            required: 10 * 1_000_000,
+            sent: 200 * 1_000_000
+        });
+    }
+
+    #[test]
+    fn creating_max_possible_physical_items_per_token() {
         let mut deps = mock_dependencies();
         setup_contract(deps.as_mut());
 
