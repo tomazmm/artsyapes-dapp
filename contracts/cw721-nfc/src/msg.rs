@@ -21,9 +21,6 @@ pub enum ExecuteMsg {
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     GetCw721Address {},
-    GetCw721TokenOwner {
-        token_id: String
-    },
     GetCw721PhysicalInfo {
         token_id: String
     },
