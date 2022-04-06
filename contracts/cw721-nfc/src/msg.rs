@@ -14,6 +14,11 @@ pub enum ExecuteMsg {
     OrderCw721Physical {
         token_id: String,
         tier: String
+    },
+    UpdateTierInfo {
+        tier: u8,
+        max_physical_limit: u8,
+        cost: u64
     }
 }
 
