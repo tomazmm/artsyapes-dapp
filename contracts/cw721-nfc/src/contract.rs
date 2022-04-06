@@ -145,7 +145,6 @@ fn update_tier_info(deps: DepsMut,
 ) -> Result<Response, ContractError> {
     // TODO: check if wallet has the rights
     // check tier
-    let tier : u8= tier.parse().unwrap();
     if tier < 1 || tier > 3{
         return Err(ContractError::InvalidTier {})
     }
