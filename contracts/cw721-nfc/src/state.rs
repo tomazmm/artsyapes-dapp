@@ -62,8 +62,8 @@ pub fn physicals<'a>() -> IndexedMap<'a, &'a [u8], Cw721PhysicalInfo, PhysicalIn
 
 pub const CONTRACT_INFO: Item<ContractInfo> = Item::new("contract_info");
 pub const TIERS: Map<U8Key, TierInfo> = Map::new("tiers");
-pub const ORDERS: Map<String, Cw721PhysicalInfo> = Map::new("orders");
-pub const ORDER_COUNT: Item<u32> = Item::new("order_count");
+pub const PHYSICALS: Map<String, Cw721PhysicalInfo> = Map::new("physicals");
+pub const PHYSICALS_COUNT: Item<u32> = Item::new("physicals_count");
 
 
 
