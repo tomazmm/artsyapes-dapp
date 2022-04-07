@@ -1,6 +1,6 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, Storage, Order, Uint128};
+use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, Storage, Order, Uint128, BlockInfo};
 use cw0::maybe_addr;
 use cw2::set_contract_version;
 use cw721_base::msg::QueryMsg::{OwnerOf};
@@ -9,7 +9,7 @@ use cw_storage_plus::{Bound, PrimaryKey, U32Key, U8Key};
 
 use crate::error::ContractError;
 use crate::msg::{AllPhysicalsResponse, Cw721AddressResponse, ExecuteMsg, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg, TierInfoResponse};
-use crate::state::{ContractInfo, CONTRACT_INFO, Cw721PhysicalInfo, ORDER_COUNT, physicals, TIERS, TierInfo};
+use crate::state::{ContractInfo, CONTRACT_INFO, Cw721PhysicalInfo, PHYSICALS_COUNT, physicals, TIERS, TierInfo, HIGHEST_BID, HighestOfferInfo};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw721-nfc";
@@ -52,15 +52,18 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::OrderCw721Physical { token_id, tier} => {
-            order_cw721_physical(deps, info, token_id, tier)
+        ExecuteMsg::OrderCw721Print { token_id, tier} => {
+            order_cw721_print(deps, info, token_id, tier)
+        },
+        ExecuteMsg::Bid721Masterpiece { token_id} => {
+            place_cw721_masterpiece_bid(deps, info, token_id)
         },
         ExecuteMsg::UpdateTierInfo { tier, max_physical_limit, cost} => {
             update_tier_info(deps, info, tier, max_physical_limit, cost)
         }
     }
 }
-fn order_cw721_physical(deps: DepsMut, info: MessageInfo, token_id: String, tier: String) -> Result<Response, ContractError> {
+fn order_cw721_print(deps: DepsMut, info: MessageInfo, token_id: String, tier: String) -> Result<Response, ContractError> {
     // check tier
     let tier : u8= tier.parse().unwrap();
     if tier < 1 || tier > 3{
@@ -80,16 +83,6 @@ fn order_cw721_physical(deps: DepsMut, info: MessageInfo, token_id: String, tier
         tier,
         status: "PENDING".to_string()
     };
-
-    // Get physical items by 'token_id' and filter by 'tier'
-    let physical_vec : Vec<Cw721PhysicalInfo> = physicals()
-        .idx.token_id
-        .prefix(order.token_id.to_string())
-        .range(deps.storage, None, None, Order::Ascending)
-        .map(|item| item.map(|(_, v)| v))
-        .filter(|item| item.as_ref().unwrap().tier == order.tier)
-        .collect::<StdResult<_>>().unwrap();
-
 
     let tier_info = TIERS.load(
         deps.storage,
@@ -111,6 +104,15 @@ fn order_cw721_physical(deps: DepsMut, info: MessageInfo, token_id: String, tier
             sent: native_token.amount.u128()});
     }
 
+    // Get physical items by 'token_id' and filter by 'tier'
+    let physical_vec : Vec<Cw721PhysicalInfo> = physicals()
+        .idx.token_id
+        .prefix(order.token_id.to_string())
+        .range(deps.storage, None, None, Order::Ascending)
+        .map(|item| item.map(|(_, v)| v))
+        .filter(|item| item.as_ref().unwrap().tier == order.tier)
+        .collect::<StdResult<_>>().unwrap();
+
     // validate  order
     let mut tier_count = 0;
     for i in physical_vec.iter(){
@@ -129,10 +131,33 @@ fn order_cw721_physical(deps: DepsMut, info: MessageInfo, token_id: String, tier
         }
     }
 
+    // let new_offer = HighestOfferInfo{ cw721_physcial: order.clone(), bid: native_token.amount };
+    // if order.tier == 3 {
+    //     // HIGHEST_BID.update(deps.storage, |offer: Option<HighestOfferInfo>| {
+    //     //     match  offer {
+    //     //         // Some(offer) => {
+    //     //         //     // if new_offer.bid > offer.bid{
+    //     //         //     //     Err(ContractError::LowBidding {});
+    //     //         //     // }
+    //     //         //     Ok(offer)
+    //     //         // },
+    //     //         Some(offer) => Err(ContractError::LowBidding {}),
+    //     //         None => Ok(new_offer),
+    //     //     }
+    //     // })
+    //     HIGHEST_BID.update(deps.storage, |offer| -> StdResult<_> {
+    //         Ok(new_offer)
+    //     })?;
+    // };
+
     // save order and increment counter
     physicals().save(deps.storage, &U32Key::from(order.id).joined_key(), &order).unwrap();
     increment_orders(deps.storage).unwrap();
 
+    Ok(Response::default())
+}
+
+fn place_cw721_masterpiece_bid(deps: DepsMut, info: MessageInfo, token_id: String) -> Result<Response, ContractError> {
     Ok(Response::default())
 }
 
@@ -164,12 +189,12 @@ fn update_tier_info(deps: DepsMut,
 
 
 fn order_count(storage: &dyn Storage) -> StdResult<u32> {
-    Ok(ORDER_COUNT.may_load(storage)?.unwrap_or_default())
+    Ok(PHYSICALS_COUNT.may_load(storage)?.unwrap_or_default())
 }
 
 fn increment_orders(storage: &mut dyn Storage) -> StdResult<u32> {
     let val = order_count(storage)? + 1;
-    ORDER_COUNT.save(storage, &val)?;
+    PHYSICALS_COUNT.save(storage, &val)?;
     Ok(val)
 }
 

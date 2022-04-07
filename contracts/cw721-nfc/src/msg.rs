@@ -11,9 +11,12 @@ pub struct InstantiateMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
-    OrderCw721Physical {
+    OrderCw721Print {
         token_id: String,
         tier: String
+    },
+    Bid721Masterpiece {
+        token_id: String
     },
     UpdateTierInfo {
         tier: u8,
