@@ -37,6 +37,9 @@ pub enum QueryMsg {
     AllCw721Physicals {
         start_after: Option<String>,
         limit: Option<u32>,
+    },
+    TierInfo {
+        tier: u8
     }
 }
 
@@ -59,4 +62,12 @@ pub struct Cw721PhysicalsResponse {
 pub struct AllPhysicalsResponse {
     pub physicals: Vec<String>,
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct TierInfoResponse {
+    pub max_physical_limit: u8,
+    pub cost: u64
+}
+
+
 
