@@ -20,7 +20,7 @@ export const GridItemBase = (props: GridItemProps) => {
 
   useEffect(() => {
     const tempImageName = nftValue.extension.image.split("//");
-    setImageName("https://ipfs.io/ipfs/" + tempImageName[1]);
+    setImageName("https://d1mx8bduarpf8s.cloudfront.net/" + tempImageName[1]);
   }, []);
 
   const toggleModal = () => setShow(!show);
