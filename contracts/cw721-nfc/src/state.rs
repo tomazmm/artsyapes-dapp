@@ -1,8 +1,8 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Addr};
-use cw_storage_plus::{Item, Map, IndexedMap, MultiIndex, IndexList, UniqueIndex, U32Key, Index, U8Key};
+use cosmwasm_std::{Addr, Uint128};
+use cw_storage_plus::{Item, Map, IndexedMap, MultiIndex, IndexList, UniqueIndex, U32Key, Index, U8Key, U128Key};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ContractInfo {
@@ -23,7 +23,13 @@ pub struct Cw721PhysicalInfo {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct TierInfo {
     pub max_physical_limit: u8,
-    pub cost: u64
+    pub cost: u64,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct HighestOfferInfo {
+    pub cw721_physcial: Cw721PhysicalInfo,
+    pub bid: Uint128,
 }
 
 impl TierInfo {
@@ -61,7 +67,11 @@ pub fn physicals<'a>() -> IndexedMap<'a, &'a [u8], Cw721PhysicalInfo, PhysicalIn
 
 
 pub const CONTRACT_INFO: Item<ContractInfo> = Item::new("contract_info");
+
 pub const TIERS: Map<U8Key, TierInfo> = Map::new("tiers");
+
+pub const HIGHEST_BID: Item<HighestOfferInfo> = Item::new("highest_bid");
+
 pub const PHYSICALS: Map<String, Cw721PhysicalInfo> = Map::new("physicals");
 pub const PHYSICALS_COUNT: Item<u32> = Item::new("physicals_count");
 

@@ -40,4 +40,7 @@ pub enum ContractError {
 
     #[error("Tier cost can't be set to zero")]
     TierCostsIsZero {},
+
+    #[error("You need to over-bid previous bidder")]
+    LowBidding {},
 }
