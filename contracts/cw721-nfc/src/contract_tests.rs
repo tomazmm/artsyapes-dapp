@@ -6,8 +6,8 @@ mod tests {
     use cw721::OwnerOfResponse;
     use crate::contract::{execute, instantiate, query};
     use crate::error::ContractError;
-    use crate::msg::ExecuteMsg::OrderCw721Physical;
-    use crate::msg::{Cw721AddressResponse, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg};
+    use crate::msg::ExecuteMsg::{OrderCw721Physical, UpdateTierInfo};
+    use crate::msg::{Cw721AddressResponse, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg, TierInfoResponse};
     use crate::state::Cw721PhysicalInfo;
 
     const CW721_ADDRESS: &str = "cw721-contract";
@@ -38,6 +38,51 @@ mod tests {
         let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCw721Address {}).unwrap();
         let value: Cw721AddressResponse = from_binary(&res).unwrap();
         assert_eq!(cw721_address, value.cw721);
+    }
+
+    #[test]
+    fn updating_tier_info() {
+        let mut deps = mock_dependencies();
+        setup_contract(deps.as_mut());
+
+        // random cannot update tier info
+        let info = mock_info("random", &[]);
+        let msg = UpdateTierInfo { tier: 3, max_physical_limit: 100, cost: 10 * 1_000_000};
+        let err =
+            execute(deps.as_mut(), mock_env(), info, msg.clone())
+                .unwrap_err();
+        assert_eq!(err, ContractError::Unauthorized {});
+
+        // owner can modify tier info
+        let info = mock_info("creator", &[]);
+        let msg = UpdateTierInfo { tier: 3, max_physical_limit: 100, cost: 10 * 1_000_000};
+        let res =
+            execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+        assert_eq!(0, res.messages.len());
+
+        // query updated tier 3 info
+        let msg = QueryMsg::TierInfo {tier: 3};
+        let res = query(deps.as_ref(),mock_env(), msg).unwrap();
+        let tier_info: TierInfoResponse = from_binary(&res).unwrap();
+        assert_eq!(100, tier_info.max_physical_limit);
+        assert_eq!(10 * 1_000_000, tier_info.cost);
+
+        // passed tier number needs to be either 1,2 or 3
+        let msg = UpdateTierInfo { tier: 0, max_physical_limit: 100, cost: 10 * 1_000_000};
+        let err = execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap_err();
+        assert_eq!(err, ContractError::InvalidTier {});
+        // tier = 4
+        let msg = UpdateTierInfo { tier: 4, max_physical_limit: 100, cost: 10 * 1_000_000};
+        let err = execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap_err();
+        assert_eq!(err, ContractError::InvalidTier {});
+
+        // passed max physical limit per tier can't be 0
+        let msg = UpdateTierInfo { tier: 3, max_physical_limit: 0, cost: 10 * 1_000_000};
+        let err = execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap_err();
+        assert_eq!(err, ContractError::TierMaxLimitIsZero {});
+        let msg = UpdateTierInfo { tier: 3, max_physical_limit: 100, cost: 0};
+        let err = execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap_err();
+        assert_eq!(err, ContractError::TierCostsIsZero {});
     }
 
     #[test]

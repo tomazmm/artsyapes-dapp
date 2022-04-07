@@ -34,4 +34,10 @@ pub enum ContractError {
 
     #[error("Only UST among native tokens accepted")]
     OnlyUSTAccepted {},
+
+    #[error("Tier max Limit can't be set to zero")]
+    TierMaxLimitIsZero {},
+
+    #[error("Tier cost can't be set to zero")]
+    TierCostsIsZero {},
 }

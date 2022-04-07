@@ -8,7 +8,7 @@ use cw721::{OwnerOfResponse};
 use cw_storage_plus::{Bound, PrimaryKey, U32Key, U8Key};
 
 use crate::error::ContractError;
-use crate::msg::{AllPhysicalsResponse, Cw721AddressResponse, ExecuteMsg, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg};
+use crate::msg::{AllPhysicalsResponse, Cw721AddressResponse, ExecuteMsg, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg, TierInfoResponse};
 use crate::state::{ContractInfo, CONTRACT_INFO, Cw721PhysicalInfo, ORDER_COUNT, physicals, TIERS, TierInfo};
 
 // version info for migration info
@@ -72,7 +72,7 @@ fn order_cw721_physical(deps: DepsMut, info: MessageInfo, token_id: String, tier
         return Err(ContractError::Unauthorized {});
     }
 
-    // create order and validate order
+    // create order and validate it
     let order = Cw721PhysicalInfo {
         id: order_count(deps.storage).unwrap() + 1,
         token_id: token_id.clone(),
@@ -94,7 +94,6 @@ fn order_cw721_physical(deps: DepsMut, info: MessageInfo, token_id: String, tier
     let tier_info = TIERS.load(
         deps.storage,
         U8Key::from(U8Key::from(order.tier))).unwrap();
-
 
     // Check if funds empty or multiple native coins sent by the user
     if info.funds.len() != 1 {
@@ -143,19 +142,20 @@ fn update_tier_info(deps: DepsMut,
                     max_physical_limit: u8,
                     cost: u64
 ) -> Result<Response, ContractError> {
-    // TODO: check if wallet has the rights
-    // check tier
+    let state = CONTRACT_INFO.load(deps.storage)?;
+    if state.owner != info.sender {
+        return Err(ContractError::Unauthorized {});
+    }
     if tier < 1 || tier > 3{
         return Err(ContractError::InvalidTier {})
     }
     if max_physical_limit == 0 {
-        //TODO: add error
+        return Err(ContractError::TierMaxLimitIsZero {})
     }
     if cost == 0 {
-        //TODO: add error
+        return Err(ContractError::TierCostsIsZero {})
     }
 
-    // Save to state
     let tier_info = TierInfo { max_physical_limit, cost };
     TIERS.save(deps.storage, U8Key::from(tier), &tier_info);
 
@@ -180,6 +180,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetCw721PhysicalInfo {token_id} => to_binary(&query_physical_info(deps, token_id)?),
         QueryMsg::Cw721Physicals {token_id, start_after, limit} => to_binary(&query_physicals(deps, token_id, start_after, limit)?),
         QueryMsg::AllCw721Physicals {start_after, limit} => to_binary(&query_all_physicals(deps, start_after, limit)?),
+        QueryMsg::TierInfo {tier} => to_binary(&query_tier_info(deps, tier)?),
     }
 }
 
@@ -242,4 +243,12 @@ fn query_all_physicals(deps: Deps,
         .map(|item| item.map(|(_, v)| v.id.to_string()))
         .collect();
     Ok(AllPhysicalsResponse {physicals: physicals?})
+}
+
+fn query_tier_info(deps: Deps, tier: u8) -> StdResult<TierInfoResponse> {
+    let tier_info = TIERS.load(deps.storage, U8Key::from(tier)).unwrap();
+    Ok(TierInfoResponse {
+        max_physical_limit: tier_info.max_physical_limit,
+        cost: tier_info.cost
+    })
 }
