@@ -28,7 +28,7 @@ pub struct TierInfo {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct HighestOfferInfo {
-    pub cw721_physcial: Cw721PhysicalInfo,
+    pub cw721_physical: Cw721PhysicalInfo,
     pub bid: Uint128,
 }
 
@@ -70,7 +70,7 @@ pub const CONTRACT_INFO: Item<ContractInfo> = Item::new("contract_info");
 
 pub const TIERS: Map<U8Key, TierInfo> = Map::new("tiers");
 
-pub const HIGHEST_BID: Item<HighestOfferInfo> = Item::new("highest_bid");
+pub const HIGHEST_OFFER: Item<HighestOfferInfo> = Item::new("highest_offer");
 
 pub const PHYSICALS: Map<String, Cw721PhysicalInfo> = Map::new("physicals");
 pub const PHYSICALS_COUNT: Item<u32> = Item::new("physicals_count");

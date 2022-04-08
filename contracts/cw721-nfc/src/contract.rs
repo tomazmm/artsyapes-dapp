@@ -1,6 +1,6 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, Storage, Order, Uint128, BlockInfo};
+use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, Storage, Order, Uint128, BlockInfo, StdError};
 use cw0::maybe_addr;
 use cw2::set_contract_version;
 use cw721_base::msg::QueryMsg::{OwnerOf};
@@ -9,7 +9,7 @@ use cw_storage_plus::{Bound, PrimaryKey, U32Key, U8Key};
 
 use crate::error::ContractError;
 use crate::msg::{AllPhysicalsResponse, Cw721AddressResponse, ExecuteMsg, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg, TierInfoResponse};
-use crate::state::{ContractInfo, CONTRACT_INFO, Cw721PhysicalInfo, PHYSICALS_COUNT, physicals, TIERS, TierInfo, HIGHEST_BID, HighestOfferInfo};
+use crate::state::{ContractInfo, CONTRACT_INFO, Cw721PhysicalInfo, PHYSICALS_COUNT, physicals, TIERS, TierInfo, HIGHEST_OFFER, HighestOfferInfo};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw721-nfc";
@@ -56,7 +56,7 @@ pub fn execute(
             order_cw721_print(deps, info, token_id, tier)
         },
         ExecuteMsg::Bid721Masterpiece { token_id} => {
-            place_cw721_masterpiece_bid(deps, info, token_id)
+            place_bid(deps, info, token_id)
         },
         ExecuteMsg::UpdateTierInfo { tier, max_physical_limit, cost} => {
             update_tier_info(deps, info, tier, max_physical_limit, cost)
@@ -70,13 +70,13 @@ fn order_cw721_print(deps: DepsMut, info: MessageInfo, token_id: String, tier: S
         return Err(ContractError::InvalidTier {})
     }
     // check token ownership
-    let owner: OwnerOfResponse = query_cw721_token_owner(deps.as_ref(), token_id.clone()).unwrap();
+    let owner: OwnerOfResponse = query_cw721_owner(deps.as_ref(), token_id.clone()).unwrap();
     if owner.owner != info.sender {
         return Err(ContractError::Unauthorized {});
     }
 
     // create order and validate it
-    let order = Cw721PhysicalInfo {
+    let cw721_physical = Cw721PhysicalInfo {
         id: order_count(deps.storage).unwrap() + 1,
         token_id: token_id.clone(),
         owner: info.sender.clone(),
@@ -86,7 +86,7 @@ fn order_cw721_print(deps: DepsMut, info: MessageInfo, token_id: String, tier: S
 
     let tier_info = TIERS.load(
         deps.storage,
-        U8Key::from(U8Key::from(order.tier))).unwrap();
+        U8Key::from(U8Key::from(cw721_physical.tier))).unwrap();
 
     // Check if funds empty or multiple native coins sent by the user
     if info.funds.len() != 1 {
@@ -107,22 +107,22 @@ fn order_cw721_print(deps: DepsMut, info: MessageInfo, token_id: String, tier: S
     // Get physical items by 'token_id' and filter by 'tier'
     let physical_vec : Vec<Cw721PhysicalInfo> = physicals()
         .idx.token_id
-        .prefix(order.token_id.to_string())
+        .prefix(cw721_physical.token_id.to_string())
         .range(deps.storage, None, None, Order::Ascending)
         .map(|item| item.map(|(_, v)| v))
-        .filter(|item| item.as_ref().unwrap().tier == order.tier)
+        .filter(|item| item.as_ref().unwrap().tier == cw721_physical.tier)
         .collect::<StdResult<_>>().unwrap();
 
     // validate  order
     let mut tier_count = 0;
     for i in physical_vec.iter(){
         // Sender can not order same physical item
-        if i.owner == order.owner {
+        if i.owner == cw721_physical.owner {
             return Err(ContractError::AlreadyOwned {});
         }
         tier_count += 1;
         if tier_count == tier_info.max_physical_limit{
-            return match order.tier {
+            return match cw721_physical.tier {
                 1 => Err(ContractError::MaxTier1Items {}),
                 2 => Err(ContractError::MaxTier2Items {}),
                 3 => Err(ContractError::MaxTier3Items {}),
@@ -131,33 +131,71 @@ fn order_cw721_print(deps: DepsMut, info: MessageInfo, token_id: String, tier: S
         }
     }
 
-    // let new_offer = HighestOfferInfo{ cw721_physcial: order.clone(), bid: native_token.amount };
-    // if order.tier == 3 {
-    //     // HIGHEST_BID.update(deps.storage, |offer: Option<HighestOfferInfo>| {
-    //     //     match  offer {
-    //     //         // Some(offer) => {
-    //     //         //     // if new_offer.bid > offer.bid{
-    //     //         //     //     Err(ContractError::LowBidding {});
-    //     //         //     // }
-    //     //         //     Ok(offer)
-    //     //         // },
-    //     //         Some(offer) => Err(ContractError::LowBidding {}),
-    //     //         None => Ok(new_offer),
-    //     //     }
-    //     // })
-    //     HIGHEST_BID.update(deps.storage, |offer| -> StdResult<_> {
-    //         Ok(new_offer)
-    //     })?;
-    // };
-
     // save order and increment counter
-    physicals().save(deps.storage, &U32Key::from(order.id).joined_key(), &order).unwrap();
+    physicals().save(deps.storage, &U32Key::from(cw721_physical.id).joined_key(), &cw721_physical).unwrap();
     increment_orders(deps.storage).unwrap();
 
     Ok(Response::default())
 }
 
-fn place_cw721_masterpiece_bid(deps: DepsMut, info: MessageInfo, token_id: String) -> Result<Response, ContractError> {
+fn place_bid(deps: DepsMut, info: MessageInfo, token_id: String) -> Result<Response, ContractError> {
+    // TODO: check if auction is still live
+
+    // check token ownership
+    let owner: OwnerOfResponse = query_cw721_owner(deps.as_ref(), token_id.clone()).unwrap();
+    if owner.owner != info.sender {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    // load masterpiece/tier-1 info
+    let tier_info = TIERS.load(
+        deps.storage,
+        U8Key::from(U8Key::from(1))).unwrap();
+
+    // Check if funds empty or multiple native coins sent by the user
+    if info.funds.len() != 1 {
+        return Err(ContractError::OnlyUSTAccepted {});
+    }
+    // Only UST accepted
+    let native_token = info.funds.first().unwrap();
+    if native_token.denom != *UUSD_DENOM {
+        return Err(ContractError::OnlyUSTAccepted {});
+    }
+    // Only exact amount of UST accepted
+    if native_token.amount != Uint128::from(tier_info.costs_sum()) {
+        return Err(ContractError::InvalidUSTAmount {
+            required: tier_info.costs_sum() as u128,
+            sent: native_token.amount.u128()});
+    }
+
+    // let highest_offer = HIGHEST_OFFER.may_load(deps.storage)?;
+    // match highest_offer {
+    //     Some(offer) => {
+    //         if native_token.amount > offer.bid{
+    //             HIGHEST_OFFER.update(deps.storage, |mut o| -> StdResult<_> {
+    //                 o.bid = native_token.amount;
+    //                 o.cw721_physical.token_id = token_id;
+    //                 o.cw721_physical.owner = info.sender.clone();
+    //                 Ok(o)
+    //             });
+    //         }
+    //         // Err(StdError::generic_err("Low bidding"));
+    //     },
+    //     None => {
+    //         HIGHEST_OFFER.save(deps.storage, &HighestOfferInfo{
+    //             bid: native_token.amount,
+    //             cw721_physical: Cw721PhysicalInfo {
+    //                 id: order_count(deps.storage).unwrap() + 1,
+    //                 token_id: token_id.clone(),
+    //                 owner: info.sender.clone(),
+    //                 tier: 1,
+    //                 status: "AUCTION".to_string()
+    //             }
+    //         });
+    //     }
+    // }
+
+
     Ok(Response::default())
 }
 
@@ -214,7 +252,7 @@ fn query_cw721_address(deps: Deps) -> StdResult<Cw721AddressResponse> {
     Ok(Cw721AddressResponse { cw721: state.cw721 })
 }
 
-fn query_cw721_token_owner(deps: Deps, token_id: String) -> StdResult<OwnerOfResponse> {
+fn query_cw721_owner(deps: Deps, token_id: String) -> StdResult<OwnerOfResponse> {
     let state = CONTRACT_INFO.load(deps.storage)?;
     let owner: OwnerOfResponse =
         deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
