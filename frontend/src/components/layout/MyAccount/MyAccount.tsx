@@ -8,6 +8,7 @@ import {useConnectedWallet} from "@terra-money/wallet-provider";
 import * as query from "../../../contract/query";
 import {ConnectedWallet} from "@terra-dev/use-wallet/useConnectedWallet";
 import {LoadingContent} from "../../shared/LoadingContent";
+import {ProfileGiveavays} from "./MyAccountsContent/ProfileGiveaways";
 
 interface MyAccountProps {
   className?: string;
@@ -51,15 +52,16 @@ export const MyAccountBase = (props: MyAccountProps) => {
             <Col xl={{span: 3}}
                  lg={{span: 12}}
                  xs={{span: 12}}
-                 className="d-flex flex-column justify-content-center align-self-end align-content-center align-items-center col">
-              <span className="owned-text">Owned</span>
+                 className="d-flex flex-column justify-content-center align-self-end align-content-center align-items-center col my-collection">
+              <span className="owned-text">My Collection</span>
               <div className="white-line"></div>
             </Col>
             <Col xl={{span: 9}}
                  lg={{span: 12}}
                  xs={{span: 12}}
-                 className="d-flex flex-column justify-content-center align-self-end align-content-center align-items-end col my-account-col">
-              <span className="my-account-text">My Account</span>
+                 className="d-flex flex-column justify-content-end align-self-end col my-account-col">
+              {/*<span className="my-account-text">My Account</span>*/}
+              <ProfileGiveavays/>
               <div className="white-line"></div>
             </Col>
           </Row>
@@ -90,14 +92,22 @@ export const MyAccount = styled(MyAccountBase)`
         z-index: 1;
         background: url("/assets/my-account-background.png");
         background-size: cover;
-        padding: 10rem 4rem;
+        padding: 5rem 4rem;
+
+        
         .row{
           &.about{
             margin-top: 3rem;
           }
           .col{
+            &.my-collection{
+              @media screen and (max-width: 767px) {
+                display: none!important;
+              }
+            }
             &.my-account-col{
               //margin-left: 2rem;
+              //margin-bottom: 0.5rem;
             }
             .owned-text{
               color: white;

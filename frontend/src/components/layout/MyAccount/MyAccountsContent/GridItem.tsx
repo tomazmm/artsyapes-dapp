@@ -44,7 +44,10 @@ export const GridItemBase = (props: GridItemProps) => {
 }
 
 export const GridItem = styled(GridItemBase)`
-  background-color: rgba(33, 30, 26, 0.7);
+  background: rgb(0,0,0);
+  background: linear-gradient(180deg, rgba(0,0,0,.5) 0%, rgba(71,71,71,.5) 40%, rgba(92,92,92,.5) 100%);
+  border: 0.1rem solid rgba(92,92,92,.7);
+  border-radius: 0.4rem;
   .grid-item-wrapper {
     cursor: pointer;
     img{
