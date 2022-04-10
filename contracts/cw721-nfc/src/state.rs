@@ -2,7 +2,8 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::{Addr, Uint128};
-use cw_storage_plus::{Item, Map, IndexedMap, MultiIndex, IndexList, UniqueIndex, U32Key, Index, U8Key, U128Key};
+use cw0::Expiration;
+use cw_storage_plus::{Item, Map, IndexedMap, MultiIndex, IndexList, UniqueIndex, U32Key, Index, U8Key};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ContractInfo {
@@ -27,9 +28,10 @@ pub struct TierInfo {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct HighestOfferInfo {
-    pub cw721_physical: Cw721PhysicalInfo,
-    pub bid: Uint128,
+pub struct BidInfo {
+    pub bid_amount: Uint128,
+    pub token_id: String,
+    pub owner: Addr,
 }
 
 impl TierInfo {
@@ -70,7 +72,11 @@ pub const CONTRACT_INFO: Item<ContractInfo> = Item::new("contract_info");
 
 pub const TIERS: Map<U8Key, TierInfo> = Map::new("tiers");
 
-pub const HIGHEST_OFFER: Item<HighestOfferInfo> = Item::new("highest_offer");
+pub const HIGHEST_OFFER: Item<BidInfo> = Item::new("highest_offer");
+
+pub const BIDS: Map<U8Key, BidInfo> = Map::new("bids");
+pub const BID_LIMIT: Item<u8> = Item::new("bid_limit");
+pub const BIDING_EXPIRATION: Item<Expiration> = Item::new("bidding_expiration");
 
 pub const PHYSICALS: Map<String, Cw721PhysicalInfo> = Map::new("physicals");
 pub const PHYSICALS_COUNT: Item<u32> = Item::new("physicals_count");
