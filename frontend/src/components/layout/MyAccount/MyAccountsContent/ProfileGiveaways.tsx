@@ -57,6 +57,7 @@ export const ProfileGiveavays = styled(ProfileGiveavaysBase)`
   display: flex;
   flex-wrap: wrap;
   justify-content: end;
+  margin: 0.4rem;
   .info-container{
     font-size: 0.9rem;
     border: 0.1rem solid white;
