@@ -52,34 +52,36 @@ export const MyAccountBase = (props: MyAccountProps) => {
             <Col xl={{span: 3}}
                  lg={{span: 12}}
                  xs={{span: 12}}
-                 className="d-flex flex-column justify-content-center align-self-end align-content-center align-items-center col my-collection">
+                 className="d-flex flex-column justify-content-center align-self-start align-items-center col my-collection">
               <span className="owned-text">My Collection</span>
               <div className="white-line"></div>
-            </Col>
-            <Col xl={{span: 9}}
-                 lg={{span: 12}}
-                 xs={{span: 12}}
-                 className="d-flex flex-column justify-content-end align-self-end col my-account-col">
-              {/*<span className="my-account-text">My Account</span>*/}
-              <ProfileGiveavays/>
-              <div className="white-line"></div>
-            </Col>
-          </Row>
-
-          <Row className="h-auto">
-            <Col xl={{span: 3}}
-                 lg={{span: 12}}
-                 xs={{span: 12}}
-              className="d-flex flex-column justify-content-center align-self-end align-content-center align-items-center col">
               <SideMenu/>
             </Col>
             <Col xl={{span: 9}}
                  lg={{span: 12}}
                  xs={{span: 12}}
-              className="d-flex flex-column justify-content-center align-self-end align-content-center align-items-end col my-account-col">
+                 className="d-flex flex-column justify-content-end align-self-start col align-items-end my-account-col">
+              {/*<span className="my-account-text">My Account</span>*/}
+              <ProfileGiveavays/>
+              <div className="white-line"></div>
               <Grid className={className} nftInfo={nftInfo}/>
             </Col>
           </Row>
+
+          {/*<Row className="h-auto">*/}
+          {/*  <Col xl={{span: 3}}*/}
+          {/*       lg={{span: 12}}*/}
+          {/*       xs={{span: 12}}*/}
+          {/*    className="d-flex flex-column justify-content-center align-self-start col">*/}
+          {/*    /!*<SideMenu/>*!/*/}
+          {/*  </Col>*/}
+          {/*  <Col xl={{span: 9}}*/}
+          {/*       lg={{span: 12}}*/}
+          {/*       xs={{span: 12}}*/}
+          {/*    className="d-flex flex-column justify-content-center align-self-end align-content-center align-items-end col my-account-col">*/}
+          {/*    /!*<Grid className={className} nftInfo={nftInfo}/>*!/*/}
+          {/*  </Col>*/}
+          {/*</Row>*/}
       </Container>
 
     </div>
@@ -92,9 +94,7 @@ export const MyAccount = styled(MyAccountBase)`
         z-index: 1;
         background: url("/assets/my-account-background.png");
         background-size: cover;
-        padding: 5rem 4rem;
-
-        
+        padding: 10rem 4rem;
         .row{
           &.about{
             margin-top: 3rem;
@@ -124,6 +124,7 @@ export const MyAccount = styled(MyAccountBase)`
             .white-line{
               border-bottom: 0.2rem groove rgba(194, 194, 194, .8);
               width: 100%;
+              margin-bottom: 2rem;
             }
           }
         }
