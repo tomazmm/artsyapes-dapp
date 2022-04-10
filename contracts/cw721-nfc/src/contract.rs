@@ -1,7 +1,7 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, Storage, Order, Uint128};
-use cw0::maybe_addr;
+use cw0::{Expiration, maybe_addr};
 use cw2::set_contract_version;
 use cw721_base::msg::QueryMsg::{OwnerOf};
 use cw721::{OwnerOfResponse};
@@ -9,7 +9,7 @@ use cw_storage_plus::{Bound, PrimaryKey, U32Key, U8Key};
 
 use crate::error::ContractError;
 use crate::msg::{AllPhysicalsResponse, Cw721AddressResponse, ExecuteMsg, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg, TierInfoResponse};
-use crate::state::{ContractInfo, CONTRACT_INFO, Cw721PhysicalInfo, PHYSICALS_COUNT, physicals, TIERS, TierInfo, BID_LIMIT, BIDS, BidInfo};
+use crate::state::{ContractInfo, CONTRACT_INFO, Cw721PhysicalInfo, PHYSICALS_COUNT, physicals, TIERS, TierInfo, BID_LIMIT, BIDS, BidInfo, BIDING_DURATION, BIDING_EXPIRATION};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw721-nfc";
@@ -49,8 +49,9 @@ pub fn instantiate(
         cost: 0
     })?;
 
-    let bid_limit: u8 = 1;
-    BID_LIMIT.save(deps.storage, &bid_limit);
+    BID_LIMIT.save(deps.storage, &1);
+    BIDING_DURATION.save(deps.storage, &90720);
+    BIDING_EXPIRATION.save(deps.storage, &Expiration::AtHeight(_env.block.height + 90720));
 
     Ok(Response::new()
         .add_attribute("method", "instantiate")

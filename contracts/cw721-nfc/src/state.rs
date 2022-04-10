@@ -72,10 +72,9 @@ pub const CONTRACT_INFO: Item<ContractInfo> = Item::new("contract_info");
 
 pub const TIERS: Map<U8Key, TierInfo> = Map::new("tiers");
 
-pub const HIGHEST_OFFER: Item<BidInfo> = Item::new("highest_offer");
-
 pub const BIDS: Map<U8Key, BidInfo> = Map::new("bids");
 pub const BID_LIMIT: Item<u8> = Item::new("bid_limit");
+pub const BIDING_DURATION: Item<u32> = Item::new("bidding_expiration");
 pub const BIDING_EXPIRATION: Item<Expiration> = Item::new("bidding_expiration");
 
 pub const PHYSICALS: Map<String, Cw721PhysicalInfo> = Map::new("physicals");
