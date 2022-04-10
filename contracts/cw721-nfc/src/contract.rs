@@ -1,6 +1,6 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, Storage, Order, Uint128, BlockInfo, StdError};
+use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, Storage, Order, Uint128};
 use cw0::maybe_addr;
 use cw2::set_contract_version;
 use cw721_base::msg::QueryMsg::{OwnerOf};
@@ -9,7 +9,7 @@ use cw_storage_plus::{Bound, PrimaryKey, U32Key, U8Key};
 
 use crate::error::ContractError;
 use crate::msg::{AllPhysicalsResponse, Cw721AddressResponse, ExecuteMsg, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg, TierInfoResponse};
-use crate::state::{ContractInfo, CONTRACT_INFO, Cw721PhysicalInfo, PHYSICALS_COUNT, physicals, TIERS, TierInfo, HIGHEST_OFFER, HighestOfferInfo};
+use crate::state::{ContractInfo, CONTRACT_INFO, Cw721PhysicalInfo, PHYSICALS_COUNT, physicals, TIERS, TierInfo, BID_LIMIT, BIDS, BidInfo};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw721-nfc";
@@ -34,9 +34,23 @@ pub fn instantiate(
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     CONTRACT_INFO.save(deps.storage, &contract_info)?;
 
-    TIERS.save(deps.storage, U8Key::from(1), &TierInfo { max_physical_limit: 1, cost: 2500 * 1_000_000 })?;
-    TIERS.save(deps.storage, U8Key::from(2), &TierInfo { max_physical_limit: 10, cost: 120 * 1_000_000 })?;
-    TIERS.save(deps.storage, U8Key::from(3), &TierInfo { max_physical_limit: 3, cost: 0 })?;
+    // Starting/opening bid for the auction of masterpiece/tier-1
+    TIERS.save(deps.storage, U8Key::from(1), &TierInfo {
+        max_physical_limit: 1,
+        cost: 2500 * 1_000_000
+    })?;
+    // Fixed prices for the tier-2/-3
+    TIERS.save(deps.storage, U8Key::from(2), &TierInfo {
+        max_physical_limit: 10,
+        cost: 120 * 1_000_000
+    })?;
+    TIERS.save(deps.storage, U8Key::from(3), &TierInfo {
+        max_physical_limit: 3,
+        cost: 0
+    })?;
+
+    let bid_limit: u8 = 1;
+    BID_LIMIT.save(deps.storage, &bid_limit);
 
     Ok(Response::new()
         .add_attribute("method", "instantiate")
@@ -140,7 +154,6 @@ fn order_cw721_print(deps: DepsMut, info: MessageInfo, token_id: String, tier: S
 
 fn place_bid(deps: DepsMut, info: MessageInfo, token_id: String) -> Result<Response, ContractError> {
     // TODO: check if auction is still live
-
     // check token ownership
     let owner: OwnerOfResponse = query_cw721_owner(deps.as_ref(), token_id.clone()).unwrap();
     if owner.owner != info.sender {
@@ -161,42 +174,47 @@ fn place_bid(deps: DepsMut, info: MessageInfo, token_id: String) -> Result<Respo
     if native_token.denom != *UUSD_DENOM {
         return Err(ContractError::OnlyUSTAccepted {});
     }
-    // Only exact amount of UST accepted
-    if native_token.amount != Uint128::from(tier_info.costs_sum()) {
+    // Only exact or greater amount of UST accepted
+    let sender_bid_amount = native_token.amount;
+    if sender_bid_amount < Uint128::from(tier_info.costs_sum()) {
         return Err(ContractError::InvalidUSTAmount {
             required: tier_info.costs_sum() as u128,
-            sent: native_token.amount.u128()});
+            sent: native_token.amount.u128()
+        });
     }
 
-    // let highest_offer = HIGHEST_OFFER.may_load(deps.storage)?;
-    // match highest_offer {
-    //     Some(offer) => {
-    //         if native_token.amount > offer.bid{
-    //             HIGHEST_OFFER.update(deps.storage, |mut o| -> StdResult<_> {
-    //                 o.bid = native_token.amount;
-    //                 o.cw721_physical.token_id = token_id;
-    //                 o.cw721_physical.owner = info.sender.clone();
-    //                 Ok(o)
-    //             });
-    //         }
-    //         // Err(StdError::generic_err("Low bidding"));
-    //     },
-    //     None => {
-    //         HIGHEST_OFFER.save(deps.storage, &HighestOfferInfo{
-    //             bid: native_token.amount,
-    //             cw721_physical: Cw721PhysicalInfo {
-    //                 id: order_count(deps.storage).unwrap() + 1,
-    //                 token_id: token_id.clone(),
-    //                 owner: info.sender.clone(),
-    //                 tier: 1,
-    //                 status: "AUCTION".to_string()
-    //             }
-    //         });
-    //     }
-    // }
+    // fetch all on-going bids
+    let bids : Vec<_> = BIDS
+        .range(deps.storage, None, None, Order::Ascending)
+        .collect::<StdResult<_>>().unwrap();
 
-
-    Ok(Response::default())
+    let bids_length = bids.len() as u8;
+    if bids_length < BID_LIMIT.load(deps.storage)? {
+        BIDS.save(deps.storage, U8Key::from(bids_length + 1), &BidInfo{
+            bid_amount:sender_bid_amount,
+            token_id,
+            owner: info.sender.clone()
+        });
+        return Ok(Response::default());
+    }
+    else {
+        // Check if overbids any of current bids
+        let possible_over_bids = bids
+            .iter()
+            .find(|(k, bid)| sender_bid_amount > bid.bid_amount)
+            .map(|(key, _)| key[0]);
+        return match possible_over_bids {
+            None => Err(ContractError::LowBidding {}),
+            Some(bid_id) => {
+                BIDS.save(deps.storage, U8Key::from(bid_id), &BidInfo{
+                    bid_amount:sender_bid_amount,
+                    token_id,
+                    owner: info.sender.clone()
+                });
+                Ok(Response::default())
+            }
+        };
+    }
 }
 
 fn update_tier_info(deps: DepsMut,

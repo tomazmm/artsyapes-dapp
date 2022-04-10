@@ -3,10 +3,9 @@ mod tests {
     use cosmwasm_std::testing::{mock_env, mock_info};
     use super::super::testing::mock_dependencies;
     use cosmwasm_std::{Addr, coin, coins, DepsMut, from_binary};
-    use cw721::OwnerOfResponse;
     use crate::contract::{execute, instantiate, query};
     use crate::error::ContractError;
-    use crate::msg::ExecuteMsg::{OrderCw721Print, UpdateTierInfo};
+    use crate::msg::ExecuteMsg::{Bid721Masterpiece, OrderCw721Print, UpdateTierInfo};
     use crate::msg::{Cw721AddressResponse, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg, TierInfoResponse};
     use crate::state::Cw721PhysicalInfo;
 
@@ -86,7 +85,7 @@ mod tests {
     }
 
     #[test]
-    fn creating_order() {
+    fn ordering_prints() {
         // physical items data
         let physical = Cw721PhysicalInfo {
             id: 1,
@@ -150,7 +149,7 @@ mod tests {
     }
 
     #[test]
-    fn creating_order_with_wrong_tier() {
+    fn ordering_prints_with_wrong_tier() {
         let mut deps = mock_dependencies();
         setup_contract(deps.as_mut());
 
@@ -167,7 +166,7 @@ mod tests {
     }
 
     #[test]
-    fn creating_order_with_invalid_funds() {
+    fn ordering_prints_with_invalid_funds() {
         let mut deps = mock_dependencies();
         setup_contract(deps.as_mut());
 
@@ -208,7 +207,7 @@ mod tests {
     }
 
     #[test]
-    fn creating_max_possible_physical_items_per_token() {
+    fn ordering_max_possible_physical_items_per_token() {
         let mut deps = mock_dependencies();
         setup_contract(deps.as_mut());
 
@@ -368,5 +367,84 @@ mod tests {
         let physicals: Cw721PhysicalsResponse = from_binary(&res).unwrap();
         assert_eq!(1, physicals.physicals.len());
         assert_eq!(vec![physical3.id.to_string()], physicals.physicals);
+    }
+
+    #[test]
+    fn placing_masterpiece_bid() {
+        // // physical items data
+        // let physical = Cw721PhysicalInfo {
+        //     id: 1,
+        //     token_id: "1".to_string(),
+        //     owner: Addr::unchecked("alice"),
+        //     tier: 3,
+        //     status: "PENDING".to_string()
+        // };
+
+        let mut deps = mock_dependencies();
+        setup_contract(deps.as_mut());
+
+        deps.querier.set_cw721_token("alice", 1);
+        deps.querier.set_cw721_token("bob", 2);
+
+        // random cannot place bid
+        let info = mock_info("chuck", &[]);
+        let msg = Bid721Masterpiece { token_id: "1".to_string()};
+        let err =
+            execute(deps.as_mut(), mock_env(), info, msg.clone())
+                .unwrap_err();
+        assert_eq!(err, ContractError::Unauthorized {});
+
+        // alice can place bid
+        let info = mock_info("alice", &[coin(2510 * 1000000, "uusd")]);
+        let msg = Bid721Masterpiece { token_id: 1.to_string()};
+        let res = execute(deps.as_mut(), mock_env(), info, msg.clone())
+            .unwrap();
+        assert_eq!(0, res.messages.len());
+
+        // bob cannot place bid with same UST amount
+        let info = mock_info("bob", &[coin(2510 * 1000000, "uusd")]);
+        let msg = Bid721Masterpiece { token_id: 2.to_string()};
+        let err = execute(deps.as_mut(), mock_env(), info, msg.clone())
+            .unwrap_err();
+        assert_eq!(err, ContractError::LowBidding {});
+
+        // bob can overbid alice
+        let info = mock_info("bob", &[coin(2600 * 1000000, "uusd")]);
+        let msg = Bid721Masterpiece { token_id: 2.to_string()};
+        let err = execute(deps.as_mut(), mock_env(), info, msg.clone())
+            .unwrap();
+        assert_eq!(0, res.messages.len());
+        //
+        // // order info is correct
+        // let query_order_msg = QueryMsg::GetCw721PhysicalInfo {token_id: "1".to_string()};
+        // let res = query(deps.as_ref(),mock_env(), query_order_msg).unwrap();
+        // let pyhsical: Cw721PhysicalInfoResponse = from_binary(&res).unwrap();
+        // assert_eq!(physical, pyhsical.physical);
+        //
+        // // alice cannot order physical item of same tier twice
+        // let info = mock_info("alice", &[coin(10 * 1000000, "uusd")]);
+        // let msg = OrderCw721Print { token_id: 1.to_string(), tier: "3".to_string()};
+        // let err = execute(deps.as_mut(), mock_env(), info, msg.clone())
+        //     .unwrap_err();
+        // assert_eq!(err, ContractError::AlreadyOwned {});
+        //
+        // // alice can still order physical item of tier 1 and 2
+        // let info = mock_info("alice", &[coin(2510 * 1000000, "uusd")]);
+        // let msg = OrderCw721Print { token_id: 1.to_string(), tier: "1".to_string()};
+        // let res = execute(deps.as_mut(), mock_env(), info, msg.clone())
+        //     .unwrap();
+        // assert_eq!(0, res.messages.len());
+        // let info = mock_info("alice", &[coin(130 * 1000000, "uusd")]);
+        // let msg = OrderCw721Print { token_id: 1.to_string(), tier: "2".to_string()};
+        // let res = execute(deps.as_mut(), mock_env(), info, msg.clone())
+        //     .unwrap();
+        // assert_eq!(0, res.messages.len());
+        //
+        // // query all orders
+        // let query_order_msg = QueryMsg::AllCw721Physicals { start_after: None, limit: None };
+        // let res = query(deps.as_ref(),mock_env(), query_order_msg).unwrap();
+        // let physicals: Cw721PhysicalsResponse = from_binary(&res).unwrap();
+        // assert_eq!(3, physicals.physicals.len());
+        // assert_eq!(vec!["1", "2", "3"], physicals.physicals);
     }
 }
