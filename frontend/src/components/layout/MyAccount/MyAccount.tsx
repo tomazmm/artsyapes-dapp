@@ -9,6 +9,7 @@ import * as query from "../../../contract/query";
 import {ConnectedWallet} from "@terra-dev/use-wallet/useConnectedWallet";
 import {LoadingContent} from "../../shared/LoadingContent";
 import {ProfileGiveavays} from "./MyAccountsContent/ProfileGiveaways";
+import {MobileBurgerMenu} from "./MyAccountsContent/MobileBurgerMenu";
 
 interface MyAccountProps {
   className?: string;
@@ -24,6 +25,7 @@ export const MyAccountBase = (props: MyAccountProps) => {
   const [tokens, setTokens] = useState<any>([])
   const [nftInfo, setNftInfo] = useState<any>([])
   const [nftsCount, setNftsCount] = useState<any>(0)
+  const [show, setShow] = useState(false);
 
 
   useEffect(() => {
@@ -44,9 +46,17 @@ export const MyAccountBase = (props: MyAccountProps) => {
     fetch()
   }, [tokens.length, connectedWallet])
 
+  const toggleBurgerMenu = () => setShow(!show);
+
+
   return (
     <div className={className}>
-      <Header/>
+      <Header setShow={toggleBurgerMenu}/>
+      {show ?
+        <MobileBurgerMenu/>
+        :
+        <></>
+      }
       <Container fluid className="h-100 fixed-top">
           <Row className="h-auto about mb-4">
             <Col xl={{span: 3}}
@@ -67,21 +77,6 @@ export const MyAccountBase = (props: MyAccountProps) => {
               <Grid className={className} nftInfo={nftInfo}/>
             </Col>
           </Row>
-
-          {/*<Row className="h-auto">*/}
-          {/*  <Col xl={{span: 3}}*/}
-          {/*       lg={{span: 12}}*/}
-          {/*       xs={{span: 12}}*/}
-          {/*    className="d-flex flex-column justify-content-center align-self-start col">*/}
-          {/*    /!*<SideMenu/>*!/*/}
-          {/*  </Col>*/}
-          {/*  <Col xl={{span: 9}}*/}
-          {/*       lg={{span: 12}}*/}
-          {/*       xs={{span: 12}}*/}
-          {/*    className="d-flex flex-column justify-content-center align-self-end align-content-center align-items-end col my-account-col">*/}
-          {/*    /!*<Grid className={className} nftInfo={nftInfo}/>*!/*/}
-          {/*  </Col>*/}
-          {/*</Row>*/}
       </Container>
 
     </div>
@@ -94,7 +89,7 @@ export const MyAccount = styled(MyAccountBase)`
         z-index: 1;
         background: url("/assets/my-account-background.png");
         background-size: cover;
-        padding: 10rem 4rem;
+        padding: 6rem 4rem;
         .row{
           &.about{
             margin-top: 3rem;
