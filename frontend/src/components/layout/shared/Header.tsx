@@ -1,19 +1,23 @@
-import React from "react";
+import React, {useState} from "react";
 import styled from 'styled-components';
 import {Col, Container, Row} from "react-bootstrap";
 import {ConnectWallet} from "../../shared/ConnectWallet";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faBars} from "@fortawesome/free-solid-svg-icons";
+import {MobileBurgerMenu} from "../MyAccount/MyAccountsContent/MobileBurgerMenu";
 
 interface HeaderProps {
   className?: string;
+  setShow?: any;
 }
 
 export const HeaderBase = (props: HeaderProps) => {
   const {
-    className
+    className,
+    setShow
   } = props;
 
+  const toggleBurgerMenu = () => setShow();
 
   return (
     <div className={className}>
@@ -34,7 +38,7 @@ export const HeaderBase = (props: HeaderProps) => {
           </Col>
           <Col sm={{span: 2}}
                xs={{span: 2}}  className="burger-menu" >
-            <FontAwesomeIcon className="icon" icon={faBars}  />
+            <FontAwesomeIcon className="icon" icon={faBars}  onClick={toggleBurgerMenu}/>
           </Col>
         </Row>
         </Container>
@@ -82,7 +86,7 @@ export const Header = styled(HeaderBase)`
           display: flex;
           justify-content: center;
         }
-        
+        cursor: pointer;
         
         svg{
           height: 2rem;

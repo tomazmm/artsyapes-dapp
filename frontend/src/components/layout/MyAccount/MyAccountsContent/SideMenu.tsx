@@ -52,6 +52,11 @@ export const SideMenu = styled(SideMenuBase)`
   width: 100%;
   margin-bottom: 2rem;
   div{
+    -webkit-user-select: none;  /* Chrome all / Safari all */
+    -moz-user-select: none;     /* Firefox all */
+    -ms-user-select: none;      /* IE 10+ */
+    user-select: none;          /* Likely future */
+    
     &.my-collection{
       color: white;
       border: 0.1rem solid rgba(92,92,92,.7);
