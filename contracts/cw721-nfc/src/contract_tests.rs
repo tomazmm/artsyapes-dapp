@@ -101,7 +101,7 @@ mod tests {
         deps.querier.set_cw721_token("alice", 1);
 
         // random cannot create order
-        let info = mock_info("chuck", &[]);
+        let info = mock_info("chuck", &[coin(130 * 1000000, "uusd")]);
         let msg = OrderCw721Print { token_id: "1".to_string(), tier: "3".to_string()};
         let err =
             execute(deps.as_mut(), mock_env(), info, msg.clone())
@@ -154,7 +154,7 @@ mod tests {
         setup_contract(deps.as_mut());
 
         // cannot create order with wrong tier(=0)
-        let info = mock_info("alice", &[]);
+        let info = mock_info("alice", &[coin(2510 * 1000000, "uusd")]);
         let msg = OrderCw721Print { token_id: 1.to_string(), tier: 0.to_string()};
         let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap_err();
         assert_eq!(err, ContractError::InvalidTier {});
@@ -387,7 +387,7 @@ mod tests {
         deps.querier.set_cw721_token("bob", 2);
 
         // random cannot place bid
-        let info = mock_info("chuck", &[]);
+        let info = mock_info("chuck", &[coin(2510 * 1000000, "uusd")]);
         let msg = Bid721Masterpiece { token_id: "1".to_string()};
         let err =
             execute(deps.as_mut(), mock_env(), info, msg.clone())

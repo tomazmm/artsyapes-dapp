@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Addr, Uint128};
+use cosmwasm_std::{Addr, StdResult, Storage, Uint128};
 use cw0::Expiration;
 use cw_storage_plus::{Item, Map, IndexedMap, MultiIndex, IndexList, UniqueIndex, U32Key, Index, U8Key};
 
@@ -71,6 +71,10 @@ pub fn physicals<'a>() -> IndexedMap<'a, &'a [u8], Cw721PhysicalInfo, PhysicalIn
 pub const CONTRACT_INFO: Item<ContractInfo> = Item::new("contract_info");
 
 pub const TIERS: Map<U8Key, TierInfo> = Map::new("tiers");
+pub fn load_tier_info(storage: &dyn Storage, tier: u8, ) -> StdResult<TierInfo> {
+    TIERS.load(storage, U8Key::from(tier))
+}
+
 
 pub const BIDS: Map<U8Key, BidInfo> = Map::new("bids");
 pub const BID_LIMIT: Item<u8> = Item::new("bid_limit");

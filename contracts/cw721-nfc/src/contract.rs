@@ -1,6 +1,6 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, Storage, Order, Uint128};
+use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, Storage, Order, Uint128, BlockInfo, Coin};
 use cw0::{Expiration, maybe_addr};
 use cw2::set_contract_version;
 use cw721_base::msg::QueryMsg::{OwnerOf};
@@ -9,7 +9,7 @@ use cw_storage_plus::{Bound, PrimaryKey, U32Key, U8Key};
 
 use crate::error::ContractError;
 use crate::msg::{AllPhysicalsResponse, Cw721AddressResponse, ExecuteMsg, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg, TierInfoResponse};
-use crate::state::{ContractInfo, CONTRACT_INFO, Cw721PhysicalInfo, PHYSICALS_COUNT, physicals, TIERS, TierInfo, BID_LIMIT, BIDS, BidInfo, BIDING_DURATION, BIDING_EXPIRATION};
+use crate::state::{ContractInfo, CONTRACT_INFO, Cw721PhysicalInfo, PHYSICALS_COUNT, physicals, TIERS, TierInfo, BID_LIMIT, BIDS, BidInfo, BIDING_DURATION, BIDING_EXPIRATION, load_tier_info};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw721-nfc";
@@ -68,10 +68,14 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::OrderCw721Print { token_id, tier} => {
+            assert_ust(info.funds.clone())?;
+            // validate_order();
             order_cw721_print(deps, info, token_id, tier)
         },
         ExecuteMsg::Bid721Masterpiece { token_id} => {
-            place_bid(deps, info, token_id)
+            assert_ust(info.funds.clone())?;
+            // process_expired_bids(deps, _env.block);
+            place_bid(deps, info, token_id, _env.block)
         },
         ExecuteMsg::UpdateTierInfo { tier, max_physical_limit, cost} => {
             update_tier_info(deps, info, tier, max_physical_limit, cost)
@@ -90,54 +94,34 @@ fn order_cw721_print(deps: DepsMut, info: MessageInfo, token_id: String, tier: S
         return Err(ContractError::Unauthorized {});
     }
 
-    // create order and validate it
-    let cw721_physical = Cw721PhysicalInfo {
-        id: order_count(deps.storage).unwrap() + 1,
-        token_id: token_id.clone(),
-        owner: info.sender.clone(),
-        tier,
-        status: "PENDING".to_string()
-    };
-
-    let tier_info = TIERS.load(
-        deps.storage,
-        U8Key::from(U8Key::from(cw721_physical.tier))).unwrap();
-
-    // Check if funds empty or multiple native coins sent by the user
-    if info.funds.len() != 1 {
-        return Err(ContractError::OnlyUSTAccepted {});
-    }
-    // Only UST accepted
-    let native_token = info.funds.first().unwrap();
-    if native_token.denom != *UUSD_DENOM {
-        return Err(ContractError::OnlyUSTAccepted {});
-    }
     // Only exact amount of UST accepted
-    if native_token.amount != Uint128::from(tier_info.costs_sum()) {
+    let tier_info = load_tier_info(deps.storage, tier)?;
+    let ust_amount = info.funds.first().unwrap().amount;
+    if ust_amount != Uint128::from(tier_info.costs_sum()) {
         return Err(ContractError::InvalidUSTAmount {
             required: tier_info.costs_sum() as u128,
-            sent: native_token.amount.u128()});
+            sent: ust_amount.u128()});
     }
 
     // Get physical items by 'token_id' and filter by 'tier'
     let physical_vec : Vec<Cw721PhysicalInfo> = physicals()
         .idx.token_id
-        .prefix(cw721_physical.token_id.to_string())
+        .prefix(token_id.to_string())
         .range(deps.storage, None, None, Order::Ascending)
         .map(|item| item.map(|(_, v)| v))
-        .filter(|item| item.as_ref().unwrap().tier == cw721_physical.tier)
+        .filter(|item| item.as_ref().unwrap().tier == tier)
         .collect::<StdResult<_>>().unwrap();
 
     // validate  order
     let mut tier_count = 0;
     for i in physical_vec.iter(){
         // Sender can not order same physical item
-        if i.owner == cw721_physical.owner {
+        if i.owner == info.sender {
             return Err(ContractError::AlreadyOwned {});
         }
         tier_count += 1;
         if tier_count == tier_info.max_physical_limit{
-            return match cw721_physical.tier {
+            return match tier {
                 1 => Err(ContractError::MaxTier1Items {}),
                 2 => Err(ContractError::MaxTier2Items {}),
                 3 => Err(ContractError::MaxTier3Items {}),
@@ -146,42 +130,30 @@ fn order_cw721_print(deps: DepsMut, info: MessageInfo, token_id: String, tier: S
         }
     }
 
-    // save order and increment counter
-    physicals().save(deps.storage, &U32Key::from(cw721_physical.id).joined_key(), &cw721_physical).unwrap();
-    increment_orders(deps.storage).unwrap();
+    // Save Cw721Physical item and increment counter
+    let cw721_physical_id = order_count(deps.storage).unwrap() + 1;
+    physicals().save(deps.storage, &U32Key::from(cw721_physical_id).joined_key(), &Cw721PhysicalInfo {
+        id: cw721_physical_id,
+        token_id: token_id.clone(),
+        owner: info.sender.clone(),
+        tier,
+        status: "PENDING".to_string()
+    })?;
+    increment_orders(deps.storage)?;
 
     Ok(Response::default())
 }
 
-fn place_bid(deps: DepsMut, info: MessageInfo, token_id: String) -> Result<Response, ContractError> {
-    // TODO: check if auction is still live
+fn place_bid(deps: DepsMut, info: MessageInfo, token_id: String, block: BlockInfo) -> Result<Response, ContractError> {
+    // if BIDING_EXPIRATION.load(deps.storage)?.is_expired(&block) {
+    //     for (key, bid) in bids.iter() {
+    //         BIDS.remove(deps.storage, U8Key::from(key[0]))
+    //     }
+    // }
     // check token ownership
     let owner: OwnerOfResponse = query_cw721_owner(deps.as_ref(), token_id.clone()).unwrap();
     if owner.owner != info.sender {
         return Err(ContractError::Unauthorized {});
-    }
-
-    // load masterpiece/tier-1 info
-    let tier_info = TIERS.load(
-        deps.storage,
-        U8Key::from(U8Key::from(1))).unwrap();
-
-    // Check if funds empty or multiple native coins sent by the user
-    if info.funds.len() != 1 {
-        return Err(ContractError::OnlyUSTAccepted {});
-    }
-    // Only UST accepted
-    let native_token = info.funds.first().unwrap();
-    if native_token.denom != *UUSD_DENOM {
-        return Err(ContractError::OnlyUSTAccepted {});
-    }
-    // Only exact or greater amount of UST accepted
-    let sender_bid_amount = native_token.amount;
-    if sender_bid_amount < Uint128::from(tier_info.costs_sum()) {
-        return Err(ContractError::InvalidUSTAmount {
-            required: tier_info.costs_sum() as u128,
-            sent: native_token.amount.u128()
-        });
     }
 
     // fetch all on-going bids
@@ -190,9 +162,21 @@ fn place_bid(deps: DepsMut, info: MessageInfo, token_id: String) -> Result<Respo
         .collect::<StdResult<_>>().unwrap();
 
     let bids_length = bids.len() as u8;
+    let ust_amount = info.funds.first().unwrap().amount;
+
+    // Still a free spot available with minimum bid
     if bids_length < BID_LIMIT.load(deps.storage)? {
+        // Amount of UST must be equal or greater than minimum bid
+        let tier1_info = load_tier_info(deps.storage, 1)?;
+        if ust_amount < Uint128::from(tier1_info.costs_sum()) {
+            return Err(ContractError::InvalidUSTAmount {
+                required: tier1_info.costs_sum() as u128,
+                sent: ust_amount.u128()
+            });
+        }
+        // Save bid into state
         BIDS.save(deps.storage, U8Key::from(bids_length + 1), &BidInfo{
-            bid_amount:sender_bid_amount,
+            bid_amount: ust_amount,
             token_id,
             owner: info.sender.clone()
         });
@@ -202,13 +186,14 @@ fn place_bid(deps: DepsMut, info: MessageInfo, token_id: String) -> Result<Respo
         // Check if overbids any of current bids
         let possible_over_bids = bids
             .iter()
-            .find(|(k, bid)| sender_bid_amount > bid.bid_amount)
+            .find(|(k, bid)| ust_amount > bid.bid_amount)
             .map(|(key, _)| key[0]);
+
         return match possible_over_bids {
             None => Err(ContractError::LowBidding {}),
             Some(bid_id) => {
                 BIDS.save(deps.storage, U8Key::from(bid_id), &BidInfo{
-                    bid_amount:sender_bid_amount,
+                    bid_amount:ust_amount,
                     token_id,
                     owner: info.sender.clone()
                 });
@@ -254,6 +239,26 @@ fn increment_orders(storage: &mut dyn Storage) -> StdResult<u32> {
     PHYSICALS_COUNT.save(storage, &val)?;
     Ok(val)
 }
+
+
+/// ## Description
+/// Verifies that funds sent to contract is UST only
+/// Returns [`Ok`] if only UST is sent to ContractError, otherwise returns [`ContractError`]
+/// ## Params
+/// * **funds** is an object of type [`Storage`]
+fn assert_ust(funds: Vec<Coin>) -> Result<(), ContractError> {
+    // Check if funds empty or multiple native coins sent by the user
+    if funds.len() != 1 {
+        return Err(ContractError::OnlyUSTAccepted {});
+    }
+    // Only UST accepted
+    let native_token = funds.first().unwrap();
+    if native_token.denom != *UUSD_DENOM {
+        return Err(ContractError::OnlyUSTAccepted {});
+    }
+    Ok(())
+}
+
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
