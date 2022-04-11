@@ -411,7 +411,7 @@ mod tests {
         // bob can overbid alice
         let info = mock_info("bob", &[coin(2600 * 1000000, "uusd")]);
         let msg = Bid721Masterpiece { token_id: 2.to_string()};
-        let err = execute(deps.as_mut(), mock_env(), info, msg.clone())
+        let res = execute(deps.as_mut(), mock_env(), info, msg.clone())
             .unwrap();
         assert_eq!(0, res.messages.len());
         //
