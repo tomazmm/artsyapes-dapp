@@ -38,9 +38,6 @@ pub enum ContractError {
     #[error("Tier max Limit can't be set to zero")]
     TierMaxLimitIsZero {},
 
-    #[error("Tier cost can't be set to zero")]
-    TierCostsIsZero {},
-
     #[error("You need to over-bid previous bidder")]
     LowBidding {},
 }
