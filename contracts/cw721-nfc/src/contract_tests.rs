@@ -79,22 +79,10 @@ mod tests {
         let msg = UpdateTierInfo { tier: 3, max_physical_limit: 0, cost: 10 * 1_000_000};
         let err = execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap_err();
         assert_eq!(err, ContractError::TierMaxLimitIsZero {});
-        let msg = UpdateTierInfo { tier: 3, max_physical_limit: 100, cost: 0};
-        let err = execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap_err();
-        assert_eq!(err, ContractError::TierCostsIsZero {});
     }
 
     #[test]
     fn ordering_prints() {
-        // physical items data
-        let physical = Cw721PhysicalInfo {
-            id: 1,
-            token_id: "1".to_string(),
-            owner: Addr::unchecked("alice"),
-            tier: 3,
-            status: "PENDING".to_string()
-        };
-
         let mut deps = mock_dependencies();
         setup_contract(deps.as_mut());
 
@@ -108,34 +96,35 @@ mod tests {
                 .unwrap_err();
         assert_eq!(err, ContractError::Unauthorized {});
 
-        // alice can order tier 3
+        // alice can order tier 3 physical-print
         let info = mock_info("alice", &[coin(10 * 1000000, "uusd")]);
-        let msg = OrderCw721Print { token_id: 1.to_string(), tier: "3".to_string()};
+        let msg = OrderCw721Print { token_id: 1.to_string(), tier: 3.to_string()};
         let res = execute(deps.as_mut(), mock_env(), info, msg.clone())
             .unwrap();
         assert_eq!(0, res.messages.len());
 
         // order info is correct
-        let query_order_msg = QueryMsg::GetCw721PhysicalInfo {token_id: "1".to_string()};
+        let query_order_msg = QueryMsg::GetCw721PhysicalInfo {token_id: 1.to_string()};
         let res = query(deps.as_ref(),mock_env(), query_order_msg).unwrap();
         let pyhsical: Cw721PhysicalInfoResponse = from_binary(&res).unwrap();
-        assert_eq!(physical, pyhsical.physical);
+        assert_eq!( Cw721PhysicalInfo {
+            id: 1,
+            token_id: "1".to_string(),
+            owner: Addr::unchecked("alice"),
+            tier: 3,
+            status: "PENDING".to_string()
+        }, pyhsical.physical);
 
-        // alice cannot order physical item of same tier twice
+        // alice cannot order physical-print of same tier twice
         let info = mock_info("alice", &[coin(10 * 1000000, "uusd")]);
-        let msg = OrderCw721Print { token_id: 1.to_string(), tier: "3".to_string()};
+        let msg = OrderCw721Print { token_id: 1.to_string(), tier: 3.to_string()};
         let err = execute(deps.as_mut(), mock_env(), info, msg.clone())
             .unwrap_err();
         assert_eq!(err, ContractError::AlreadyOwned {});
 
-        // alice can still order physical item of tier 1 and 2
-        let info = mock_info("alice", &[coin(2510 * 1000000, "uusd")]);
-        let msg = OrderCw721Print { token_id: 1.to_string(), tier: "1".to_string()};
-        let res = execute(deps.as_mut(), mock_env(), info, msg.clone())
-            .unwrap();
-        assert_eq!(0, res.messages.len());
+        // alice can still order tier 2 physical-print
         let info = mock_info("alice", &[coin(130 * 1000000, "uusd")]);
-        let msg = OrderCw721Print { token_id: 1.to_string(), tier: "2".to_string()};
+        let msg = OrderCw721Print { token_id: 1.to_string(), tier: 2.to_string()};
         let res = execute(deps.as_mut(), mock_env(), info, msg.clone())
             .unwrap();
         assert_eq!(0, res.messages.len());
@@ -144,8 +133,8 @@ mod tests {
         let query_order_msg = QueryMsg::AllCw721Physicals { start_after: None, limit: None };
         let res = query(deps.as_ref(),mock_env(), query_order_msg).unwrap();
         let physicals: Cw721PhysicalsResponse = from_binary(&res).unwrap();
-        assert_eq!(3, physicals.physicals.len());
-        assert_eq!(vec!["1", "2", "3"], physicals.physicals);
+        assert_eq!(2, physicals.physicals.len());
+        assert_eq!(vec!["1", "2"], physicals.physicals);
     }
 
     #[test]
@@ -157,6 +146,12 @@ mod tests {
         let info = mock_info("alice", &[coin(2510 * 1000000, "uusd")]);
         let msg = OrderCw721Print { token_id: 1.to_string(), tier: 0.to_string()};
         let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap_err();
+        assert_eq!(err, ContractError::InvalidTier {});
+
+        // tier = 1
+        let msg = OrderCw721Print { token_id: 1.to_string(), tier: 1.to_string()};
+        let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone())
+            .unwrap_err();
         assert_eq!(err, ContractError::InvalidTier {});
 
         // tier = 4
@@ -213,10 +208,21 @@ mod tests {
 
         deps.querier.set_cw721_token("alice", 1);
 
-        // alice orders tier 1, 2 and 3
-        for x in 1..4 {
+        // Tier 2 and 3 have only one possible physical item
+        let info = mock_info("creator", &[]);
+        let msg = UpdateTierInfo { tier: 3, max_physical_limit: 1, cost: 0};
+        let res =
+            execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+        assert_eq!(0, res.messages.len());
+        let info = mock_info("creator", &[]);
+        let msg = UpdateTierInfo { tier: 2, max_physical_limit: 1, cost: 120 * 1_000_000};
+        let res =
+            execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+        assert_eq!(0, res.messages.len());
+
+        // alice orders tier 2 and 3
+        for x in 2..4 {
             let ust = match x {
-                1 => coin(2510 * 1000000, "uusd"),
                 2 => coin(130 * 1000000, "uusd"),
                 _ => coin(10 * 1000000, "uusd")
             };
@@ -235,75 +241,43 @@ mod tests {
         deps.querier.transfer_cw721_token("bob", 1);
         let info = mock_info("bob", &[coin(2510 * 1000000, "uusd")]);
 
-        // bob cannot order tier 1
-        let msg = OrderCw721Print { token_id: 1.to_string(), tier: 1.to_string()};
-        let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap_err();
-        assert_eq!(err, ContractError::MaxTier1Items {});
-        // bob orders tier 2 and 3
+        // bob cannot order tier 2 and 3 anymore
         for x in 2..4 {
             let ust = match x {
                 2 => coin(130 * 1000000, "uusd"),
                 _ => coin(10 * 1000000, "uusd")
             };
             let info = mock_info("bob", &[ust]);
-            // creates an order
-            let msg = OrderCw721Print { token_id: 1.to_string(), tier: x.to_string()};
-            let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
-            assert_eq!(0, res.messages.len());
-            // can't have a duplicate physical item
             let msg = OrderCw721Print { token_id: 1.to_string(), tier: x.to_string()};
             let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap_err();
-            assert_eq!(err, ContractError::AlreadyOwned {});
+            match x {
+                2 => assert_eq!(err, ContractError::MaxTier2Items {}),
+                _ => assert_eq!(err, ContractError::MaxTier3Items {})
+            }
         }
 
-        // bob sells/transfers NFT to chuck
-        deps.querier.transfer_cw721_token("chuck", 1);
-        // chuck orders tier 2 and 3
+        // Tier 2 and 3 get additional physical item
+        let info = mock_info("creator", &[]);
+        let msg = UpdateTierInfo { tier: 3, max_physical_limit: 2, cost: 0};
+        let res =
+            execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+        assert_eq!(0, res.messages.len());
+        let info = mock_info("creator", &[]);
+        let msg = UpdateTierInfo { tier: 2, max_physical_limit: 2, cost: 120 * 1_000_000};
+        let res =
+            execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+        assert_eq!(0, res.messages.len());
+
+        // Now bob can order tier 2 and tier 3 physical prints
         for x in 2..4 {
             let ust = match x {
                 2 => coin(130 * 1000000, "uusd"),
                 _ => coin(10 * 1000000, "uusd")
             };
-            let info = mock_info("chuck", &[ust]);
+            let info = mock_info("bob", &[ust]);
             let msg = OrderCw721Print { token_id: 1.to_string(), tier: x.to_string()};
-            let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
+            let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
             assert_eq!(0, res.messages.len());
-            // can't have a duplicate physical item
-            let msg = OrderCw721Print { token_id: 1.to_string(), tier: x.to_string()};
-            let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap_err();
-            assert_eq!(err, ContractError::AlreadyOwned {});
-        }
-
-        // chuck sells/transfers NFT to david
-        deps.querier.transfer_cw721_token("david", 1);
-        let info = mock_info("david", &[coin(10 * 1000000, "uusd")]);
-
-        // david cannot order tier 3
-        let msg = OrderCw721Print { token_id: 1.to_string(), tier: 3.to_string()};
-        let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap_err();
-        assert_eq!(err, ContractError::MaxTier3Items {});
-
-        // david orders tier 2
-        let info = mock_info("david", &[coin(130 * 1000000, "uusd")]);
-        let msg = OrderCw721Print { token_id: 1.to_string(), tier: 2.to_string()};
-        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
-        assert_eq!(0, res.messages.len());
-
-        // token transfers to other accounts and all of the physical items are ordered out
-        let mut accounts= Vec::from(["Eve", "Faythe", "Grace", "Heidi", "Ivan", "Judy", "Mike"]);
-        while let Some(account) = accounts.pop() {
-            deps.querier.transfer_cw721_token(account, 1);
-
-            let info = mock_info(account, &[coin(130 * 1000000, "uusd")]);
-            let msg = OrderCw721Print { token_id: 1.to_string(), tier: 2.to_string()};
-            let result = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone());
-            match result {
-                Ok(res)  => { assert_eq!(0, res.messages.len()); }
-                Err(err) => {
-                    assert_eq!(err, ContractError::MaxTier2Items {});
-                    break;
-                }
-            }
         }
     }
 

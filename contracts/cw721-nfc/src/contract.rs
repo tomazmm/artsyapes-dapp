@@ -69,20 +69,10 @@ pub fn execute(
     match msg {
         ExecuteMsg::OrderCw721Print { token_id, tier} => {
             assert_ust(info.funds.clone())?;
-            validate_order(
-                deps.storage,
-                info.sender.clone(),
-                token_id.clone(),
-                tier.clone())?;
             order_cw721_print(deps, info, token_id, tier)
         },
         ExecuteMsg::Bid721Masterpiece { token_id} => {
             assert_ust(info.funds.clone())?;
-            validate_order(
-                deps.storage,
-                info.sender.clone(),
-                token_id.clone(),
-                1.to_string())?;
             place_bid(deps, info, token_id)
         },
         ExecuteMsg::UpdateTierInfo { tier, max_physical_limit, cost} => {
@@ -91,8 +81,11 @@ pub fn execute(
     }
 }
 fn order_cw721_print(deps: DepsMut, info: MessageInfo, token_id: String, tier: String) -> Result<Response, ContractError> {
-    // parse tier
+    // validate tier
     let tier : u8= tier.parse().unwrap();
+    if tier != 2 && tier != 3 {
+        return Err(ContractError::InvalidTier {})
+    }
     // check token ownership
     let owner: OwnerOfResponse = query_cw721_owner(deps.as_ref(), token_id.clone()).unwrap();
     if owner.owner != info.sender {
@@ -107,6 +100,8 @@ fn order_cw721_print(deps: DepsMut, info: MessageInfo, token_id: String, tier: S
             required: tier_info.costs_sum() as u128,
             sent: ust_amount.u128()});
     }
+
+    validate_order(deps.storage, &info.sender, &token_id, tier)?;
 
     // Save Cw721Physical item and increment counter
     let cw721_physical_id = order_count(deps.storage).unwrap() + 1;
@@ -197,9 +192,6 @@ fn update_tier_info(deps: DepsMut,
     if max_physical_limit == 0 {
         return Err(ContractError::TierMaxLimitIsZero {})
     }
-    if cost == 0 {
-        return Err(ContractError::TierCostsIsZero {})
-    }
 
     let tier_info = TierInfo { max_physical_limit, cost };
     TIERS.save(deps.storage, U8Key::from(tier), &tier_info)?;
@@ -219,15 +211,10 @@ fn increment_orders(storage: &mut dyn Storage) -> StdResult<u32> {
 
 fn validate_order(
     storage: &dyn Storage,
-    sender: Addr,
-    token_id: String,
-    tier: String
+    sender: &Addr,
+    token_id: &String,
+    tier: u8
 ) -> Result<(), ContractError> {
-    // validate tier
-    let tier : u8= tier.parse().unwrap();
-    if tier < 1 || tier > 3{
-        return Err(ContractError::InvalidTier {})
-    }
     let tier_info = load_tier_info(storage, tier)?; //TODO just use query instead?
     // Get physical items by 'token_id' and filter by 'tier'
     let physical_vec : Vec<Cw721PhysicalInfo> = physicals()
@@ -242,7 +229,7 @@ fn validate_order(
     let mut tier_count = 0;
     for i in physical_vec.iter(){
         // Sender can not order same physical item
-        if i.owner == sender {
+        if i.owner == *sender {
             return Err(ContractError::AlreadyOwned {});
         }
         tier_count += 1;
@@ -351,7 +338,7 @@ fn query_all_physicals(deps: Deps,
 }
 
 fn query_tier_info(deps: Deps, tier: u8) -> StdResult<TierInfoResponse> {
-    let tier_info = TIERS.load(deps.storage, U8Key::from(tier)).unwrap();
+    let tier_info = load_tier_info(deps.storage, tier)?;
     Ok(TierInfoResponse {
         max_physical_limit: tier_info.max_physical_limit,
         cost: tier_info.cost
