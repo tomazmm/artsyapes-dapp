@@ -1,8 +1,9 @@
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::testing::{mock_env, mock_info};
+    use cosmwasm_std::CosmosMsg::Bank;
     use super::super::testing::mock_dependencies;
-    use cosmwasm_std::{Addr, coin, coins, DepsMut, from_binary};
+    use cosmwasm_std::{Addr, BankMsg, coin, Coin, coins, DepsMut, from_binary};
     use crate::contract::{execute, instantiate, query};
     use crate::error::ContractError;
     use crate::msg::ExecuteMsg::{Bid721Masterpiece, OrderCw721Print, UpdateTierInfo};
@@ -324,14 +325,16 @@ mod tests {
         assert_eq!(err, ContractError::Unauthorized {});
 
         // alice can place bid
-        let info = mock_info("alice", &[coin(2510 * 1000000, "uusd")]);
+        let alice_funds = coin(2510 * 1000000, "uusd"); coin(2510 * 1000000, "uusd");
+        let info = mock_info("alice", &[alice_funds.clone()]);
         let msg = Bid721Masterpiece { token_id: 1.to_string()};
         let res = execute(deps.as_mut(), mock_env(), info, msg.clone())
             .unwrap();
         assert_eq!(0, res.messages.len());
 
         // bob cannot place bid with same UST amount
-        let info = mock_info("bob", &[coin(2510 * 1000000, "uusd")]);
+        let bob_funds = coin(2510 * 1000000, "uusd");
+        let info = mock_info("bob", &[bob_funds.clone()]);
         let msg = Bid721Masterpiece { token_id: 2.to_string()};
         let err = execute(deps.as_mut(), mock_env(), info, msg.clone())
             .unwrap_err();
@@ -342,6 +345,15 @@ mod tests {
         let msg = Bid721Masterpiece { token_id: 2.to_string()};
         let res = execute(deps.as_mut(), mock_env(), info, msg.clone())
             .unwrap();
-        assert_eq!(0, res.messages.len());
+        assert_eq!(1, res.messages.len());
+        assert_eq!(Bank(BankMsg::Send {
+            to_address: "alice".to_string(),
+            amount: vec![
+                Coin {
+                    denom: "uusd".to_string(),
+                    amount: alice_funds.amount,
+                },
+            ],
+        }), res.messages[0].msg);
     }
 }
