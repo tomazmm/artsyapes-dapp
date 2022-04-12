@@ -264,7 +264,7 @@ fn validate_order(
 /// - process all the bids and creates the physicals items.
 /// - updates the bidding_expiration state variable
 /// Returns [`Ok`]
-fn process_auction(storage: &mut dyn Storage, block: BlockInfo) -> Result<(), ()> {
+fn process_auction(storage: &mut dyn Storage, block: BlockInfo) -> Result<(), ContractError> {
     if BIDING_EXPIRATION.load(storage)?.is_expired(&block) {
         // fetch all on-going bids
         let bids : Vec<_> = BIDS
@@ -284,9 +284,9 @@ fn process_auction(storage: &mut dyn Storage, block: BlockInfo) -> Result<(), ()
             })?;
             increment_orders(storage)?;
         }
-        let bidding_duration = BIDING_DURATION.load(storage)?;
-        let bidding_expiration = &Expiration::AtHeight(_env.block.height + bidding_duration);
-        BIDING_EXPIRATION.save(deps.storage, bidding_expiration)?;
+        let bidding_duration = BIDING_DURATION.load(storage)? as u64;
+        let bidding_expiration = &Expiration::AtHeight(block.height + bidding_duration);
+        BIDING_EXPIRATION.save(storage, bidding_expiration)?;
     }
     Ok(())
 }
