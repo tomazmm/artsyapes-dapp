@@ -7,8 +7,8 @@ mod tests {
     use crate::contract::{execute, instantiate, query};
     use crate::error::ContractError;
     use crate::msg::ExecuteMsg::{Bid721Masterpiece, OrderCw721Print, UpdateTierInfo};
-    use crate::msg::{Cw721AddressResponse, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg, TierInfoResponse};
-    use crate::state::Cw721PhysicalInfo;
+    use crate::msg::{Cw721AddressResponse, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg, TierInfoResponse, BidsResponse};
+    use crate::state::{BidInfo, Cw721PhysicalInfo};
 
     const CW721_ADDRESS: &str = "cw721-contract";
 
@@ -325,35 +325,57 @@ mod tests {
         assert_eq!(err, ContractError::Unauthorized {});
 
         // alice can place bid
-        let alice_funds = coin(2510 * 1000000, "uusd"); coin(2510 * 1000000, "uusd");
-        let info = mock_info("alice", &[alice_funds.clone()]);
+        let alice_bid_funds = coin(2510 * 1000000, "uusd");
+        let info = mock_info("alice", &[alice_bid_funds.clone()]);
         let msg = Bid721Masterpiece { token_id: 1.to_string()};
-        let res = execute(deps.as_mut(), mock_env(), info, msg.clone())
+        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone())
             .unwrap();
         assert_eq!(0, res.messages.len());
 
+        // check alice's bid
+        let res = query(deps.as_ref(),mock_env(), QueryMsg::Bids {}).unwrap();
+        let bids: BidsResponse = from_binary(&res).unwrap();
+        assert_eq!(1, bids.bids.len());
+        assert_eq!(vec![BidInfo{
+            bid_amount: alice_bid_funds.amount,
+            owner: info.sender,
+            token_id: "1".to_string()
+        }], bids.bids);
+
         // bob cannot place bid with same UST amount
-        let bob_funds = coin(2510 * 1000000, "uusd");
-        let info = mock_info("bob", &[bob_funds.clone()]);
+        let bob_bid_funds = coin(2510 * 1000000, "uusd");
+        let info = mock_info("bob", &[bob_bid_funds.clone()]);
         let msg = Bid721Masterpiece { token_id: 2.to_string()};
         let err = execute(deps.as_mut(), mock_env(), info, msg.clone())
             .unwrap_err();
         assert_eq!(err, ContractError::LowBidding {});
 
         // bob can overbid alice
-        let info = mock_info("bob", &[coin(2600 * 1000000, "uusd")]);
+        let bob_bid_funds = coin(2600 * 1000000, "uusd");
+        let info = mock_info("bob", &[bob_bid_funds.clone()]);
         let msg = Bid721Masterpiece { token_id: 2.to_string()};
-        let res = execute(deps.as_mut(), mock_env(), info, msg.clone())
+        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone())
             .unwrap();
+        // Check if message sending UST back to alice
         assert_eq!(1, res.messages.len());
         assert_eq!(Bank(BankMsg::Send {
             to_address: "alice".to_string(),
             amount: vec![
                 Coin {
                     denom: "uusd".to_string(),
-                    amount: alice_funds.amount,
+                    amount: alice_bid_funds.amount,
                 },
             ],
         }), res.messages[0].msg);
+
+        // check bob's bid
+        let res = query(deps.as_ref(),mock_env(), QueryMsg::Bids {}).unwrap();
+        let bids: BidsResponse = from_binary(&res).unwrap();
+        assert_eq!(1, bids.bids.len());
+        assert_eq!(vec![BidInfo{
+            bid_amount: bob_bid_funds.amount,
+            owner: info.sender,
+            token_id: "2".to_string()
+        }], bids.bids);
     }
 }

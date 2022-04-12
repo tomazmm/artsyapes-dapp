@@ -1,7 +1,7 @@
 use cosmwasm_std::Addr;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use crate::state::Cw721PhysicalInfo;
+use crate::state::{BidInfo, Cw721PhysicalInfo};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
@@ -41,6 +41,7 @@ pub enum QueryMsg {
         start_after: Option<String>,
         limit: Option<u32>,
     },
+    Bids {},
     TierInfo {
         tier: u8
     }
@@ -70,6 +71,11 @@ pub struct AllPhysicalsResponse {
 pub struct TierInfoResponse {
     pub max_physical_limit: u8,
     pub cost: u64
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct BidsResponse {
+    pub bids: Vec<BidInfo>
 }
 
 
