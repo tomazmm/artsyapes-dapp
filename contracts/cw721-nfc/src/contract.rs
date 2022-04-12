@@ -2,7 +2,7 @@
 
 
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, Storage, Order, Uint128, Coin, Addr, BankMsg, coin};
+use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, Storage, Order, Uint128, Coin, Addr, BankMsg, coin, BlockInfo};
 use cosmwasm_std::CosmosMsg::Bank;
 use cw0::{Expiration, maybe_addr};
 use cw2::set_contract_version;
@@ -11,7 +11,8 @@ use cw721::{OwnerOfResponse};
 use cw_storage_plus::{Bound, PrimaryKey, U32Key, U8Key};
 
 use crate::error::ContractError;
-use crate::msg::{AllPhysicalsResponse, Cw721AddressResponse, ExecuteMsg, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg, TierInfoResponse};
+use crate::msg::{AllPhysicalsResponse, Cw721AddressResponse, ExecuteMsg, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg, TierInfoResponse, BidsResponse};
+use crate::msg::QueryMsg::Bids;
 use crate::state::{ContractInfo, CONTRACT_INFO, Cw721PhysicalInfo, PHYSICALS_COUNT, physicals, TIERS, TierInfo, BID_LIMIT, BIDS, BidInfo, BIDING_DURATION, BIDING_EXPIRATION, load_tier_info};
 
 // version info for migration info
@@ -76,6 +77,7 @@ pub fn execute(
         },
         ExecuteMsg::Bid721Masterpiece { token_id} => {
             assert_ust(info.funds.clone())?;
+            process_auction(deps.storage, _env.block)?;
             place_bid(deps, info, token_id)
         },
         ExecuteMsg::UpdateTierInfo { tier, max_physical_limit, cost} => {
@@ -94,7 +96,6 @@ fn order_cw721_print(deps: DepsMut, info: MessageInfo, token_id: String, tier: S
     if owner.owner != info.sender {
         return Err(ContractError::Unauthorized {});
     }
-
     // Only exact amount of UST accepted
     let tier_info = load_tier_info(deps.storage, tier)?;
     let ust_amount = info.funds.first().unwrap().amount;
@@ -105,7 +106,6 @@ fn order_cw721_print(deps: DepsMut, info: MessageInfo, token_id: String, tier: S
     }
 
     validate_order(deps.storage, &info.sender, &token_id, tier)?;
-
     // Save Cw721Physical item and increment counter
     let cw721_physical_id = order_count(deps.storage).unwrap() + 1;
     physicals().save(deps.storage, &U32Key::from(cw721_physical_id).joined_key(), &Cw721PhysicalInfo {
@@ -120,12 +120,11 @@ fn order_cw721_print(deps: DepsMut, info: MessageInfo, token_id: String, tier: S
     Ok(Response::default())
 }
 
-fn place_bid(deps: DepsMut, info: MessageInfo, token_id: String) -> Result<Response, ContractError> {
-    // if BIDING_EXPIRATION.load(deps.storage)?.is_expired(&block) {
-    //     for (key, bid) in bids.iter() {
-    //         BIDS.remove(deps.storage, U8Key::from(key[0]))
-    //     }
-    // }
+fn place_bid(
+    deps: DepsMut,
+    info: MessageInfo,
+    token_id: String
+) -> Result<Response, ContractError> {
     // check token ownership
     let owner: OwnerOfResponse = query_cw721_owner(deps.as_ref(), token_id.clone()).unwrap();
     if owner.owner != info.sender {
@@ -141,6 +140,7 @@ fn place_bid(deps: DepsMut, info: MessageInfo, token_id: String) -> Result<Respo
 
     let bids_length = bids.len() as u8;
     let ust_amount = info.funds.first().unwrap().amount;
+
     // Still a free spot available with minimum bid
     if bids_length < BID_LIMIT.load(deps.storage)? {
         // Amount of UST must be equal or greater than minimum bid
@@ -259,6 +259,38 @@ fn validate_order(
     Ok(())
 }
 
+/// ## Description
+/// If auction expired:
+/// - process all the bids and creates the physicals items.
+/// - updates the bidding_expiration state variable
+/// Returns [`Ok`]
+fn process_auction(storage: &mut dyn Storage, block: BlockInfo) -> Result<(), ()> {
+    if BIDING_EXPIRATION.load(storage)?.is_expired(&block) {
+        // fetch all on-going bids
+        let bids : Vec<_> = BIDS
+            .range(storage, None, None, Order::Ascending)
+            .collect::<StdResult<_>>().unwrap();
+        for (key, bid) in bids.iter() {
+            // Remove bid
+            BIDS.remove(storage, U8Key::from(key[0]));
+            // Create and save Cw721Physical item and increment counter
+            let cw721_physical_id = order_count(storage).unwrap() + 1;
+            physicals().save(storage, &U32Key::from(cw721_physical_id).joined_key(), &Cw721PhysicalInfo {
+                id: cw721_physical_id,
+                token_id: bid.token_id.clone(),
+                owner: bid.owner.clone(),
+                tier: 1,
+                status: "PENDING".to_string()
+            })?;
+            increment_orders(storage)?;
+        }
+        let bidding_duration = BIDING_DURATION.load(storage)?;
+        let bidding_expiration = &Expiration::AtHeight(_env.block.height + bidding_duration);
+        BIDING_EXPIRATION.save(deps.storage, bidding_expiration)?;
+    }
+    Ok(())
+}
+
 
 /// ## Description
 /// Verifies that funds sent to contract is UST only
@@ -282,11 +314,18 @@ fn assert_ust(funds: Vec<Coin>) -> Result<(), ContractError> {
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::GetCw721Address {} => to_binary(&query_cw721_address(deps)?),
-        QueryMsg::GetCw721PhysicalInfo {token_id} => to_binary(&query_physical_info(deps, token_id)?),
-        QueryMsg::Cw721Physicals {token_id, start_after, limit} => to_binary(&query_physicals(deps, token_id, start_after, limit)?),
-        QueryMsg::AllCw721Physicals {start_after, limit} => to_binary(&query_all_physicals(deps, start_after, limit)?),
-        QueryMsg::TierInfo {tier} => to_binary(&query_tier_info(deps, tier)?),
+        QueryMsg::GetCw721Address {} =>
+            to_binary(&query_cw721_address(deps)?),
+        QueryMsg::GetCw721PhysicalInfo {token_id} =>
+            to_binary(&query_physical_info(deps, token_id)?),
+        QueryMsg::Cw721Physicals {token_id, start_after, limit} =>
+            to_binary(&query_physicals(deps, token_id, start_after, limit)?),
+        QueryMsg::AllCw721Physicals {start_after, limit} =>
+            to_binary(&query_all_physicals(deps, start_after, limit)?),
+        QueryMsg::Bids {} =>
+            to_binary(&query_bids(deps.storage)?),
+        QueryMsg::TierInfo {tier} =>
+            to_binary(&query_tier_info(deps, tier)?)
     }
 }
 
@@ -357,4 +396,12 @@ fn query_tier_info(deps: Deps, tier: u8) -> StdResult<TierInfoResponse> {
         max_physical_limit: tier_info.max_physical_limit,
         cost: tier_info.cost
     })
+}
+
+fn query_bids(storage: &dyn Storage) -> StdResult<BidsResponse> {
+    let bids : Vec<BidInfo> = BIDS
+        .range(storage, None, None, Order::Ascending)
+        .map(|pair|pair.map(|(_, bid)|bid))
+        .collect::<StdResult<_>>().unwrap();
+    Ok(BidsResponse{bids})
 }
