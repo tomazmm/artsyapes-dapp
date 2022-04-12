@@ -1,6 +1,9 @@
 #[cfg(not(feature = "library"))]
+
+
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, Storage, Order, Uint128, Coin, Addr};
+use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, Storage, Order, Uint128, Coin, Addr, BankMsg};
+use cosmwasm_std::CosmosMsg::Bank;
 use cw0::{Expiration, maybe_addr};
 use cw2::set_contract_version;
 use cw721_base::msg::QueryMsg::{OwnerOf};
@@ -93,7 +96,7 @@ fn order_cw721_print(deps: DepsMut, info: MessageInfo, token_id: String, tier: S
     }
 
     // Only exact amount of UST accepted
-    let tier_info = load_tier_info(deps.storage, tier)?; //TODO just use query instead?
+    let tier_info = load_tier_info(deps.storage, tier)?;
     let ust_amount = info.funds.first().unwrap().amount;
     if ust_amount != Uint128::from(tier_info.costs_sum()) {
         return Err(ContractError::InvalidUSTAmount {
@@ -159,13 +162,24 @@ fn place_bid(deps: DepsMut, info: MessageInfo, token_id: String) -> Result<Respo
         // Check if overbids any of current bids
         let possible_over_bids = bids
             .iter()
-            .find(|(_, bid)| ust_amount > bid.bid_amount)
-            .map(|(key, _)| key[0]);
+            .find(|(_, bid)| ust_amount > bid.bid_amount);
 
         return match possible_over_bids {
             None => Err(ContractError::LowBidding {}),
-            Some(bid_id) => {
-                BIDS.save(deps.storage, U8Key::from(bid_id), &BidInfo{
+            Some((id, old_bid)) => {
+                // Send UST back to the old_bid account
+                // let msg = Bank(BankMsg::Send {
+                //     to_address: old_bid.owner.to_string(),
+                //     amount: vec![deduct_tax(
+                //         deps.as_ref(),
+                //         Coin {
+                //             denom: UUSD_DENOM.to_string(),
+                //             amount: old_bid.bid_amount,
+                //         },
+                //     )?],
+                // });
+                // Save the new bid
+                BIDS.save(deps.storage, U8Key::from(id[0]), &BidInfo{
                     bid_amount:ust_amount,
                     token_id,
                     owner: info.sender.clone()
@@ -215,7 +229,7 @@ fn validate_order(
     token_id: &String,
     tier: u8
 ) -> Result<(), ContractError> {
-    let tier_info = load_tier_info(storage, tier)?; //TODO just use query instead?
+    let tier_info = load_tier_info(storage, tier)?;
     // Get physical items by 'token_id' and filter by 'tier'
     let physical_vec : Vec<Cw721PhysicalInfo> = physicals()
         .idx.token_id
