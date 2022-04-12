@@ -2,7 +2,7 @@
 
 
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, Storage, Order, Uint128, Coin, Addr, BankMsg};
+use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, Storage, Order, Uint128, Coin, Addr, BankMsg, coin};
 use cosmwasm_std::CosmosMsg::Bank;
 use cw0::{Expiration, maybe_addr};
 use cw2::set_contract_version;
@@ -132,6 +132,8 @@ fn place_bid(deps: DepsMut, info: MessageInfo, token_id: String) -> Result<Respo
         return Err(ContractError::Unauthorized {});
     }
 
+    validate_order(deps.storage, &info.sender, &token_id, 1)?;
+
     // fetch all on-going bids
     let bids : Vec<_> = BIDS
         .range(deps.storage, None, None, Order::Ascending)
@@ -139,11 +141,10 @@ fn place_bid(deps: DepsMut, info: MessageInfo, token_id: String) -> Result<Respo
 
     let bids_length = bids.len() as u8;
     let ust_amount = info.funds.first().unwrap().amount;
-
     // Still a free spot available with minimum bid
     if bids_length < BID_LIMIT.load(deps.storage)? {
         // Amount of UST must be equal or greater than minimum bid
-        let tier1_info = load_tier_info(deps.storage, 1)?; //TODO just use query instead?
+        let tier1_info = load_tier_info(deps.storage, 1)?;
         if ust_amount < Uint128::from(tier1_info.costs_sum()) {
             return Err(ContractError::InvalidUSTAmount {
                 required: tier1_info.costs_sum() as u128,
@@ -167,24 +168,23 @@ fn place_bid(deps: DepsMut, info: MessageInfo, token_id: String) -> Result<Respo
         return match possible_over_bids {
             None => Err(ContractError::LowBidding {}),
             Some((id, old_bid)) => {
-                // Send UST back to the old_bid account
-                // let msg = Bank(BankMsg::Send {
-                //     to_address: old_bid.owner.to_string(),
-                //     amount: vec![deduct_tax(
-                //         deps.as_ref(),
-                //         Coin {
-                //             denom: UUSD_DENOM.to_string(),
-                //             amount: old_bid.bid_amount,
-                //         },
-                //     )?],
-                // });
+                // Craft message to return UST to bidder
+                let return_ust_msg = Bank(BankMsg::Send {
+                    to_address: old_bid.owner.to_string(),
+                    amount: vec![
+                        Coin {
+                            denom: UUSD_DENOM.to_string(),
+                            amount: old_bid.bid_amount,
+                        },
+                    ],
+                });
                 // Save the new bid
                 BIDS.save(deps.storage, U8Key::from(id[0]), &BidInfo{
                     bid_amount:ust_amount,
                     token_id,
                     owner: info.sender.clone()
                 })?;
-                Ok(Response::default())
+                Ok(Response::new().add_message(return_ust_msg))
             }
         };
     }
