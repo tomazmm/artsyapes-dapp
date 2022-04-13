@@ -240,7 +240,6 @@ mod tests {
 
         // alice sells/transfers NFT to bob
         deps.querier.transfer_cw721_token("bob", 1);
-        let info = mock_info("bob", &[coin(2510 * 1000000, "uusd")]);
 
         // bob cannot order tier 2 and 3 anymore
         for x in 2..4 {
@@ -277,7 +276,7 @@ mod tests {
             };
             let info = mock_info("bob", &[ust]);
             let msg = OrderCw721Print { token_id: 1.to_string(), tier: x.to_string()};
-            let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
+            let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
             assert_eq!(0, res.messages.len());
         }
     }
