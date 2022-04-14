@@ -9,7 +9,8 @@ pub struct InstantiateMsg {
     pub cw721: Addr,
     pub tier_info: [TierInfo; 3],
     pub bids_limit: u8,
-    pub bidding_duration: u64
+    pub bidding_duration: u64,
+    pub bidding_pause: u64
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

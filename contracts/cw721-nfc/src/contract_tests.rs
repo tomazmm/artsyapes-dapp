@@ -31,7 +31,8 @@ mod tests {
                 }
             ],
             bids_limit: 1,
-            bidding_duration: 90720
+            bidding_duration: 19440,
+            bidding_pause: 71280
         };
         let info = mock_info("creator", &[]);
         let res = instantiate(deps, mock_env(), info, msg).unwrap();
@@ -61,7 +62,8 @@ mod tests {
                 }
             ],
             bids_limit: 1,
-            bidding_duration: 90720
+            bidding_duration: 19440,
+            bidding_pause: 71280
         };
         let info = mock_info("creator", &coins(1000, "earth"));
 
@@ -89,7 +91,7 @@ mod tests {
         let res = query(deps.as_ref(),mock_env(), msg).unwrap();
         let value: BiddingInfoResponse = from_binary(&res).unwrap();
         assert_eq!(1, value.bids_limit);
-        assert_eq!(90720, value.duration);
+        assert_eq!(19440, value.duration);
         assert_eq!(Expiration::AtHeight(value.duration + 12_345), value.expiration);
     }
 

@@ -47,6 +47,7 @@ pub fn instantiate(
     BIDDING_INFO.save(deps.storage, &BiddingInfo{
         bids_limit: msg.bids_limit,
         duration: msg.bidding_duration,
+        pause_duration: msg.bidding_pause,
         start: _env.block.height,
         expires: Expiration::AtHeight(_env.block.height + msg.bidding_duration)
     })?;
@@ -72,8 +73,9 @@ pub fn execute(
             order_cw721_print(deps, info, token_id, tier)
         },
         ExecuteMsg::Bid721Masterpiece { token_id} => {
-            assert_ust(info.funds.clone())?;
             process_bids(deps.storage, _env.block)?;
+            assert_ust(info.funds.clone())?;
+            // assert_bidding_window(deps.storage, _env.block)?;
             place_bid(deps, info, token_id)
         },
         ExecuteMsg::UpdateTierInfo { tier, max_physical_limit, cost} => {
@@ -101,7 +103,7 @@ fn order_cw721_print(deps: DepsMut, info: MessageInfo, token_id: String, tier: S
             sent: ust_amount.u128()});
     }
 
-    validate_order(deps.storage, &info.sender, &token_id, tier)?;
+    is_physical_item_available(deps.storage, &info.sender, &token_id, tier)?;
 
     // Save Cw721Physical item and increment counter
     let cw721_physical_id = order_count(deps.storage).unwrap() + 1;
@@ -128,7 +130,7 @@ fn place_bid(
         return Err(ContractError::Unauthorized {});
     }
 
-    validate_order(deps.storage, &info.sender, &token_id, 1)?;
+    is_physical_item_available(deps.storage, &info.sender, &token_id, 1)?;
 
     // fetch all on-going bids
     let bids : Vec<_> = BIDS
@@ -221,7 +223,7 @@ fn increment_orders(storage: &mut dyn Storage) -> StdResult<u32> {
     Ok(val)
 }
 
-fn validate_order(
+fn is_physical_item_available(
     storage: &dyn Storage,
     sender: &Addr,
     token_id: &String,
@@ -258,7 +260,7 @@ fn validate_order(
 }
 
 /// ## Description
-/// If auction expired:
+/// The function does the following:
 /// - process all the bids and creates the physicals items.
 /// - updates the bidding_expiration state variable
 /// Returns [`Ok`]
@@ -284,7 +286,8 @@ fn process_bids(storage: &mut dyn Storage, block: BlockInfo) -> Result<(), Contr
             increment_orders(storage)?;
         }
         BIDDING_INFO.update(storage, |mut info| -> StdResult<_> {
-            info.expires = Expiration::AtHeight(block.height + bidding_info.duration);
+            info.start += block.height + info.pause_duration;
+            info.expires = Expiration::AtHeight(info.start + bidding_info.duration);
             Ok(info)
         })?;
     }
