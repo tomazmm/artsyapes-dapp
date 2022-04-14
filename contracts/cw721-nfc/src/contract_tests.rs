@@ -4,11 +4,12 @@ mod tests {
     use cosmwasm_std::CosmosMsg::Bank;
     use super::super::testing::mock_dependencies;
     use cosmwasm_std::{Addr, BankMsg, coin, Coin, coins, DepsMut, from_binary};
+    use cw0::Expiration;
     use crate::contract::{execute, instantiate, query};
     use crate::error::ContractError;
     use crate::msg::ExecuteMsg::{Bid721Masterpiece, OrderCw721Print, UpdateTierInfo};
-    use crate::msg::{Cw721AddressResponse, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg, TierInfoResponse, BidsResponse};
-    use crate::state::{BiddingInfo, BidInfo, Cw721PhysicalInfo, TierInfo};
+    use crate::msg::{Cw721AddressResponse, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg, TierInfoResponse, BidsResponse, BiddingInfoResponse};
+    use crate::state::{BidInfo, Cw721PhysicalInfo, TierInfo};
 
     const CW721_ADDRESS: &str = "cw721-contract";
 
@@ -43,7 +44,7 @@ mod tests {
 
         let cw721_address = Addr::unchecked(CW721_ADDRESS);
 
-        let msg = InstantiateMsg {
+        let instantiate_msg = InstantiateMsg {
             cw721:  cw721_address.clone(),
             tier_info: [
                 TierInfo {
@@ -65,13 +66,31 @@ mod tests {
         let info = mock_info("creator", &coins(1000, "earth"));
 
         // we can just call .unwrap() to assert this was a success
-        let res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
+        let res = instantiate(deps.as_mut(), mock_env(), info, instantiate_msg.clone()).unwrap();
         assert_eq!(0, res.messages.len());
 
-        // it worked, let's query the state
+        // success, check state
+        // query the cw721 address
         let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCw721Address {}).unwrap();
         let value: Cw721AddressResponse = from_binary(&res).unwrap();
         assert_eq!(cw721_address, value.cw721);
+
+        // query tiers info
+        for i in 0..3 {
+            let msg = QueryMsg::TierInfo {tier: i + 1};
+            let res = query(deps.as_ref(),mock_env(), msg).unwrap();
+            let value: TierInfoResponse = from_binary(&res).unwrap();
+            assert_eq!(instantiate_msg.tier_info[i as usize].cost, value.cost);
+            assert_eq!(instantiate_msg.tier_info[i as usize].max_physical_limit, value.max_physical_limit);
+        }
+
+        // query bidding info
+        let msg = QueryMsg::BiddingInfo {};
+        let res = query(deps.as_ref(),mock_env(), msg).unwrap();
+        let value: BiddingInfoResponse = from_binary(&res).unwrap();
+        assert_eq!(1, value.bids_limit);
+        assert_eq!(90720, value.duration);
+        assert_eq!(Expiration::AtHeight(value.duration + 12_345), value.expiration);
     }
 
     #[test]

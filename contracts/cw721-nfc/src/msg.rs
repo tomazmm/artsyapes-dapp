@@ -1,15 +1,15 @@
-use std::collections::HashMap;
 use cosmwasm_std::Addr;
+use cw0::Expiration;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use crate::state::{BiddingInfo, BidInfo, Cw721PhysicalInfo, TierInfo};
+use crate::state::{BidInfo, Cw721PhysicalInfo, TierInfo};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
     pub cw721: Addr,
     pub tier_info: [TierInfo; 3],
     pub bids_limit: u8,
-    pub bidding_duration: u128
+    pub bidding_duration: u64
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -45,6 +45,7 @@ pub enum QueryMsg {
         start_after: Option<String>,
         limit: Option<u32>,
     },
+    BiddingInfo {},
     Bids {},
     TierInfo {
         tier: u8
@@ -80,6 +81,13 @@ pub struct TierInfoResponse {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct BidsResponse {
     pub bids: Vec<BidInfo>
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct BiddingInfoResponse {
+    pub bids_limit: u8,
+    pub duration: u64,
+    pub expiration: Expiration
 }
 
 
