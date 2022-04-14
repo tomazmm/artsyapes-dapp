@@ -8,13 +8,29 @@ mod tests {
     use crate::error::ContractError;
     use crate::msg::ExecuteMsg::{Bid721Masterpiece, OrderCw721Print, UpdateTierInfo};
     use crate::msg::{Cw721AddressResponse, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg, TierInfoResponse, BidsResponse};
-    use crate::state::{BidInfo, Cw721PhysicalInfo};
+    use crate::state::{BiddingInfo, BidInfo, Cw721PhysicalInfo, TierInfo};
 
     const CW721_ADDRESS: &str = "cw721-contract";
 
     fn setup_contract(deps: DepsMut<'_>){
         let msg = InstantiateMsg {
             cw721: Addr::unchecked(CW721_ADDRESS),
+            tier_info: [
+                TierInfo {
+                max_physical_limit: 1,
+                cost: 2500 * 1_000_000
+                },
+                TierInfo {
+                    max_physical_limit: 10,
+                    cost: 120 * 1_000_000
+                },
+                TierInfo {
+                    max_physical_limit: 3,
+                    cost: 0
+                }
+            ],
+            bids_limit: 1,
+            bidding_duration: 90720
         };
         let info = mock_info("creator", &[]);
         let res = instantiate(deps, mock_env(), info, msg).unwrap();
@@ -27,7 +43,25 @@ mod tests {
 
         let cw721_address = Addr::unchecked(CW721_ADDRESS);
 
-        let msg = InstantiateMsg { cw721:  cw721_address.clone()};
+        let msg = InstantiateMsg {
+            cw721:  cw721_address.clone(),
+            tier_info: [
+                TierInfo {
+                    max_physical_limit: 1,
+                    cost: 2500 * 1_000_000
+                },
+                TierInfo {
+                    max_physical_limit: 10,
+                    cost: 120 * 1_000_000
+                },
+                TierInfo {
+                    max_physical_limit: 3,
+                    cost: 0
+                }
+            ],
+            bids_limit: 1,
+            bidding_duration: 90720
+        };
         let info = mock_info("creator", &coins(1000, "earth"));
 
         // we can just call .unwrap() to assert this was a success
