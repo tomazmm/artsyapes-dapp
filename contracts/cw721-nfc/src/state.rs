@@ -14,7 +14,7 @@ pub struct ContractInfo {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct BiddingInfo {
     pub bids_limit: u8,
-    pub duration: u128,
+    pub duration: u64,
     pub expiration: Expiration
 }
 
@@ -82,10 +82,9 @@ pub fn load_tier_info(storage: &dyn Storage, tier: u8, ) -> StdResult<TierInfo> 
     TIERS.load(storage, U8Key::from(tier))
 }
 
+pub const BIDS: Map<U8Key, BidInfo> = Map::new("bids");
 pub const BIDDING_INFO: Item<BiddingInfo> = Item::new("bidding_info");
 
-pub const BIDS: Map<U8Key, BidInfo> = Map::new("bids");
-pub const BID_LIMIT: Item<u8> = Item::new("bid_limit");
 pub const BIDING_DURATION: Item<u32> = Item::new("bidding_expiration");
 pub const BIDING_EXPIRATION: Item<Expiration> = Item::new("bidding_expiration");
 

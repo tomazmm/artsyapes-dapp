@@ -1,6 +1,4 @@
 #[cfg(not(feature = "library"))]
-
-
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, Storage, Order, Uint128, Coin, Addr, BankMsg, BlockInfo};
 use cosmwasm_std::CosmosMsg::Bank;
@@ -11,8 +9,8 @@ use cw721::{OwnerOfResponse};
 use cw_storage_plus::{Bound, PrimaryKey, U32Key, U8Key};
 
 use crate::error::ContractError;
-use crate::msg::{AllPhysicalsResponse, Cw721AddressResponse, ExecuteMsg, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg, TierInfoResponse, BidsResponse};
-use crate::state::{ContractInfo, CONTRACT_INFO, Cw721PhysicalInfo, PHYSICALS_COUNT, physicals, TIERS, TierInfo, BID_LIMIT, BIDS, BidInfo, BIDING_DURATION, BIDING_EXPIRATION, load_tier_info, BiddingInfo, BIDDING_INFO};
+use crate::msg::{AllPhysicalsResponse, Cw721AddressResponse, ExecuteMsg, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg, TierInfoResponse, BidsResponse, BiddingInfoResponse};
+use crate::state::{ContractInfo, CONTRACT_INFO, Cw721PhysicalInfo, PHYSICALS_COUNT, physicals, TIERS, TierInfo, BIDS, BidInfo, BIDING_EXPIRATION, load_tier_info, BiddingInfo, BIDDING_INFO};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw721-nfc";
@@ -37,15 +35,22 @@ pub fn instantiate(
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     CONTRACT_INFO.save(deps.storage, &contract_info)?;
 
-    // Save tier infos into state
-    for (i, tier) in msg.tier_info.iter().enumerate(){
-        TIERS.save(deps.storage, U8Key::from(i as u8), tier);
+    // Initialize tier information
+    for i in 0..3{
+        TIERS.save(
+            deps.storage,
+            U8Key::from((i as u8) + 1),
+            &msg.tier_info[i])?;
     }
 
-    // BIDDING_INFO.save(deps.storage, &)
+    // Initialize Bidding info
+    BIDDING_INFO.save(deps.storage, &BiddingInfo{
+        bids_limit: msg.bids_limit,
+        duration: msg.bidding_duration,
+        expiration: Expiration::AtHeight(_env.block.height + msg.bidding_duration)
+    })?;
 
-    BID_LIMIT.save(deps.storage, &1)?;
-    BIDING_DURATION.save(deps.storage, &90720)?;
+
     BIDING_EXPIRATION.save(deps.storage, &Expiration::AtHeight(_env.block.height + 90720))?;
 
     Ok(Response::new()
@@ -133,7 +138,8 @@ fn place_bid(
     let ust_amount = info.funds.first().unwrap().amount;
 
     // Still a free spot available with minimum bid
-    if bids_length < BID_LIMIT.load(deps.storage)? {
+    let bidding_info = BIDDING_INFO.load(deps.storage)?;
+    if bids_length < bidding_info.bids_limit {
         // Amount of UST must be equal or greater than minimum bid
         let tier1_info = load_tier_info(deps.storage, 1)?;
         if ust_amount < Uint128::from(tier1_info.costs_sum()) {
@@ -256,7 +262,8 @@ fn validate_order(
 /// - updates the bidding_expiration state variable
 /// Returns [`Ok`]
 fn process_auction(storage: &mut dyn Storage, block: BlockInfo) -> Result<(), ContractError> {
-    if BIDING_EXPIRATION.load(storage)?.is_expired(&block) {
+    let bidding_info = BIDDING_INFO.load(storage)?;
+    if bidding_info.expiration.is_expired(&block) {
         // fetch all on-going bids
         let bids : Vec<_> = BIDS
             .range(storage, None, None, Order::Ascending)
@@ -275,9 +282,10 @@ fn process_auction(storage: &mut dyn Storage, block: BlockInfo) -> Result<(), Co
             })?;
             increment_orders(storage)?;
         }
-        let bidding_duration = BIDING_DURATION.load(storage)? as u64;
-        let bidding_expiration = &Expiration::AtHeight(block.height + bidding_duration);
-        BIDING_EXPIRATION.save(storage, bidding_expiration)?;
+        BIDDING_INFO.update(storage, |mut info| -> StdResult<_> {
+            info.expiration = Expiration::AtHeight(block.height + bidding_info.duration);
+            Ok(info)
+        })?;
     }
     Ok(())
 }
@@ -315,6 +323,8 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             to_binary(&query_all_physicals(deps, start_after, limit)?),
         QueryMsg::Bids {} =>
             to_binary(&query_bids(deps.storage)?),
+        QueryMsg::BiddingInfo {} =>
+            to_binary(&query_bidding_info(deps.storage)?),
         QueryMsg::TierInfo {tier} =>
             to_binary(&query_tier_info(deps, tier)?)
     }
@@ -395,4 +405,13 @@ fn query_bids(storage: &dyn Storage) -> StdResult<BidsResponse> {
         .map(|pair|pair.map(|(_, bid)|bid))
         .collect::<StdResult<_>>().unwrap();
     Ok(BidsResponse{bids})
+}
+
+fn query_bidding_info(storage: &dyn Storage) -> StdResult<BiddingInfoResponse> {
+    let bidding_info = BIDDING_INFO.load(storage)?;
+    Ok(BiddingInfoResponse{
+        bids_limit: bidding_info.bids_limit,
+        duration: bidding_info.duration,
+        expiration: bidding_info.expiration
+    })
 }
