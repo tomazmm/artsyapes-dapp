@@ -14,7 +14,8 @@ pub struct ContractInfo {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct BiddingInfo {
     pub bids_limit: u8,
-    pub duration: u64,
+    pub duration: u64, // length of bidding window in blocks
+    pub pause_duration: u64, // length of bidding pause between bidding windows
     pub start: u64, // starting block height
     pub expires: Expiration // end block height
 }
