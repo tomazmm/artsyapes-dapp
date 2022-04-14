@@ -12,7 +12,7 @@ use cw_storage_plus::{Bound, PrimaryKey, U32Key, U8Key};
 
 use crate::error::ContractError;
 use crate::msg::{AllPhysicalsResponse, Cw721AddressResponse, ExecuteMsg, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg, TierInfoResponse, BidsResponse};
-use crate::state::{ContractInfo, CONTRACT_INFO, Cw721PhysicalInfo, PHYSICALS_COUNT, physicals, TIERS, TierInfo, BID_LIMIT, BIDS, BidInfo, BIDING_DURATION, BIDING_EXPIRATION, load_tier_info};
+use crate::state::{ContractInfo, CONTRACT_INFO, Cw721PhysicalInfo, PHYSICALS_COUNT, physicals, TIERS, TierInfo, BID_LIMIT, BIDS, BidInfo, BIDING_DURATION, BIDING_EXPIRATION, load_tier_info, BiddingInfo, BIDDING_INFO};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw721-nfc";
@@ -37,20 +37,12 @@ pub fn instantiate(
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     CONTRACT_INFO.save(deps.storage, &contract_info)?;
 
-    // Starting/opening bid for the auction of masterpiece/tier-1
-    TIERS.save(deps.storage, U8Key::from(1), &TierInfo {
-        max_physical_limit: 1,
-        cost: 2500 * 1_000_000
-    })?;
-    // Fixed prices for the tier-2/-3
-    TIERS.save(deps.storage, U8Key::from(2), &TierInfo {
-        max_physical_limit: 10,
-        cost: 120 * 1_000_000
-    })?;
-    TIERS.save(deps.storage, U8Key::from(3), &TierInfo {
-        max_physical_limit: 3,
-        cost: 0
-    })?;
+    // Save tier infos into state
+    for (i, tier) in msg.tier_info.iter().enumerate(){
+        TIERS.save(deps.storage, U8Key::from(i as u8), tier);
+    }
+
+    // BIDDING_INFO.save(deps.storage, &)
 
     BID_LIMIT.save(deps.storage, &1)?;
     BIDING_DURATION.save(deps.storage, &90720)?;

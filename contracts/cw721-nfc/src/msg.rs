@@ -1,11 +1,15 @@
+use std::collections::HashMap;
 use cosmwasm_std::Addr;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use crate::state::{BidInfo, Cw721PhysicalInfo};
+use crate::state::{BiddingInfo, BidInfo, Cw721PhysicalInfo, TierInfo};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
     pub cw721: Addr,
+    pub tier_info: [TierInfo; 3],
+    pub bids_limit: u8,
+    pub bidding_duration: u128
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
