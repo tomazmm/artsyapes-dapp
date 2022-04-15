@@ -40,4 +40,7 @@ pub enum ContractError {
 
     #[error("You need to over-bid previous bidder")]
     LowBidding {},
+
+    #[error("Unauthorized")]
+    BiddingNotAllowed {},
 }
