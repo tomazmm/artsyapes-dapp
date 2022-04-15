@@ -88,6 +88,7 @@ pub struct BidsResponse {
 pub struct BiddingInfoResponse {
     pub bids_limit: u8,
     pub duration: u64,
+    pub pause_duration: u64,
     pub expiration: Expiration
 }
 
