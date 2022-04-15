@@ -1,9 +1,10 @@
 #[cfg(test)]
 mod tests {
+    use std::ops::Add;
     use cosmwasm_std::testing::{mock_env, mock_info};
     use cosmwasm_std::CosmosMsg::Bank;
     use super::super::testing::mock_dependencies;
-    use cosmwasm_std::{Addr, BankMsg, coin, Coin, coins, DepsMut, from_binary};
+    use cosmwasm_std::{Addr, BankMsg, coin, Coin, coins, DepsMut, from_binary, Uint128};
     use cw0::Expiration;
     use crate::contract::{execute, instantiate, query};
     use crate::error::ContractError;
@@ -62,7 +63,7 @@ mod tests {
                 }
             ],
             bids_limit: 1,
-            bidding_duration: 19440,
+            bidding_duration: 19440 ,
             bidding_pause: 71280
         };
         let info = mock_info("creator", &coins(1000, "earth"));
@@ -364,7 +365,7 @@ mod tests {
     }
 
     #[test]
-    fn placing_masterpiece_bid() {
+    fn overbidding_current_bids() {
         let mut deps = mock_dependencies();
         setup_contract(deps.as_mut());
 
@@ -432,5 +433,60 @@ mod tests {
             owner: info.sender,
             token_id: "2".to_string()
         }], bids.bids);
+    }
+
+    #[test]
+    fn bidding_allowed_only_inside_bidding_window() {
+        let mut deps = mock_dependencies();
+        setup_contract(deps.as_mut());
+
+        deps.querier.set_cw721_token("alice", 1);
+
+        let res = query(deps.as_ref(),mock_env(), QueryMsg::BiddingInfo {}).unwrap();
+        let bidding_info: BiddingInfoResponse = from_binary(&res).unwrap();
+
+        // alice cannot place bid before bidding window starts
+        let mut alice_bid_funds = coin(5000 * 1_000_000, "uusd");
+        let info = mock_info("alice", &[alice_bid_funds.clone()]);
+        let msg = Bid721Masterpiece { token_id: 1.to_string()};
+        let mut env = mock_env();
+        env.block.height = 12_344;
+        let err = execute(deps.as_mut(), env.clone(), info.clone(), msg.clone()).unwrap_err();
+        assert_eq!(err, ContractError::BiddingNotAllowed {});
+
+        // alice can bid inside bidding window
+        loop {
+            alice_bid_funds.amount = Uint128::from(alice_bid_funds.amount.u128() + 1_000_000);
+            env.block.height += 1;
+            let info = mock_info("alice", &[alice_bid_funds.clone()]);
+            let result = execute(deps.as_mut(), env.clone(), info.clone(), msg.clone());
+            match result {
+                Err(err) => {
+                    // Bidding windows expired at 12345 + 19440
+                    assert_eq!(err, ContractError::BiddingNotAllowed {});
+                    assert_eq!(123_45 + bidding_info.duration, env.block.height);
+                    break
+                },
+                Ok(_) => continue
+            }
+        }
+    }
+
+    #[test]
+    fn processing_bids_after_bidding_window_expires() {
+        let mut deps = mock_dependencies();
+        setup_contract(deps.as_mut());
+
+        deps.querier.set_cw721_token("alice", 1);
+
+        let res = query(deps.as_ref(),mock_env(), QueryMsg::BiddingInfo {}).unwrap();
+        let bidding_info: BiddingInfoResponse = from_binary(&res).unwrap();
+
+        // alice places masterpiece bid
+        let mut alice_bid_funds = coin(3000 * 1_000_000, "uusd");
+        let info = mock_info("alice", &[alice_bid_funds.clone()]);
+        let msg = Bid721Masterpiece { token_id: 1.to_string()};
+        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
+        assert_eq!(0, res.messages.len());
     }
 }

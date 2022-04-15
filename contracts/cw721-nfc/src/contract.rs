@@ -1,6 +1,6 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, Storage, Order, Uint128, Coin, Addr, BankMsg, BlockInfo};
+use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, Storage, Order, Uint128, Coin, Addr, BankMsg, BlockInfo, Event};
 use cosmwasm_std::CosmosMsg::Bank;
 use cw0::{Expiration, maybe_addr};
 use cw2::set_contract_version;
@@ -71,10 +71,9 @@ pub fn execute(
             order_cw721_print(deps, info, token_id, tier)
         },
         ExecuteMsg::Bid721Masterpiece { token_id} => {
-            process_bids(deps.storage, _env.block)?;
+            process_bids(deps.storage, &_env.block)?;
             assert_ust(info.funds.clone())?;
-            // assert_bidding_window(deps.storage, _env.block)?;
-            place_bid(deps, info, token_id)
+            place_bid(deps, &_env.block, info, token_id)
         },
         ExecuteMsg::UpdateTierInfo { tier, max_physical_limit, cost} => {
             update_tier_info(deps, info, tier, max_physical_limit, cost)
@@ -119,9 +118,15 @@ fn order_cw721_print(deps: DepsMut, info: MessageInfo, token_id: String, tier: S
 
 fn place_bid(
     deps: DepsMut,
+    block: &BlockInfo,
     info: MessageInfo,
-    token_id: String
+    token_id: String,
 ) -> Result<Response, ContractError> {
+    // Check if bidding is on-going/live
+    let bidding_info = BIDDING_INFO.load(deps.storage)?;
+    if block.height < bidding_info.start || bidding_info.expires.is_expired(block) {
+        return Err(ContractError::BiddingNotAllowed {});
+    }
     // check token ownership
     let owner: OwnerOfResponse = query_cw721_owner(deps.as_ref(), token_id.clone()).unwrap();
     if owner.owner != info.sender {
@@ -139,7 +144,6 @@ fn place_bid(
     let ust_amount = info.funds.first().unwrap().amount;
 
     // Still a free spot available with minimum bid
-    let bidding_info = BIDDING_INFO.load(deps.storage)?;
     if bids_length < bidding_info.bids_limit {
         // Amount of UST must be equal or greater than minimum bid
         let tier1_info = load_tier_info(deps.storage, 1)?;
@@ -269,8 +273,8 @@ fn is_physical_item_available(
 /// - process all the bids and creates the physicals items.
 /// - updates the 'BIDDING_INFO' state variable
 /// Returns [`Ok`]
-fn process_bids(storage: &mut dyn Storage, block: BlockInfo) -> Result<(), ContractError> {
-    let bidding_info = BIDDING_INFO.load(storage)?;
+fn process_bids(storage: &mut dyn Storage, block: &BlockInfo) -> Result<Response, ContractError> {
+    let mut bidding_info = BIDDING_INFO.load(storage)?;
     if bidding_info.expires.is_expired(&block) {
         // fetch all on-going bids
         let bids : Vec<_> = BIDS
@@ -290,15 +294,15 @@ fn process_bids(storage: &mut dyn Storage, block: BlockInfo) -> Result<(), Contr
             })?;
             increment_physcials(storage)?;
         }
-        BIDDING_INFO.update(storage, |mut info| -> StdResult<_> {
+        bidding_info = BIDDING_INFO.update(storage, |mut info| -> StdResult<_> {
             info.start += block.height + info.pause_duration;
             info.expires = Expiration::AtHeight(info.start + bidding_info.duration);
             Ok(info)
         })?;
+        return Ok(Response::default().add_attribute("method", "instantiate"));
     }
-    Ok(())
+    Ok(Response::default())
 }
-
 
 /// ## Description
 /// Verifies that funds sent to contract is UST only
