@@ -90,8 +90,9 @@ mod tests {
         let msg = QueryMsg::BiddingInfo {};
         let res = query(deps.as_ref(),mock_env(), msg).unwrap();
         let value: BiddingInfoResponse = from_binary(&res).unwrap();
-        assert_eq!(1, value.bids_limit);
-        assert_eq!(19440, value.duration);
+        assert_eq!(instantiate_msg.bids_limit, value.bids_limit);
+        assert_eq!(instantiate_msg.bidding_duration, value.duration);
+        assert_eq!(instantiate_msg.bidding_pause, value.pause_duration);
         assert_eq!(Expiration::AtHeight(value.duration + 12_345), value.expiration);
     }
 

@@ -87,9 +87,6 @@ pub fn load_tier_info(storage: &dyn Storage, tier: u8, ) -> StdResult<TierInfo> 
 pub const BIDS: Map<U8Key, BidInfo> = Map::new("bids");
 pub const BIDDING_INFO: Item<BiddingInfo> = Item::new("bidding_info");
 
-pub const BIDING_DURATION: Item<u32> = Item::new("bidding_expiration");
-pub const BIDING_EXPIRATION: Item<Expiration> = Item::new("bidding_expiration");
-
 pub const PHYSICALS: Map<String, Cw721PhysicalInfo> = Map::new("physicals");
 pub const PHYSICALS_COUNT: Item<u32> = Item::new("physicals_count");
 

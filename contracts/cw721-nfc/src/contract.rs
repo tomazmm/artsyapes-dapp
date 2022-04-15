@@ -10,7 +10,7 @@ use cw_storage_plus::{Bound, PrimaryKey, U32Key, U8Key};
 
 use crate::error::ContractError;
 use crate::msg::{AllPhysicalsResponse, Cw721AddressResponse, ExecuteMsg, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg, TierInfoResponse, BidsResponse, BiddingInfoResponse};
-use crate::state::{ContractInfo, CONTRACT_INFO, Cw721PhysicalInfo, PHYSICALS_COUNT, physicals, TIERS, TierInfo, BIDS, BidInfo, BIDING_EXPIRATION, load_tier_info, BiddingInfo, BIDDING_INFO};
+use crate::state::{ContractInfo, CONTRACT_INFO, Cw721PhysicalInfo, PHYSICALS_COUNT, physicals, TIERS, TierInfo, BIDS, BidInfo, load_tier_info, BiddingInfo, BIDDING_INFO};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw721-nfc";
@@ -51,8 +51,6 @@ pub fn instantiate(
         start: _env.block.height,
         expires: Expiration::AtHeight(_env.block.height + msg.bidding_duration)
     })?;
-
-    BIDING_EXPIRATION.save(deps.storage, &Expiration::AtHeight(_env.block.height + 90720))?;
 
     Ok(Response::new()
         .add_attribute("method", "instantiate")
@@ -105,8 +103,8 @@ fn order_cw721_print(deps: DepsMut, info: MessageInfo, token_id: String, tier: S
 
     is_physical_item_available(deps.storage, &info.sender, &token_id, tier)?;
 
-    // Save Cw721Physical item and increment counter
-    let cw721_physical_id = order_count(deps.storage).unwrap() + 1;
+    // Save Cw721Physical item and increment physcials counter
+    let cw721_physical_id = physicals_count(deps.storage).unwrap() + 1;
     physicals().save(deps.storage, &U32Key::from(cw721_physical_id).joined_key(), &Cw721PhysicalInfo {
         id: cw721_physical_id,
         token_id: token_id.clone(),
@@ -114,7 +112,7 @@ fn order_cw721_print(deps: DepsMut, info: MessageInfo, token_id: String, tier: S
         tier,
         status: "PENDING".to_string()
     })?;
-    increment_orders(deps.storage)?;
+    increment_physcials(deps.storage)?;
 
     Ok(Response::default())
 }
@@ -213,16 +211,21 @@ fn update_tier_info(deps: DepsMut,
     Ok(Response::default())
 }
 
-fn order_count(storage: &dyn Storage) -> StdResult<u32> {
+fn physicals_count(storage: &dyn Storage) -> StdResult<u32> {
     Ok(PHYSICALS_COUNT.may_load(storage)?.unwrap_or_default())
 }
 
-fn increment_orders(storage: &mut dyn Storage) -> StdResult<u32> {
-    let val = order_count(storage)? + 1;
+fn increment_physcials(storage: &mut dyn Storage) -> StdResult<u32> {
+    let val = physicals_count(storage)? + 1;
     PHYSICALS_COUNT.save(storage, &val)?;
     Ok(val)
 }
 
+/// ## Description
+/// Each tier has a max physical items.
+/// This function checks if there are still any physical items available for a specific Tier.
+/// Additional to that, account can order only 1 item per Tier.
+/// Returns [`Ok`] if physical item is still available, , otherwise returns [`ContractError`]
 fn is_physical_item_available(
     storage: &dyn Storage,
     sender: &Addr,
@@ -242,6 +245,8 @@ fn is_physical_item_available(
     // validate  order
     let mut tier_count = 0;
     for i in physical_vec.iter(){
+        // IMO, the following check is pointless, because one can still send token to another account
+        // and order a physical bid from a new account. But this was a requirement from the artsyapes team
         // Sender can not order same physical item
         if i.owner == *sender {
             return Err(ContractError::AlreadyOwned {});
@@ -260,9 +265,9 @@ fn is_physical_item_available(
 }
 
 /// ## Description
-/// The function does the following:
+/// If the bidding window is expired, the function does the following:
 /// - process all the bids and creates the physicals items.
-/// - updates the bidding_expiration state variable
+/// - updates the 'BIDDING_INFO' state variable
 /// Returns [`Ok`]
 fn process_bids(storage: &mut dyn Storage, block: BlockInfo) -> Result<(), ContractError> {
     let bidding_info = BIDDING_INFO.load(storage)?;
@@ -275,7 +280,7 @@ fn process_bids(storage: &mut dyn Storage, block: BlockInfo) -> Result<(), Contr
             // Remove bid
             BIDS.remove(storage, U8Key::from(key[0]));
             // Create and save Cw721Physical item and increment counter
-            let cw721_physical_id = order_count(storage).unwrap() + 1;
+            let cw721_physical_id = physicals_count(storage).unwrap() + 1;
             physicals().save(storage, &U32Key::from(cw721_physical_id).joined_key(), &Cw721PhysicalInfo {
                 id: cw721_physical_id,
                 token_id: bid.token_id.clone(),
@@ -283,7 +288,7 @@ fn process_bids(storage: &mut dyn Storage, block: BlockInfo) -> Result<(), Contr
                 tier: 1,
                 status: "PENDING".to_string()
             })?;
-            increment_orders(storage)?;
+            increment_physcials(storage)?;
         }
         BIDDING_INFO.update(storage, |mut info| -> StdResult<_> {
             info.start += block.height + info.pause_duration;
@@ -416,6 +421,7 @@ fn query_bidding_info(storage: &dyn Storage) -> StdResult<BiddingInfoResponse> {
     Ok(BiddingInfoResponse{
         bids_limit: bidding_info.bids_limit,
         duration: bidding_info.duration,
+        pause_duration: bidding_info.pause_duration,
         expiration: bidding_info.expires
     })
 }
