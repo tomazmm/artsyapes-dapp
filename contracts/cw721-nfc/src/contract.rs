@@ -71,10 +71,12 @@ pub fn execute(
             order_cw721_print(deps, info, token_id, tier)
         },
         ExecuteMsg::Bid721Masterpiece { token_id} => {
-            process_bids(deps.storage, &_env.block)?;
             assert_ust(info.funds.clone())?;
             place_bid(deps, &_env.block, info, token_id)
         },
+        ExecuteMsg::ResolveBids {} => {
+            resolve_bids(deps.storage, &_env.block)
+        }
         ExecuteMsg::UpdateTierInfo { tier, max_physical_limit, cost} => {
             update_tier_info(deps, info, tier, max_physical_limit, cost)
         }
@@ -144,7 +146,7 @@ fn place_bid(
     let ust_amount = info.funds.first().unwrap().amount;
 
     // Still a free spot available with minimum bid
-    if bids_length < bidding_info.bids_limit {
+    return if bids_length < bidding_info.bids_limit {
         // Amount of UST must be equal or greater than minimum bid
         let tier1_info = load_tier_info(deps.storage, 1)?;
         if ust_amount < Uint128::from(tier1_info.costs_sum()) {
@@ -154,20 +156,19 @@ fn place_bid(
             });
         }
         // Save bid into state
-        BIDS.save(deps.storage, U8Key::from(bids_length + 1), &BidInfo{
+        BIDS.save(deps.storage, U8Key::from(bids_length + 1), &BidInfo {
             bid_amount: ust_amount,
             token_id,
             owner: info.sender.clone()
         })?;
-        return Ok(Response::default());
-    }
-    else {
+        Ok(Response::default())
+    } else {
         // Check if overbids any of current bids
         let possible_over_bids = bids
             .iter()
             .find(|(_, bid)| ust_amount > bid.bid_amount);
 
-        return match possible_over_bids {
+        match possible_over_bids {
             None => Err(ContractError::LowBidding {}),
             Some((id, old_bid)) => {
                 // Craft message to return UST to bidder
@@ -181,14 +182,14 @@ fn place_bid(
                     ],
                 });
                 // Save the new bid
-                BIDS.save(deps.storage, U8Key::from(id[0]), &BidInfo{
-                    bid_amount:ust_amount,
+                BIDS.save(deps.storage, U8Key::from(id[0]), &BidInfo {
+                    bid_amount: ust_amount,
                     token_id,
                     owner: info.sender.clone()
                 })?;
                 Ok(Response::new().add_message(return_ust_msg))
             }
-        };
+        }
     }
 }
 
@@ -273,7 +274,7 @@ fn is_physical_item_available(
 /// - process all the bids and creates the physicals items.
 /// - updates the 'BIDDING_INFO' state variable
 /// Returns [`Ok`]
-fn process_bids(storage: &mut dyn Storage, block: &BlockInfo) -> Result<Response, ContractError> {
+fn resolve_bids(storage: &mut dyn Storage, block: &BlockInfo) -> Result<Response, ContractError> {
     let mut bidding_info = BIDDING_INFO.load(storage)?;
     if bidding_info.expires.is_expired(&block) {
         // fetch all on-going bids
@@ -295,12 +296,13 @@ fn process_bids(storage: &mut dyn Storage, block: &BlockInfo) -> Result<Response
             increment_physcials(storage)?;
         }
         bidding_info = BIDDING_INFO.update(storage, |mut info| -> StdResult<_> {
-            info.start += block.height + info.pause_duration;
+            info.start = block.height + info.pause_duration;
             info.expires = Expiration::AtHeight(info.start + bidding_info.duration);
             Ok(info)
         })?;
-        return Ok(Response::default().add_attribute("method", "instantiate"));
+        return Ok(Response::default().add_event(Event::new("Resolved Bids")));
     }
+    // Maybe return ContractError (e.g BiddingLive)
     Ok(Response::default())
 }
 
@@ -424,8 +426,9 @@ fn query_bidding_info(storage: &dyn Storage) -> StdResult<BiddingInfoResponse> {
     let bidding_info = BIDDING_INFO.load(storage)?;
     Ok(BiddingInfoResponse{
         bids_limit: bidding_info.bids_limit,
+        start: bidding_info.start,
+        expiration: bidding_info.expires,
         duration: bidding_info.duration,
-        pause_duration: bidding_info.pause_duration,
-        expiration: bidding_info.expires
+        pause_duration: bidding_info.pause_duration
     })
 }

@@ -23,6 +23,7 @@ pub enum ExecuteMsg {
     Bid721Masterpiece {
         token_id: String
     },
+    ResolveBids {},
     UpdateTierInfo {
         tier: u8,
         max_physical_limit: u8,
@@ -46,8 +47,8 @@ pub enum QueryMsg {
         start_after: Option<String>,
         limit: Option<u32>,
     },
-    BiddingInfo {},
     Bids {},
+    BiddingInfo {},
     TierInfo {
         tier: u8
     }
@@ -87,9 +88,10 @@ pub struct BidsResponse {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct BiddingInfoResponse {
     pub bids_limit: u8,
+    pub start: u64,
+    pub expiration: Expiration,
     pub duration: u64,
-    pub pause_duration: u64,
-    pub expiration: Expiration
+    pub pause_duration: u64
 }
 
 

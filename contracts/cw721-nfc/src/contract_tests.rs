@@ -8,11 +8,14 @@ mod tests {
     use cw0::Expiration;
     use crate::contract::{execute, instantiate, query};
     use crate::error::ContractError;
-    use crate::msg::ExecuteMsg::{Bid721Masterpiece, OrderCw721Print, UpdateTierInfo};
-    use crate::msg::{Cw721AddressResponse, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg, TierInfoResponse, BidsResponse, BiddingInfoResponse};
+    use crate::msg::ExecuteMsg::{Bid721Masterpiece, OrderCw721Print, ResolveBids, UpdateTierInfo};
+    use crate::msg::{Cw721AddressResponse, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg, TierInfoResponse, BidsResponse, BiddingInfoResponse, AllPhysicalsResponse};
     use crate::state::{BidInfo, Cw721PhysicalInfo, TierInfo};
 
     const CW721_ADDRESS: &str = "cw721-contract";
+    const BIDDING_DURATION: u64 = 19440;
+    const BIDDING_PAUSE: u64 = 71280;
+
 
     fn setup_contract(deps: DepsMut<'_>){
         let msg = InstantiateMsg {
@@ -32,8 +35,8 @@ mod tests {
                 }
             ],
             bids_limit: 1,
-            bidding_duration: 19440,
-            bidding_pause: 71280
+            bidding_duration: BIDDING_DURATION,
+            bidding_pause: BIDDING_PAUSE
         };
         let info = mock_info("creator", &[]);
         let res = instantiate(deps, mock_env(), info, msg).unwrap();
@@ -63,8 +66,8 @@ mod tests {
                 }
             ],
             bids_limit: 1,
-            bidding_duration: 19440 ,
-            bidding_pause: 71280
+            bidding_duration: BIDDING_DURATION ,
+            bidding_pause: BIDDING_PAUSE
         };
         let info = mock_info("creator", &coins(1000, "earth"));
 
@@ -94,7 +97,7 @@ mod tests {
         assert_eq!(instantiate_msg.bids_limit, value.bids_limit);
         assert_eq!(instantiate_msg.bidding_duration, value.duration);
         assert_eq!(instantiate_msg.bidding_pause, value.pause_duration);
-        assert_eq!(Expiration::AtHeight(value.duration + 12_345), value.expiration);
+        assert_eq!(Expiration::AtHeight(value.duration + 123_45), value.expiration);
     }
 
     #[test]
@@ -380,7 +383,7 @@ mod tests {
                 .unwrap_err();
         assert_eq!(err, ContractError::Unauthorized {});
 
-        // alice can place bid
+        // alice places first bid
         let alice_bid_funds = coin(2510 * 1000000, "uusd");
         let info = mock_info("alice", &[alice_bid_funds.clone()]);
         let msg = Bid721Masterpiece { token_id: 1.to_string()};
@@ -464,7 +467,16 @@ mod tests {
                 Err(err) => {
                     // Bidding windows expired at 12345 + 19440
                     assert_eq!(err, ContractError::BiddingNotAllowed {});
-                    assert_eq!(123_45 + bidding_info.duration, env.block.height);
+                    assert_eq!(123_45 + BIDDING_DURATION, env.block.height);
+                    // Check last alice's bid
+                    let res = query(deps.as_ref(),mock_env(), QueryMsg::Bids {}).unwrap();
+                    let bids: BidsResponse = from_binary(&res).unwrap();
+                    assert_eq!(1, bids.bids.len());
+                    assert_eq!(vec![BidInfo{
+                        bid_amount: Uint128::from(alice_bid_funds.amount.u128() - 1_000_000),
+                        owner: info.sender,
+                        token_id: "1".to_string()
+                    }], bids.bids);
                     break
                 },
                 Ok(_) => continue
@@ -479,14 +491,36 @@ mod tests {
 
         deps.querier.set_cw721_token("alice", 1);
 
+        // alice places masterpiece bid
+        let  alice_bid_funds = coin(3000 * 1_000_000, "uusd");
+        let info = mock_info("alice", &[alice_bid_funds.clone()]);
+        let mut env = mock_env();
+        let msg = Bid721Masterpiece { token_id: 1.to_string()};
+        let res = execute(deps.as_mut(), env.clone(), info.clone(), msg.clone()).unwrap();
+        assert_eq!(0, res.messages.len());
+
+        env.block.height += BIDDING_DURATION; //  bidding is now expired
+
+        // Resolve Bids
+        let res = execute(deps.as_mut(), env.clone(), info.clone(), ResolveBids {}).unwrap();
+        assert_eq!(0, res.messages.len());
+
+        // Success, check bids
+        let res = query(deps.as_ref(),mock_env(), QueryMsg::Bids {}).unwrap();
+        let bids: BidsResponse = from_binary(&res).unwrap();
+        assert_eq!(0, bids.bids.len());
+        // Check physicals
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::AllCw721Physicals {start_after: None, limit: None}).unwrap();
+        let physicals: AllPhysicalsResponse = from_binary(&res).unwrap();
+        assert_eq!(1, physicals.physicals.len());
+        // Check updated Bidding Information
         let res = query(deps.as_ref(),mock_env(), QueryMsg::BiddingInfo {}).unwrap();
         let bidding_info: BiddingInfoResponse = from_binary(&res).unwrap();
-
-        // alice places masterpiece bid
-        let mut alice_bid_funds = coin(3000 * 1_000_000, "uusd");
-        let info = mock_info("alice", &[alice_bid_funds.clone()]);
-        let msg = Bid721Masterpiece { token_id: 1.to_string()};
-        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
-        assert_eq!(0, res.messages.len());
+        assert_eq!(BIDDING_DURATION, bidding_info.duration);
+        assert_eq!(env.block.height + BIDDING_PAUSE, bidding_info.start);
+        assert_eq!(Expiration::AtHeight(env.block.height + BIDDING_DURATION + BIDDING_PAUSE), bidding_info.expiration);
     }
 }
