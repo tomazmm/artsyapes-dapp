@@ -5,6 +5,7 @@ import {Navigate, Route, Routes, useLocation, useNavigate} from "react-router-do
 import {LoadingPage} from "./components/shared/LoadingPage";
 import {Header} from "./components/layout/Header/Header"
 import {BurgerMenu} from "./components/layout/Header/components/BurgerMenu";
+import {Background} from "./components/layout/Background/Background";
 
 
 const Home = lazy(() =>
@@ -67,6 +68,7 @@ function App() {
               :
               <></>
           }
+          <Background/>
           <React.Suspense fallback={<LoadingPage/>}>
             <Routes>
               <Route path={"/my-profile"} element={<MyProfile connectedWallet={connectedWallet} />}/>
