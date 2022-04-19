@@ -1,7 +1,6 @@
 import React, {useEffect, useState} from "react";
 import styled from 'styled-components';
 import {Col, Container, Row} from "react-bootstrap";
-import {Header} from "../shared/Header";
 import {Grid} from "./MyAccountsContent/Grid";
 import {SideMenu} from "./MyAccountsContent/SideMenu";
 import {useConnectedWallet} from "@terra-money/wallet-provider";
@@ -25,7 +24,7 @@ export const MyAccountBase = (props: MyAccountProps) => {
   const [tokens, setTokens] = useState<any>([])
   const [nftInfo, setNftInfo] = useState<any>([])
   const [nftsCount, setNftsCount] = useState<any>(0)
-  const [show, setShow] = useState(false);
+  // const [show, setShow] = useState(false);
 
 
   useEffect(() => {
@@ -46,17 +45,11 @@ export const MyAccountBase = (props: MyAccountProps) => {
     fetch()
   }, [tokens.length, connectedWallet])
 
-  const toggleBurgerMenu = () => setShow(!show);
+  // const toggleBurgerMenu = () => setShow(!show);
 
 
   return (
     <div className={className}>
-      <Header setShow={toggleBurgerMenu}/>
-      {show ?
-        <MobileBurgerMenu/>
-        :
-        <></>
-      }
       <Container fluid className="h-100 fixed-top">
           <Row className="h-auto about mb-4">
             <Col xl={{span: 3}}
