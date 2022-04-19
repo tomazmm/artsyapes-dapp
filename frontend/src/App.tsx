@@ -3,18 +3,18 @@ import {useConnectedWallet, useWallet, WalletStatus,} from '@terra-money/wallet-
 import * as query from './contract/query'
 import {Navigate, Route, Routes, useLocation, useNavigate} from "react-router-dom";
 import {LoadingPage} from "./components/shared/LoadingPage";
-import {Header} from "./components/layout/shared/Header"
-import {MobileBurgerMenu} from "./components/layout/MyAccount/MyAccountsContent/MobileBurgerMenu";
+import {Header} from "./components/layout/Header/Header"
+import {BurgerMenu} from "./components/layout/Header/components/BurgerMenu";
 
 
 const Home = lazy(() =>
-  import('./components/layout/Home/Home')
+  import('./pages/home')
     .then(({ Home }) => ({ default: Home })),
 );
 
-const MyAccount = lazy(() =>
-  import('./components/layout/MyAccount/MyAccount')
-    .then(({ MyAccount }) => ({ default: MyAccount })),
+const MyProfile = lazy(() =>
+  import('./pages/my-profile')
+    .then(({ MyProfile }) => ({ default: MyProfile })),
 );
 
 const Order = lazy(() =>
@@ -63,13 +63,13 @@ function App() {
         <div className="ArtsyApesApp">
           <Header setShow={toggleBurgerMenu}/>
           {show ?
-              <MobileBurgerMenu/>
+              <BurgerMenu/>
               :
               <></>
           }
           <React.Suspense fallback={<LoadingPage/>}>
             <Routes>
-              <Route path={"/my-profile"} element={<MyAccount connectedWallet={connectedWallet} />}/>
+              <Route path={"/my-profile"} element={<MyProfile connectedWallet={connectedWallet} />}/>
               <Route path={"/order"} element={<Order />}/>
 
 

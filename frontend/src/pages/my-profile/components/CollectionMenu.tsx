@@ -5,11 +5,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {faPlus, faCircle} from "@fortawesome/free-solid-svg-icons";
 import {Grid} from "./Grid";
 
-interface SideMenuProps {
+interface CollectionProps {
   className?: string;
 }
 
-export const SideMenuBase = (props: SideMenuProps) => {
+export const CollectionBase = (props: CollectionProps) => {
   const {
     className
   } = props;
@@ -47,7 +47,7 @@ export const SideMenuBase = (props: SideMenuProps) => {
 }
 
 
-export const SideMenu = styled(SideMenuBase)`
+export const CollectionMenu = styled(CollectionBase)`
   display: block;
   width: 100%;
   margin-bottom: 2rem;

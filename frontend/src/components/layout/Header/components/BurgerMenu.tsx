@@ -1,19 +1,15 @@
 import React from "react";
 import styled from 'styled-components';
 import {Col, Container, Modal, Row,} from "react-bootstrap";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {faChevronRight} from "@fortawesome/free-solid-svg-icons";
-import {GridItem} from "./GridItem";
-import {SideMenu} from "./SideMenu";
-import {ProfileGiveavays} from "./ProfileGiveaways";
-import {Grid} from "./Grid";
+import {CollectionMenu} from "../../../../pages/my-profile/components/CollectionMenu";
 
-interface MobileBurgerMenuProps {
+
+interface BurgerMenuProps {
   className?: string;
   show?: boolean;
 }
 
-export const MobileBurgerMenuBase = (props: MobileBurgerMenuProps) => {
+export const BurgerMenuBase = (props: BurgerMenuProps) => {
   const {
     className,
     show
@@ -27,7 +23,7 @@ export const MobileBurgerMenuBase = (props: MobileBurgerMenuProps) => {
                xs={{span: 12}}
                className="d-flex flex-column justify-content-center align-self-start align-items-center col my-collection">
             <div className="white-line"></div>
-            <SideMenu/>
+            <CollectionMenu/>
           </Col>
         </Row>
       </Container>
@@ -36,7 +32,7 @@ export const MobileBurgerMenuBase = (props: MobileBurgerMenuProps) => {
 }
 
 
-export const MobileBurgerMenu = styled(MobileBurgerMenuBase)`
+export const BurgerMenu = styled(BurgerMenuBase)`
   @media screen and (min-width: 768px) {
     display: none;
   }

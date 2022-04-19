@@ -1,21 +1,17 @@
 import React, {useEffect, useState} from "react";
 import styled from 'styled-components';
 import {Col, Container, Row} from "react-bootstrap";
-import {Grid} from "./MyAccountsContent/Grid";
-import {SideMenu} from "./MyAccountsContent/SideMenu";
-import {useConnectedWallet} from "@terra-money/wallet-provider";
-import * as query from "../../../contract/query";
+import {Grid} from "./components/Grid";
+import * as query from "../../contract/query";
 import {ConnectedWallet} from "@terra-dev/use-wallet/useConnectedWallet";
-import {LoadingContent} from "../../shared/LoadingContent";
-import {ProfileGiveavays} from "./MyAccountsContent/ProfileGiveaways";
-import {MobileBurgerMenu} from "./MyAccountsContent/MobileBurgerMenu";
+import {CollectionMenu} from "./components/CollectionMenu";
 
-interface MyAccountProps {
+interface MyProfileProps {
   className?: string;
   connectedWallet?: ConnectedWallet;
 }
 
-export const MyAccountBase = (props: MyAccountProps) => {
+export const MyProfileBase = (props: MyProfileProps) => {
   const {
     className,
     connectedWallet
@@ -54,14 +50,13 @@ export const MyAccountBase = (props: MyAccountProps) => {
                  className="d-flex flex-column justify-content-center align-self-start align-items-center col my-collection">
               <span className="owned-text">My Collection</span>
               <div className="white-line"></div>
-              <SideMenu/>
+              <CollectionMenu/>
             </Col>
             <Col xl={{span: 9}}
                  lg={{span: 12}}
                  xs={{span: 12}}
                  className="d-flex flex-column justify-content-end align-self-start col align-items-end my-account-col">
               {/*<span className="my-account-text">My Account</span>*/}
-              <ProfileGiveavays/>
               <div className="white-line"></div>
               <Grid className={className} nftInfo={nftInfo}/>
             </Col>
@@ -73,7 +68,7 @@ export const MyAccountBase = (props: MyAccountProps) => {
 }
 
 
-export const MyAccount = styled(MyAccountBase)`
+export const MyProfile= styled(MyProfileBase)`
     > .container-fluid{
         z-index: 1;
         background: url("/assets/my-account-background.png");
