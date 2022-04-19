@@ -3,6 +3,8 @@ import styled from 'styled-components';
 import {Row, Col, Modal, Button } from "react-bootstrap";
 import {faClose} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {Link, useNavigate} from "react-router-dom";
+
 
 interface GridItemModalProps {
   className?: string;
@@ -59,7 +61,7 @@ export const GridItemModalBase = (props: GridItemModalProps) => {
                     </div>
                   })}
                 </div>
-                <Button variant="light">Order Physical Item</Button>
+                <Link to="/order" className="btn btn-light">Order Physical Item</Link>
               </Col>
             </Row>
           </Modal.Body>

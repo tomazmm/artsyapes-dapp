@@ -17,6 +17,11 @@ const MyAccount = lazy(() =>
     .then(({ MyAccount }) => ({ default: MyAccount })),
 );
 
+const Order = lazy(() =>
+    import('./pages/order')
+        .then(({ Order }) => ({ default: Order })),
+);
+
 
 function App() {
   const navigate = useNavigate();
@@ -65,14 +70,14 @@ function App() {
           <React.Suspense fallback={<LoadingPage/>}>
             <Routes>
               <Route path={"/my-profile"} element={<MyAccount connectedWallet={connectedWallet} />}/>
+              <Route path={"/order"} element={<Order />}/>
+
 
               {["/"].map((path, index) =>
                 <Route path={path} element={<Navigate to={"/my-profile"} />} key={index} />
               )}
             </Routes>
           </React.Suspense>
-
-          {/*  TODO: add wallet to the right upper corner*/}
         </div>
       )
     case WalletStatus.WALLET_NOT_CONNECTED:

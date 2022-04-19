@@ -24,7 +24,6 @@ export const MyAccountBase = (props: MyAccountProps) => {
   const [tokens, setTokens] = useState<any>([])
   const [nftInfo, setNftInfo] = useState<any>([])
   const [nftsCount, setNftsCount] = useState<any>(0)
-  // const [show, setShow] = useState(false);
 
 
   useEffect(() => {
@@ -44,9 +43,6 @@ export const MyAccountBase = (props: MyAccountProps) => {
     }
     fetch()
   }, [tokens.length, connectedWallet])
-
-  // const toggleBurgerMenu = () => setShow(!show);
-
 
   return (
     <div className={className}>
