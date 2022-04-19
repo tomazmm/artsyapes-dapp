@@ -1,7 +1,7 @@
 import React from "react";
 import styled from 'styled-components';
 import {Col, Container, Row} from "react-bootstrap";
-import {ConnectWallet} from "../../shared/ConnectWallet";
+import {ConnectWallet} from "../../components/shared/ConnectWallet";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {faChevronRight} from "@fortawesome/free-solid-svg-icons";
 

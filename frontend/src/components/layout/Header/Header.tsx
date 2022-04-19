@@ -4,7 +4,6 @@ import {Col, Container, Row} from "react-bootstrap";
 import {ConnectWallet} from "../../shared/ConnectWallet";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faBars} from "@fortawesome/free-solid-svg-icons";
-import {MobileBurgerMenu} from "../MyAccount/MyAccountsContent/MobileBurgerMenu";
 
 interface HeaderProps {
   className?: string;
