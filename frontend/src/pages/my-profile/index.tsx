@@ -43,7 +43,7 @@ export const MyProfileBase = (props: MyProfileProps) => {
   return (
     <div className={className}>
       <Container fluid className="h-100 fixed-top">
-          <Row className="h-auto about mb-4">
+          <Row className="h-100 about mb-4">
             <Col xl={{span: 3}}
                  lg={{span: 12}}
                  xs={{span: 12}}
@@ -57,7 +57,7 @@ export const MyProfileBase = (props: MyProfileProps) => {
                  xs={{span: 12}}
                  className="d-flex flex-column justify-content-end align-self-start col align-items-end my-account-col">
               {/*<span className="my-account-text">My Account</span>*/}
-              <div className="white-line"></div>
+              <div className="white-line nfts"></div>
               <Grid className={className} nftInfo={nftInfo}/>
             </Col>
           </Row>
@@ -85,8 +85,10 @@ export const MyProfile= styled(MyProfileBase)`
               }
             }
             &.my-account-col{
-              //margin-left: 2rem;
-              //margin-bottom: 0.5rem;
+              height: 100%;
+              @media screen and (max-width: 1200px) and (min-width: 768px){
+                height: 80%;
+              }
             }
             .owned-text{
               color: white;
@@ -101,9 +103,12 @@ export const MyProfile= styled(MyProfileBase)`
               margin-bottom: 1rem;
             }
             .white-line{
-              border-bottom: 0.2rem groove rgba(194, 194, 194, .8);
+              border-bottom: 2px groove rgba(194, 194, 194, .8);
               width: 100%;
               margin-bottom: 2rem;
+              &.nfts{
+                margin-top: 3.07rem;
+              }
             }
           }
         }
