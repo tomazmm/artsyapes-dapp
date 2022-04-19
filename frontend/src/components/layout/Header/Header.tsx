@@ -4,6 +4,7 @@ import {Col, Container, Row} from "react-bootstrap";
 import {ConnectWallet} from "../../shared/ConnectWallet";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faBars} from "@fortawesome/free-solid-svg-icons";
+import {useNavigate} from 'react-router-dom';
 
 interface HeaderProps {
   className?: string;
@@ -18,6 +19,9 @@ export const HeaderBase = (props: HeaderProps) => {
 
   const toggleBurgerMenu = () => setShow();
 
+  const navigate = useNavigate();
+  const navigateMyProfile = () => navigate('/my-profile');
+
   return (
     <div className={className}>
       <Container fluid className="fixed-top h-auto">
@@ -25,12 +29,11 @@ export const HeaderBase = (props: HeaderProps) => {
           <Col lg={{span: 12}} sm={{span: 10}}
                xs={{span: 10}} md={{span: 12}} className="left-col" >
             <Row className="h-25 d-flex flex-row align-items-center">
-              <Col lg={{span: 6}} sm={{span: 12}}
-                   xs={{span: 12}} md={{span: 6}} className="col logo" >
+              <Col lg={{span: 6}} md={{span: 6}} className="col logo" >
                 <img className="logo" src={'/assets/logo.png'}/>
               </Col>
-              <Col lg={{span: 6}} sm={{span: 12}}
-                   xs={{span: 12}} md={{span: 6}} className="col wallet-button ">
+              <Col lg={{span: 6}} md={{span: 6}} className="col right-wing">
+                <span onClick={navigateMyProfile} className="my-profile">My profile</span>
                 <ConnectWallet />
               </Col>
             </Row>
@@ -60,13 +63,21 @@ export const Header = styled(HeaderBase)`
               justify-content: start;
             }
 
-            &.wallet-button{
+            &.right-wing{
               @media screen and (min-width: 768px) {
                 justify-content: end;
               }
 
               @media screen and (max-width: 767px) {
                 display: none!important;
+              }
+              .my-profile{
+                color: white;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding-right: 1rem;
+                cursor: pointer;
               }
             }
             padding: 0.5rem;
