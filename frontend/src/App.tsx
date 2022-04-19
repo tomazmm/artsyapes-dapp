@@ -32,12 +32,18 @@ function App() {
   const [updating, setUpdating] = useState(true)
   const [resetValue, setResetValue] = useState(0)
   const [show, setShow] = useState(false);
+  const [path, setPath] = useState("");
+
 
   const { status } = useWallet()
 
   const connectedWallet = useConnectedWallet()
 
   useEffect(() => {
+    if(path !== location.pathname){
+      setShow(false);
+      setPath(location.pathname);
+    }
     const prefetch = async () :Promise<any> => {
       if (connectedWallet) {
         setCount((await query.numTokens(connectedWallet)).count)
@@ -45,8 +51,7 @@ function App() {
       setUpdating(false)
     }
     prefetch()
-  }, [connectedWallet])
-
+  }, [connectedWallet, location.pathname])
 
   const toggleBurgerMenu = () => setShow(!show);
 
