@@ -3,6 +3,8 @@ import {useConnectedWallet, useWallet, WalletStatus,} from '@terra-money/wallet-
 import * as query from './contract/query'
 import {Navigate, Route, Routes, useLocation, useNavigate} from "react-router-dom";
 import {LoadingPage} from "./components/shared/LoadingPage";
+import {Header} from "./components/layout/shared/Header"
+import {MobileBurgerMenu} from "./components/layout/MyAccount/MyAccountsContent/MobileBurgerMenu";
 
 
 const Home = lazy(() =>
@@ -23,6 +25,7 @@ function App() {
   const [count, setCount] = useState(null)
   const [updating, setUpdating] = useState(true)
   const [resetValue, setResetValue] = useState(0)
+  const [show, setShow] = useState(false);
 
   const { status } = useWallet()
 
@@ -38,6 +41,9 @@ function App() {
     prefetch()
   }, [connectedWallet])
 
+
+  const toggleBurgerMenu = () => setShow(!show);
+
   switch (status){
     case WalletStatus.INITIALIZING:
       return (
@@ -50,11 +56,17 @@ function App() {
     case WalletStatus.WALLET_CONNECTED:
       return (
         <div className="ArtsyApesApp">
+          <Header setShow={toggleBurgerMenu}/>
+          {show ?
+              <MobileBurgerMenu/>
+              :
+              <></>
+          }
           <React.Suspense fallback={<LoadingPage/>}>
             <Routes>
               <Route path={"/my-profile"} element={<MyAccount connectedWallet={connectedWallet} />}/>
 
-              {["/home", "/"].map((path, index) =>
+              {["/"].map((path, index) =>
                 <Route path={path} element={<Navigate to={"/my-profile"} />} key={index} />
               )}
             </Routes>
@@ -68,12 +80,8 @@ function App() {
         <div className="ArtsyApesApp">
           <React.Suspense fallback={<LoadingPage/>}>
             <Routes>
-              <Route path="/home" element={<Home />}/>
-
-              <Route
-                path="*"
-                element={<Navigate to="/home" />}
-              />
+              <Route path="/" element={<Home />}/>
+              <Route path="*" element={<Navigate to="/"/>}/>
             </Routes>
           </React.Suspense>
         </div>

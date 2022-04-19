@@ -3,7 +3,6 @@ import styled from 'styled-components';
 import {Row, Col, Modal, Button } from "react-bootstrap";
 import {faClose} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {GridItem} from "./GridItem";
 
 interface GridItemModalProps {
   className?: string;
@@ -24,7 +23,6 @@ export const GridItemModalBase = (props: GridItemModalProps) => {
 
   const toggleModal = () => setShow();
 
-  console.log(nftValue.extension);
   return (
       <Modal show={show} onHide={toggleModal} centered dialogClassName={className}>
           <Modal.Body className="nft-details">
@@ -40,7 +38,7 @@ export const GridItemModalBase = (props: GridItemModalProps) => {
                 <div className="title d-flex flex-wrap justify-content-center">
                   <span>Traits</span>
                 </div>
-                <div className="stats d-flex justify-content-start">
+                <div className="traits d-flex justify-content-start">
                   {nftValue.extension.attributes.map((value: any, index: any) => {
                     return <div key={index}>
                       <span className="value-title">{value.trait_type.charAt(0).toUpperCase() + value.trait_type.slice(1)}</span>
@@ -58,7 +56,6 @@ export const GridItemModalBase = (props: GridItemModalProps) => {
                           </div>
                         )
                       }
-
                     </div>
                   })}
                 </div>
@@ -115,10 +112,10 @@ export const GridItemModal = styled(GridItemModalBase)`
             font-size: 1.3rem;
             padding-bottom: 1rem;
           }
-          .stats{
+          .traits{
             display: flex;
             flex-wrap: wrap;
-            width: 60%;
+            width: 90%;
             border: 1px solid rgba(92,92,92,.7);
             border-radius: 0.4rem;
             padding: 1rem;
