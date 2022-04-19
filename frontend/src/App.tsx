@@ -32,7 +32,7 @@ function App() {
   const [updating, setUpdating] = useState(true)
   const [resetValue, setResetValue] = useState(0)
   const [show, setShow] = useState(false);
-  const [path, setPath] = useState("");
+  const [pathName, setPath] = useState("");
 
 
   const { status } = useWallet()
@@ -40,7 +40,7 @@ function App() {
   const connectedWallet = useConnectedWallet()
 
   useEffect(() => {
-    if(path !== location.pathname){
+    if(pathName !== location.pathname){
       setShow(false);
       setPath(location.pathname);
     }
@@ -54,6 +54,8 @@ function App() {
   }, [connectedWallet, location.pathname])
 
   const toggleBurgerMenu = () => setShow(!show);
+
+
 
   switch (status){
     case WalletStatus.INITIALIZING:
@@ -80,8 +82,11 @@ function App() {
               <Route path={"/order"} element={<Order />}/>
 
 
-              {["/"].map((path, index) =>
-                <Route path={path} element={<Navigate to={"/my-profile"} />} key={index} />
+              {["/my-profile", "/order"].map((path, index) =>{
+                if(path !== pathName){
+                  return <Route path={pathName} element={<Navigate to={"/my-profile"} />} key={index} />
+                }
+                }
               )}
             </Routes>
           </React.Suspense>
