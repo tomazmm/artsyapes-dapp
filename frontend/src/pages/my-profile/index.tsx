@@ -71,8 +71,8 @@ export const MyProfileBase = (props: MyProfileProps) => {
 export const MyProfile= styled(MyProfileBase)`
     > .container-fluid{
         z-index: 1;
-        background: url("/assets/my-account-background.png");
-        background-size: cover;
+        //background: url("/assets/my-account-background.png");
+        //background-size: cover;
         padding: 6rem 4rem;
         .row{
           &.about{
