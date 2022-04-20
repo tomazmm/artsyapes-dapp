@@ -16,11 +16,10 @@ export const GridBase = (props: GridProps) => {
     nftInfo
   } = props;
 
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState(true);
 
   useEffect(() => {
-    console.error(nftInfo);
-    if(nftInfo.length > 0)
+    if(nftInfo.length)
       for(const it of nftInfo){
         if(it.extension === null){
           setShow(false);
@@ -32,7 +31,7 @@ export const GridBase = (props: GridProps) => {
 
   return (
     <div className={className}>
-      <Row className="h-auto grid-row">
+      <Row className={`h-auto grid-row ${ !show ? "grid-row-center" : ""}`}>
         { show ?(
             nftInfo.map((value: any, index: any) => {
               return <Col key={index}
@@ -47,7 +46,7 @@ export const GridBase = (props: GridProps) => {
         ) : (
             <Col className="d-flex flex-column justify-content-center align-content-center align-items-center col-no-nft">
               <FontAwesomeIcon className="warning" icon={faCircleExclamation}  />
-              <span>Your list of tokens is empty.</span>
+              <span>You do not own an ArtsyApe yet.</span>
             </Col>
         )
         }
@@ -88,8 +87,6 @@ export const Grid = styled(GridBase)`
     max-height: 100%;
     height: 100%!important;
     display: flex;
-    align-content: center;
-    justify-content: center;
     .col-no-nft{
       padding: 1rem;
       background: rgb(0,0,0);
@@ -97,7 +94,7 @@ export const Grid = styled(GridBase)`
       border-radius: 0.4rem;
       flex: none;
       border: 1px solid rgba(92,92,92,.7);
-      width: 14rem;
+      width: 20rem;
       color: white;
       .warning{
         margin: 1rem;
@@ -110,6 +107,10 @@ export const Grid = styled(GridBase)`
         text-align: center;
       }
     }
+  }
+  .grid-row-center {
+    align-content: center;
+    justify-content: center;
   }
   
 `;
