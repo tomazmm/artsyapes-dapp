@@ -10,10 +10,12 @@ task(async (env) => {
     let it = 0;
     while (it !== tokens.length) {
         try {
-            const token_id = parseInt(tokens[it].info.name).toString();
+            const real_owner = tokens[it].access.owner;
+            const token_id = parseInt(tokens[it].info.extension.name.split(" ")[1]).toString();
             const token_uri = tokens[it].info.token_uri;
             const extension = tokens[it].info.extension;
-            await mint(owner, owner.key.accAddress,  token_id, token_uri ,extension);
+            // console.log(token_id)
+            await mint(owner, real_owner,  token_id, token_uri ,extension);
             it++;
         }
         catch (_) {
