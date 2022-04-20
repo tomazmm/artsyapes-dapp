@@ -25,5 +25,4 @@ export const Background = styled(BackgroundBase)`
   height: 100vh;
   background-size: cover;
   padding: 6rem 4rem;
-      
 `;
