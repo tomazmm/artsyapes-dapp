@@ -86,6 +86,7 @@ function App() {
     navigateToOrder
   };
 
+
   switch (status){
     case WalletStatus.INITIALIZING:
       return (
@@ -99,14 +100,14 @@ function App() {
       return (
         <GlobalContext.Provider value={globalContext}>
           {loadPage ? (
-            <div className="ArtsyApesApp">
+            <div className="ArtsyApesApp" style={{height: "100vh"}}>
+              <Background/>
               <Header setShow={toggleBurgerMenu}/>
               {show ?
                 <BurgerMenu/>
                 :
                 <></>
               }
-              <Background/>
               <React.Suspense fallback={<LoadingPage/>}>
                 <Routes>
                   <Route path={"/my-profile"} element={<MyProfile connectedWallet={connectedWallet} />}/>
@@ -128,7 +129,6 @@ function App() {
             </>
           )
           }
-
         </GlobalContext.Provider>
 
       )

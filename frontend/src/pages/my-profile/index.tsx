@@ -15,9 +15,9 @@ export const MyProfileBase = (props: MyProfileProps) => {
 
 
   return (
-    <div className={className}>
-      <Container fluid className="h-100 fixed-top">
-          <Row className="h-100 about mb-4">
+    <div className={`${className} h-100`} >
+      <Container fluid className="h-100 mt-5">
+          <Row className="h-100 mb-4">
             <Col xl={{span: 3}}
                  lg={{span: 12}}
                  xs={{span: 12}}
@@ -30,7 +30,6 @@ export const MyProfileBase = (props: MyProfileProps) => {
                  lg={{span: 12}}
                  xs={{span: 12}}
                  className="d-flex flex-column justify-content-end align-self-start col align-items-end my-account-col">
-              {/*<span className="my-account-text">My Account</span>*/}
               <div className="white-line nfts"></div>
               <Grid className={className}/>
             </Col>
@@ -44,14 +43,8 @@ export const MyProfileBase = (props: MyProfileProps) => {
 
 export const MyProfile= styled(MyProfileBase)`
     > .container-fluid{
-        z-index: 1;
-        //background: url("/assets/my-account-background.png");
-        //background-size: cover;
-        padding: 6rem 4rem;
+        width: 95%;
         .row{
-          &.about{
-            margin-top: 3rem;
-          }
           .col{
             &.my-collection{
               @media screen and (max-width: 767px) {
