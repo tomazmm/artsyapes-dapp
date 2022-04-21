@@ -1,44 +1,18 @@
-import React, {useEffect, useState} from "react";
+import React from "react";
 import styled from 'styled-components';
 import {Col, Container, Row} from "react-bootstrap";
 import {Grid} from "./components/Grid";
-import * as query from "../../contract/query";
-import {ConnectedWallet} from "@terra-dev/use-wallet/useConnectedWallet";
 import {CollectionMenu} from "./components/CollectionMenu";
 
 interface MyProfileProps {
   className?: string;
-  connectedWallet?: ConnectedWallet;
 }
 
 export const MyProfileBase = (props: MyProfileProps) => {
   const {
-    className,
-    connectedWallet
+    className
   } = props;
 
-  const [tokens, setTokens] = useState<any>([])
-  const [nftInfo, setNftInfo] = useState<any>([])
-  const [nftsCount, setNftsCount] = useState<any>(0)
-
-
-  useEffect(() => {
-    const fetch = async () :Promise<any> => {
-      if (connectedWallet) {
-        setTokens(await query.tokens(connectedWallet));
-      }
-      if(tokens.length !== 0 && connectedWallet){
-        for(const it of tokens.tokens){
-          const token = await query.nftInfo(connectedWallet, it)
-
-          setNftInfo( (prevState: any) => {
-            return [...prevState, token]
-          })
-        }
-      }
-    }
-    fetch()
-  }, [tokens.length, connectedWallet])
 
   return (
     <div className={className}>
@@ -58,7 +32,7 @@ export const MyProfileBase = (props: MyProfileProps) => {
                  className="d-flex flex-column justify-content-end align-self-start col align-items-end my-account-col">
               {/*<span className="my-account-text">My Account</span>*/}
               <div className="white-line nfts"></div>
-              <Grid className={className} nftInfo={nftInfo}/>
+              <Grid className={className}/>
             </Col>
           </Row>
       </Container>

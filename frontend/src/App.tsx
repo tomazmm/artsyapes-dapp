@@ -6,6 +6,7 @@ import {LoadingPage} from "./components/shared/LoadingPage";
 import {Header} from "./components/layout/Header/Header"
 import {BurgerMenu} from "./components/layout/Header/components/BurgerMenu";
 import {Background} from "./components/layout/Background/Background";
+import GlobalContext from "./components/shared/GlobalContext";
 
 
 const Home = lazy(() =>
@@ -28,11 +29,14 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [count, setCount] = useState(null)
-  const [updating, setUpdating] = useState(true)
-  const [resetValue, setResetValue] = useState(0)
   const [show, setShow] = useState(false);
   const [pathName, setPath] = useState("");
+  const [orderPathNames, setOrderPathNames] = useState<any>(["/my-profile"]);
+  const [loadPage, setLoadPage] = useState(false);
+
+  const [getTokenNumbers, setGetTokenNumbers] = useState(true);
+  const [tokenNumbers, setTokenNumbers] = useState<any>([])
+  const [tokenInfo, setTokenInfo] = useState<any>([])
 
 
   const { status } = useWallet()
@@ -45,17 +49,42 @@ function App() {
       setPath(location.pathname);
     }
     const prefetch = async () :Promise<any> => {
-      if (connectedWallet) {
-        setCount((await query.numTokens(connectedWallet)).count)
+      if (connectedWallet && getTokenNumbers) {
+        // console.log(tokenNumbers.tokens.length)
+        setTokenNumbers(await query.tokens(connectedWallet));
+        setGetTokenNumbers(false);
+
+        if(tokenNumbers.tokens == undefined)
+          return;
+
+        if(tokenNumbers.length !== 0 && connectedWallet && tokenInfo.length <= tokenNumbers.tokens.length){
+          for(const it of tokenNumbers.tokens){
+            const token = await query.nftInfo(connectedWallet, it)
+            setTokenInfo( (prevState: any) => {
+              return [...prevState, token]
+            })
+            setOrderPathNames( (prevState: any) => {
+              return [...prevState, "/order/"+it]
+            })
+          }
+        }
+        setLoadPage(true);
       }
-      setUpdating(false)
+
     }
     prefetch()
-  }, [connectedWallet, location.pathname])
+  }, [connectedWallet, location.pathname, tokenNumbers.tokens])
+
 
   const toggleBurgerMenu = () => setShow(!show);
+  const navigateToOrder = (id: string) => navigate("/order/" + id)
 
-
+  const globalContext = {
+    tokenNum: tokenNumbers,
+    tokensInfo: tokenInfo,
+    connectedWallet: connectedWallet,
+    navigateToOrder
+  };
 
   switch (status){
     case WalletStatus.INITIALIZING:
@@ -68,29 +97,40 @@ function App() {
       )
     case WalletStatus.WALLET_CONNECTED:
       return (
-        <div className="ArtsyApesApp">
-          <Header setShow={toggleBurgerMenu}/>
-          {show ?
-              <BurgerMenu/>
-              :
-              <></>
+        <GlobalContext.Provider value={globalContext}>
+          {loadPage ? (
+            <div className="ArtsyApesApp">
+              <Header setShow={toggleBurgerMenu}/>
+              {show ?
+                <BurgerMenu/>
+                :
+                <></>
+              }
+              <Background/>
+              <React.Suspense fallback={<LoadingPage/>}>
+                <Routes>
+                  <Route path={"/my-profile"} element={<MyProfile connectedWallet={connectedWallet} />}/>
+                  <Route path={"/order"} element={<Order />}/>
+
+                  {orderPathNames.find((path:string) => path === pathName) ? (
+                    <></>
+                  ) : (
+                    <Route path={pathName} element={<Navigate to={"/my-profile"} />}/>
+                  ) }
+                </Routes>
+              </React.Suspense>
+            </div>
+          ) : (
+            <>
+              <div className="ArtsyApesApp">
+                <LoadingPage />
+              </div>
+            </>
+          )
           }
-          <Background/>
-          <React.Suspense fallback={<LoadingPage/>}>
-            <Routes>
-              <Route path={"/my-profile"} element={<MyProfile connectedWallet={connectedWallet} />}/>
-              <Route path={"/order"} element={<Order />}/>
 
+        </GlobalContext.Provider>
 
-              {["/my-profile", "/order"].map((path, index) =>{
-                if(path !== pathName){
-                  return <Route path={pathName} element={<Navigate to={"/my-profile"} />} key={index} />
-                }
-                }
-              )}
-            </Routes>
-          </React.Suspense>
-        </div>
       )
     case WalletStatus.WALLET_NOT_CONNECTED:
       return (

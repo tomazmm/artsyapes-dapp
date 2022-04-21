@@ -1,39 +1,40 @@
-import React, {useEffect, useState} from "react";
+import React, {useContext, useEffect, useState} from "react";
 import styled from 'styled-components';
 import {Col, Container, Modal, Row,} from "react-bootstrap";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {faChevronRight, faCircleExclamation} from "@fortawesome/free-solid-svg-icons";
 import {GridItem} from "./GridItem";
+import globalContext from "../../../components/shared/GlobalContext";
+import GlobalContext from "../../../components/shared/GlobalContext";
 
 interface GridProps {
   className?: string;
-  nftInfo?: any;
 }
 
 export const GridBase = (props: GridProps) => {
   const {
-    className,
-    nftInfo
+    className
   } = props;
 
   const [show, setShow] = useState(true);
+  const context = useContext(GlobalContext);
 
   useEffect(() => {
-    if(nftInfo.length)
-      for(const it of nftInfo){
+    if(context.tokensInfo.length)
+      for(const it of context.tokensInfo){
         if(it.extension === null){
           setShow(false);
           break;
         }
       }
-  }, [nftInfo.length]);
+  }, [context.tokensInfo.length]);
 
 
   return (
     <div className={className}>
       <Row className={`h-auto grid-row ${ !show ? "grid-row-center" : ""}`}>
         { show ?(
-            nftInfo.map((value: any, index: any) => {
+          context.tokensInfo.map((value: any, index: any) => {
               return <Col key={index}
                           xl={{span:4}}
                           lg={{span: 6}}

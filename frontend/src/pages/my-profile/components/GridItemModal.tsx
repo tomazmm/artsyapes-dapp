@@ -1,9 +1,11 @@
-import React, {useEffect, useState} from "react";
+import React, {useContext, useEffect, useState} from "react";
 import styled from 'styled-components';
 import {Row, Col, Modal, Button } from "react-bootstrap";
 import {faClose} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {Link, useNavigate} from "react-router-dom";
+import GlobalContext from "../../../components/shared/GlobalContext";
+import {nftInfo} from "../../../contract/query";
 
 
 interface GridItemModalProps {
@@ -24,6 +26,7 @@ export const GridItemModalBase = (props: GridItemModalProps) => {
   } = props;
 
   const toggleModal = () => setShow();
+  const id = nftValue.extension.name.split(" ")[1];
 
   return (
       <Modal show={show} onHide={toggleModal} centered dialogClassName={className}>
@@ -61,7 +64,7 @@ export const GridItemModalBase = (props: GridItemModalProps) => {
                     </div>
                   })}
                 </div>
-                <Link to="/order" className="btn btn-light">Order Physical Item</Link>
+                <Link to={"/order/" + id}  className="btn btn-light">Order Physical Item</Link>
               </Col>
             </Row>
           </Modal.Body>
