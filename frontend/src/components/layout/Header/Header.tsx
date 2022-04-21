@@ -24,7 +24,7 @@ export const HeaderBase = (props: HeaderProps) => {
 
   return (
     <div className={className}>
-      <Container fluid className="fixed-top h-auto">
+      <Container fluid className="h-auto">
         <Row className="header-row d-flex flex-row align-items-center">
           <Col lg={{span: 12}} sm={{span: 10}}
                xs={{span: 10}} md={{span: 12}} className="left-col" >
@@ -51,7 +51,6 @@ export const HeaderBase = (props: HeaderProps) => {
 
 export const Header = styled(HeaderBase)`
   >.container-fluid{
-    z-index: 2;
     background-color: black;
     padding: .5rem 4rem;
     .header-row{

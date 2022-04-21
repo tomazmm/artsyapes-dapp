@@ -32,7 +32,7 @@ export const GridBase = (props: GridProps) => {
 
   return (
     <div className={className}>
-      <Row className={`h-auto grid-row ${ !show ? "grid-row-center" : ""}`}>
+      <Row className={`grid-row ${ !show ? "grid-row-center" : ""}`}>
         { show ?(
           context.tokensInfo.map((value: any, index: any) => {
               return <Col key={index}
@@ -61,7 +61,7 @@ export const Grid = styled(GridBase)`
   display: block;
   width: 100%;
   margin: auto;
-  height: 100%;
+  max-height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   ::-webkit-scrollbar {
