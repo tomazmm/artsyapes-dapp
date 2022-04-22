@@ -36,7 +36,7 @@ export const GridBase = (props: GridProps) => {
         { show ?(
           context.tokensInfo.map((value: any, index: any) => {
               return <Col key={index}
-                          xl={{span:4}}
+                          xl={{span: 4}}
                           lg={{span: 6}}
                           md={{span: 6}}
                           xs={{span: 12}}
@@ -58,9 +58,7 @@ export const GridBase = (props: GridProps) => {
 
 
 export const Grid = styled(GridBase)`
-  display: block;
   width: 100%;
-  margin: auto;
   max-height: 100%;
   overflow-y: auto;
   overflow-x: hidden;

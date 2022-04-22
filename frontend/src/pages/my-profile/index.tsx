@@ -15,7 +15,7 @@ export const MyProfileBase = (props: MyProfileProps) => {
 
 
   return (
-    <div className={`${className} h-100`} >
+    <div className={`${className} h-75`} >
       <Container fluid className="h-100 mt-5">
           <Row className="h-100 mb-4">
             <Col xl={{span: 3}}
@@ -29,7 +29,7 @@ export const MyProfileBase = (props: MyProfileProps) => {
             <Col xl={{span: 9}}
                  lg={{span: 12}}
                  xs={{span: 12}}
-                 className="d-flex flex-column justify-content-end align-self-start col align-items-end my-account-col">
+                 className="d-flex flex-column col my-account-col">
               <div className="white-line nfts"></div>
               <Grid className={className}/>
             </Col>
