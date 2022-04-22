@@ -7,6 +7,7 @@ import {Header} from "./components/layout/Header/Header"
 import {BurgerMenu} from "./components/layout/Header/components/BurgerMenu";
 import {Background} from "./components/layout/Background/Background";
 import GlobalContext from "./components/shared/GlobalContext";
+import {nftInfo} from "./contract/query";
 
 
 const Home = lazy(() =>
@@ -26,64 +27,47 @@ const Order = lazy(() =>
 
 
 function App() {
-  const navigate = useNavigate();
-  const location = useLocation();
-
   const [show, setShow] = useState(false);
-  const [pathName, setPath] = useState("");
-  const [orderPathNames, setOrderPathNames] = useState<any>(["/my-profile"]);
-  const [loadPage, setLoadPage] = useState(false);
+  const [loadPage, setLoadPage] = useState(true);
 
-  const [getTokenNumbers, setGetTokenNumbers] = useState(true);
-  const [tokenNumbers, setTokenNumbers] = useState<any>([])
+  const [tokens, setTokens] = useState<any>([])
   const [tokenInfo, setTokenInfo] = useState<any>([])
-
 
   const { status } = useWallet()
 
   const connectedWallet = useConnectedWallet()
 
   useEffect(() => {
-    if(pathName !== location.pathname){
-      setShow(false);
-      setPath(location.pathname);
-    }
-    const prefetch = async () :Promise<any> => {
-      if (connectedWallet && getTokenNumbers) {
-        // console.log(tokenNumbers.tokens.length)
-        setTokenNumbers(await query.tokens(connectedWallet));
-        setGetTokenNumbers(false);
+    // fetch wallet's tokens and their corresponding info
+    const fetchTokenInfo = async () :Promise<any> => {
+      if (connectedWallet) {
+        const wallet_tokens = await query.tokens(connectedWallet);
+        setTokens(wallet_tokens.tokens);
 
-        if(tokenNumbers.tokens == undefined)
-          return;
-
-        if(tokenNumbers.length !== 0 && connectedWallet && tokenInfo.length <= tokenNumbers.tokens.length){
-          for(const it of tokenNumbers.tokens){
+        if(wallet_tokens.tokens.length){
+          for(const it of wallet_tokens.tokens){
             const token = await query.nftInfo(connectedWallet, it)
             setTokenInfo( (prevState: any) => {
               return [...prevState, token]
             })
-            setOrderPathNames( (prevState: any) => {
-              return [...prevState, "/order/"+it]
-            })
           }
         }
-        setLoadPage(true);
       }
-
     }
-    prefetch()
-  }, [connectedWallet, location.pathname, tokenNumbers.tokens])
+    fetchTokenInfo()
+  }, [connectedWallet])
+
+  useEffect(() => {
+    console.log(tokens)
+  }, [tokens])
 
 
   const toggleBurgerMenu = () => setShow(!show);
-  const navigateToOrder = (id: string) => navigate("/order/" + id)
 
   const globalContext = {
-    tokenNum: tokenNumbers,
+    tokenNum: tokens,
     tokensInfo: tokenInfo,
     connectedWallet: connectedWallet,
-    navigateToOrder
   };
 
 
@@ -110,14 +94,8 @@ function App() {
               }
               <React.Suspense fallback={<LoadingPage/>}>
                 <Routes>
-                  <Route path={"/my-profile"} element={<MyProfile connectedWallet={connectedWallet} />}/>
-                  <Route path={"/order"} element={<Order />}/>
-
-                  {orderPathNames.find((path:string) => path === pathName) ? (
-                    <></>
-                  ) : (
-                    <Route path={pathName} element={<Navigate to={"/my-profile"} />}/>
-                  ) }
+                  <Route path={"/"} element={<MyProfile />}/>
+                  <Route path={"/order/:id"} element={<Order />}/>
                 </Routes>
               </React.Suspense>
             </div>
@@ -130,7 +108,6 @@ function App() {
           )
           }
         </GlobalContext.Provider>
-
       )
     case WalletStatus.WALLET_NOT_CONNECTED:
       return (
@@ -145,6 +122,5 @@ function App() {
       )
   }
 }
-
 
 export default App

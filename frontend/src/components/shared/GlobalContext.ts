@@ -5,7 +5,6 @@ interface ITokensInfo {
   tokenNum?: any,
   tokensInfo?: any
   connectedWallet?: any
-  navigateToOrder: (id: string) => void
 }
 
 
