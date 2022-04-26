@@ -4,7 +4,6 @@ import {Col, Container, Modal, Row,} from "react-bootstrap";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {faChevronRight, faCircleExclamation} from "@fortawesome/free-solid-svg-icons";
 import {GridItem} from "./GridItem";
-import globalContext from "../../../components/shared/GlobalContext";
 import GlobalContext from "../../../components/shared/GlobalContext";
 
 interface GridProps {
@@ -38,7 +37,6 @@ export const GridBase = (props: GridProps) => {
               return <Col key={index}
                           xl={{span: 4}}
                           lg={{span: 6}}
-                          md={{span: 6}}
                           xs={{span: 12}}
                           className="d-flex flex-column justify-content-start align-self-start align-content-center align-items-center col mb-4">
                 <GridItem nftValue={value}/>

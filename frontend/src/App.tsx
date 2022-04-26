@@ -38,7 +38,6 @@ function App() {
   const connectedWallet = useConnectedWallet()
 
   useEffect(() => {
-    // fetch wallet's tokens and their corresponding info
     const fetchTokenInfo = async () :Promise<any> => {
       if (connectedWallet) {
         const wallet_tokens = await query.tokens(connectedWallet);
