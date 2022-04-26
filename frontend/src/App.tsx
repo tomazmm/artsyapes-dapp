@@ -7,7 +7,8 @@ import {Header} from "./components/layout/Header/Header"
 import {BurgerMenu} from "./components/layout/Header/components/BurgerMenu";
 import {Background} from "./components/layout/Background/Background";
 import GlobalContext from "./components/shared/GlobalContext";
-import {nftInfo} from "./contract/query";
+import PurchaseInfo from "./components/shared/PurchaseInfo";
+
 
 
 const Home = lazy(() =>
@@ -25,6 +26,10 @@ const Order = lazy(() =>
         .then(({ Order }) => ({ default: Order })),
 );
 
+const Purchase = lazy(() =>
+    import('./pages/purchase')
+        .then(({ Purchase }) => ({ default: Purchase })),
+);
 
 function App() {
   const [show, setShow] = useState(false);
@@ -90,6 +95,7 @@ function App() {
                 <Routes>
                   <Route path={"/"} element={<MyProfile />}/>
                   <Route path={"/order/:id"} element={<Order />}/>
+                  <Route path={"/order/:id/purchase"} element={<Purchase />}/>
                 </Routes>
               </React.Suspense>
             </div>
