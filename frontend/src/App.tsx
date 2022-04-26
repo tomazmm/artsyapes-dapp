@@ -56,15 +56,10 @@ function App() {
     fetchTokenInfo()
   }, [connectedWallet])
 
-  useEffect(() => {
-    console.log(tokens)
-  }, [tokens])
-
-
   const toggleBurgerMenu = () => setShow(!show);
 
   const globalContext = {
-    tokenNum: tokens,
+    tokens,
     tokensInfo: tokenInfo,
     connectedWallet: connectedWallet,
   };

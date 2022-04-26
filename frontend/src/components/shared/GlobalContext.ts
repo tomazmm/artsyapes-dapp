@@ -1,13 +1,13 @@
 // components/GlobalContext.js
 import React from "react";
+import {ConnectedWallet} from "@terra-dev/use-wallet/useConnectedWallet";
 
-interface ITokensInfo {
-  tokenNum?: any,
-  tokensInfo?: any
-  connectedWallet?: any
+interface IGlobalContext {
+  tokens?: string[],
+  tokensInfo?: any,
+  connectedWallet?: ConnectedWallet
 }
 
-
-const GlobalContext = React.createContext({} as ITokensInfo);
+const GlobalContext = React.createContext({} as IGlobalContext);
 
 export default GlobalContext;

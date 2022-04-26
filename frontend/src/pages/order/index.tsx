@@ -1,6 +1,8 @@
-import React, {useEffect, useState} from "react";
+import React, {useContext, useEffect, useState} from "react";
 import styled from 'styled-components';
 import {Col, Container, Row} from "react-bootstrap";
+import GlobalContext from "../../components/shared/GlobalContext";
+import {useNavigate} from "react-router-dom";
 
 interface OrderProps {
   className?: string;
@@ -10,6 +12,19 @@ export const OrderBase = (props: OrderProps) => {
   const {
     className,
   } = props;
+
+  const globalContext = useContext(GlobalContext);
+
+  const navigate = useNavigate();
+  const navigateToMyProfile = () => navigate('/');
+
+  useEffect( () => {
+    // redirect if token_id (from 'pathname') not in user's wallet
+    const token_id = window.location.pathname.replace( /^\D+/g, '');
+    if (!globalContext.tokens?.includes(token_id)) {
+      navigateToMyProfile();
+    }
+  }, [])
 
   return (
     <div className={className}>
@@ -32,7 +47,6 @@ export const OrderBase = (props: OrderProps) => {
     </div>
   )
 }
-
 
 export const Order = styled(OrderBase)`
     > .container-fluid{
