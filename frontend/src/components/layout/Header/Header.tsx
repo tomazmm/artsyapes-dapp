@@ -30,7 +30,7 @@ export const HeaderBase = (props: HeaderProps) => {
                xs={{span: 10}} md={{span: 12}} className="left-col" >
             <Row className="h-25 d-flex flex-row align-items-center">
               <Col lg={{span: 6}} md={{span: 6}} className="col logo" >
-                <img className="logo" src={'/assets/logo.png'}/>
+                <img onClick={navigateMyProfile} className="logo" src={'/assets/logo.png'}/>
               </Col>
               <Col lg={{span: 6}} md={{span: 6}} className="col right-wing">
                 <span onClick={navigateMyProfile} className="my-profile">My Apes</span>
@@ -82,6 +82,7 @@ export const Header = styled(HeaderBase)`
             padding: 0.5rem;
             .logo{
               width: 10rem;
+              cursor: pointer;
             }
           }
         }
