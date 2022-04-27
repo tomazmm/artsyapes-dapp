@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import styled from 'styled-components';
-import {GridItemModal} from "./GridItemModal";
+import {useNavigate} from "react-router-dom";
 
 interface GridItemProps {
   className?: string;
@@ -13,6 +13,8 @@ export const GridItemBase = (props: GridItemProps) => {
     nftValue
   } = props;
 
+  const navigate = useNavigate();
+  const id = nftValue.extension.name.split(" ")[1]
 
   const [imageName, setImageName] = useState<any>("")
   const [show, setShow] = useState(false);
@@ -23,6 +25,8 @@ export const GridItemBase = (props: GridItemProps) => {
     setImageName("https://d1mx8bduarpf8s.cloudfront.net/" + tempImageName[1]);
   }, []);
 
+  const orderPhysical = () => navigate("/order/" + id)
+
   const toggleModal = () => setShow(!show);
 
   const onLoadShowText = () => setShowCardText(true);
@@ -30,7 +34,7 @@ export const GridItemBase = (props: GridItemProps) => {
   return (
     <div className={className}>
       {/*Card View*/}
-      <div className="grid-item-wrapper d-flex flex-column" onClick={toggleModal}>
+      <div className="grid-item-wrapper d-flex flex-column" onClick={orderPhysical}>
         <img src={imageName} onLoad={onLoadShowText} />
         {showCardText ? (
           <span>{nftValue.extension.name}</span>
@@ -38,7 +42,7 @@ export const GridItemBase = (props: GridItemProps) => {
         }
       </div>
 
-      <GridItemModal nftValue={nftValue} imageName={imageName} show={show} setShow={toggleModal}/>
+      {/*<GridItemModal nftValue={nftValue} imageName={imageName} show={show} setShow={toggleModal}/>*/}
     </div>
   )
 }

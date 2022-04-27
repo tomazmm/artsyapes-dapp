@@ -3,7 +3,6 @@ import styled from 'styled-components';
 import {Col, Container, Row} from "react-bootstrap";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {faPlus, faCircle} from "@fortawesome/free-solid-svg-icons";
-import {Grid} from "./Grid";
 
 interface CollectionProps {
   className?: string;
@@ -50,7 +49,27 @@ export const CollectionBase = (props: CollectionProps) => {
 export const CollectionMenu = styled(CollectionBase)`
   display: block;
   width: 100%;
-  margin-bottom: 2rem;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  /* Track */
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  /* Handle */
+  ::-webkit-scrollbar-thumb {
+    background: #888;
+  }
+
+  /* Handle on hover */
+  ::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
   div{
     -webkit-user-select: none;  /* Chrome all / Safari all */
     -moz-user-select: none;     /* Firefox all */

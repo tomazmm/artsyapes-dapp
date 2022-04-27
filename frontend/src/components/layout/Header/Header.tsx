@@ -24,7 +24,7 @@ export const HeaderBase = (props: HeaderProps) => {
 
   return (
     <div className={className}>
-      <Container fluid className="h-auto">
+      <Container fluid>
         <Row className="header-row d-flex flex-row align-items-center">
           <Col lg={{span: 12}} sm={{span: 10}}
                xs={{span: 10}} md={{span: 12}} className="left-col" >

@@ -7,7 +7,7 @@ import {Header} from "./components/layout/Header/Header"
 import {BurgerMenu} from "./components/layout/Header/components/BurgerMenu";
 import {Background} from "./components/layout/Background/Background";
 import GlobalContext from "./components/shared/GlobalContext";
-import PurchaseInfo from "./components/shared/PurchaseInfo";
+import styled from "styled-components";
 
 
 
@@ -31,7 +31,15 @@ const Purchase = lazy(() =>
         .then(({ Purchase }) => ({ default: Purchase })),
 );
 
-function App() {
+interface AppProps {
+  className?: string;
+}
+
+export const AppBase = (props: AppProps) => {
+  const {
+    className,
+  } = props;
+
   const [show, setShow] = useState(false);
   const [loadPage, setLoadPage] = useState(true);
 
@@ -74,7 +82,7 @@ function App() {
     case WalletStatus.INITIALIZING:
       return (
         <>
-          <div className="ArtsyApesApp">
+          <div className={className}>
             <LoadingPage />
           </div>
         </>
@@ -83,22 +91,27 @@ function App() {
       return (
         <GlobalContext.Provider value={globalContext}>
           {loadPage ? (
-            <div className="ArtsyApesApp" style={{height: "100vh"}}>
+            <div className={className}>
               <Background/>
-              <Header setShow={toggleBurgerMenu}/>
-              {show ?
-                <BurgerMenu/>
-                :
-                <></>
-              }
-              <React.Suspense fallback={<LoadingPage/>}>
-                <Routes>
-                  <Route path={"/"} element={<MyProfile />}/>
-                  <Route path={"/order/:id"} element={<Order />}/>
-                  <Route path={"/order/:id/purchase"} element={<Purchase />}/>
-                </Routes>
-              </React.Suspense>
+              <div className="header">
+                  <Header setShow={toggleBurgerMenu}/>
+                  {show ?
+                      <BurgerMenu/>
+                      :
+                      <></>
+                  }
+              </div>
+              <div className="content">
+                <React.Suspense fallback={<LoadingPage/>}>
+                  <Routes>
+                    <Route path={"/order/:id"} element={<Order />}/>
+                    <Route path={"/order/:id/purchase"} element={<Purchase />}/>
+                    <Route path={"/"} element={<MyProfile />}/>
+                  </Routes>
+                </React.Suspense>
+              </div>
             </div>
+
           ) : (
             <>
               <div className="ArtsyApesApp">
@@ -123,4 +136,17 @@ function App() {
   }
 }
 
-export default App
+export const App = styled(AppBase)`
+  display: flex;
+  flex-flow: column;
+  height: 100vh;
+  .header{
+    flex: 0 1 auto;
+  }
+  .content{
+    flex: 1 1 auto;
+    overflow-y: hidden;
+    overflow-x: hidden;
+    height: 100%;
+  }
+`;

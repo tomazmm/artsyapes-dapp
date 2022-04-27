@@ -4,7 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 
 import { getChainOptions, WalletProvider } from '@terra-money/wallet-provider'
 
-import App from './App'
+import {App} from './App'
 import reportWebVitals from './reportWebVitals'
 
 
