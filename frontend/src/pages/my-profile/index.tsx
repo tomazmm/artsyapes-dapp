@@ -2,7 +2,6 @@ import React from "react";
 import styled from 'styled-components';
 import {Col, Container, Row} from "react-bootstrap";
 import {Grid} from "./components/Grid";
-import {CollectionMenu} from "./components/CollectionMenu";
 
 interface MyProfileProps {
   className?: string;
