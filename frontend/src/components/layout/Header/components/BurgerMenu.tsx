@@ -1,7 +1,6 @@
 import React from "react";
 import styled from 'styled-components';
 import {Col, Container, Modal, Row,} from "react-bootstrap";
-import {CollectionMenu} from "../../../../pages/my-profile/components/CollectionMenu";
 import {ConnectWallet} from "../../../shared/ConnectWallet";
 import {useLocation, useNavigate} from "react-router-dom";
 
@@ -38,7 +37,6 @@ export const BurgerMenuBase = (props: BurgerMenuProps) => {
                   xs={{span: 12}}
                   className="d-flex flex-column justify-content-center align-self-start align-items-center col my-collection">
                 <div className="white-line"></div>
-                <CollectionMenu/>
               </Col>
             </Row>
           :
