@@ -63,9 +63,8 @@ export const TokenBase = (props: TokenProps) => {
 
 export const Token = styled(TokenBase)`
   display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
+  margin-top: 2.5em;
+  height: 90%;
     > .container-fluid{
       padding: 0;
       width: 90rem;
@@ -73,9 +72,9 @@ export const Token = styled(TokenBase)`
       max-height: 100%;
       display: flex;
       justify-content: center;
-      background: rgb(0,0,0);
-      background: linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(28, 28, 28,1) 40%, rgba(28, 28, 28,1) 100%);
-      border: 1px solid rgba(92,92,92,.7);
+      //background: rgb(0,0,0);
+      //background: linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(28, 28, 28,1) 40%, rgba(28, 28, 28,1) 100%);
+      //border: 1px solid rgba(92,92,92,.7);
       color: white;
     }
 `;
