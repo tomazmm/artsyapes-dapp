@@ -42,10 +42,8 @@ export const MyProfile= styled(MyProfileBase)`
           height: 100%;
           .col{
             &.my-account-col{
-              height: 95%;
-              @media screen and (max-width: 1200px) and (min-width: 768px){
-                height: 70%;
-              }
+              height: 90%;
+              
             }
             .white-line{
               border-bottom: 2px groove white;
