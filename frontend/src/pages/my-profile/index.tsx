@@ -15,9 +15,9 @@ export const MyProfileBase = (props: MyProfileProps) => {
 
 
   return (
-    <div className={`${className} h-75`} >
-      <Container fluid className="h-100 mt-5">
-          <Row className="h-100 mb-4">
+    <div className={`${className}`} >
+      <Container fluid >
+          <Row>
             <Col xl={{span: 3}}
                  lg={{span: 12}}
                  xs={{span: 12}}
@@ -31,7 +31,7 @@ export const MyProfileBase = (props: MyProfileProps) => {
                  xs={{span: 12}}
                  className="d-flex flex-column col my-account-col">
               <div className="white-line nfts"></div>
-              <Grid className={className}/>
+              <Grid/>
             </Col>
           </Row>
       </Container>
@@ -42,19 +42,26 @@ export const MyProfileBase = (props: MyProfileProps) => {
 
 
 export const MyProfile= styled(MyProfileBase)`
+  height: 100%;
     > .container-fluid{
+        height: 100%;
         width: 95%;
         .row{
+          height: 100%;
           .col{
             &.my-collection{
+              height: 100%;
               @media screen and (max-width: 767px) {
                 display: none!important;
               }
+              @media screen and (max-width: 1200px) and (min-width: 768px){
+                height: 20%;
+              }
             }
             &.my-account-col{
-              height: 100%;
+              height: 95%;
               @media screen and (max-width: 1200px) and (min-width: 768px){
-                height: 80%;
+                height: 70%;
               }
             }
             .owned-text{
@@ -75,6 +82,9 @@ export const MyProfile= styled(MyProfileBase)`
               margin-bottom: 2rem;
               &.nfts{
                 margin-top: 3.07rem;
+                @media screen and (max-width: 1200px) and (min-width: 768px){
+                  margin-top: 0;
+                }
               }
             }
           }

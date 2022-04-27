@@ -57,7 +57,7 @@ export const GridBase = (props: GridProps) => {
 
 export const Grid = styled(GridBase)`
   width: 100%;
-  max-height: 100%;
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   ::-webkit-scrollbar {
@@ -84,6 +84,9 @@ export const Grid = styled(GridBase)`
     max-height: 100%;
     height: 100%!important;
     display: flex;
+    @media screen and (max-width: 991px) {
+      flex-flow: column;
+    }
     .col-no-nft{
       padding: 1rem;
       background: rgb(0,0,0);
