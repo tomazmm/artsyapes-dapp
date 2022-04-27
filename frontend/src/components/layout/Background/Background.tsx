@@ -26,4 +26,5 @@ export const Background = styled(BackgroundBase)`
   
   background: url("/assets/my-account-background.png");
   background-size: cover;
+  opacity: 0.945;
 `;
