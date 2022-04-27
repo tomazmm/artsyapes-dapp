@@ -26,11 +26,6 @@ const Order = lazy(() =>
         .then(({ Order }) => ({ default: Order })),
 );
 
-const Purchase = lazy(() =>
-    import('./pages/purchase')
-        .then(({ Purchase }) => ({ default: Purchase })),
-);
-
 interface AppProps {
   className?: string;
 }
@@ -105,7 +100,6 @@ export const AppBase = (props: AppProps) => {
                 <React.Suspense fallback={<LoadingPage/>}>
                   <Routes>
                     <Route path={"/order/:id"} element={<Order />}/>
-                    <Route path={"/order/:id/purchase"} element={<Purchase />}/>
                     <Route path={"/"} element={<MyProfile />}/>
                   </Routes>
                 </React.Suspense>

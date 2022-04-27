@@ -56,24 +56,7 @@ export const OrderBase = (props: OrderProps) => {
           <>
           </>
       )
-
       }
-      {/*<Container fluid>*/}
-        {/*<Row>*/}
-        {/*  <Col>*/}
-        {/*    <h2>Tier 3</h2>*/}
-        {/*    <img onClick={() => purchase(3)} src="../../assets/golden-ape-trait.png"/>*/}
-        {/*  </Col>*/}
-        {/*  <Col>*/}
-        {/*    <h2 className="mt-5">Tier 2</h2>*/}
-        {/*    <img onClick={() => purchase(2)} src="../../assets/golden-ape-trait.png"/>*/}
-        {/*  </Col>*/}
-        {/*  <Col>*/}
-        {/*    <h2>Tier 1</h2>*/}
-        {/*    <img onClick={() => purchase(1)} src="../../assets/golden-ape-trait.png"/>*/}
-        {/*  </Col>*/}
-        {/*</Row>*/}
-      {/*</Container>*/}
     </div>
   )
 }
