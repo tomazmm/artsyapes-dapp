@@ -25,7 +25,7 @@ export const GridItemBase = (props: GridItemProps) => {
     setImageName("https://d1mx8bduarpf8s.cloudfront.net/" + tempImageName[1]);
   }, []);
 
-  const orderPhysical = () => navigate("/order/" + id)
+  const navigateToToken = () => navigate("/token/" + id)
 
   const toggleModal = () => setShow(!show);
 
@@ -34,7 +34,7 @@ export const GridItemBase = (props: GridItemProps) => {
   return (
     <div className={className}>
       {/*Card View*/}
-      <div className="grid-item-wrapper d-flex flex-column" onClick={orderPhysical}>
+      <div className="grid-item-wrapper d-flex flex-column" onClick={navigateToToken}>
         <img src={imageName} onLoad={onLoadShowText} />
         {showCardText ? (
           <span>{nftValue.extension.name}</span>

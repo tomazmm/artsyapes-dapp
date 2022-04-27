@@ -21,9 +21,9 @@ const MyProfile = lazy(() =>
     .then(({ MyProfile }) => ({ default: MyProfile })),
 );
 
-const Order = lazy(() =>
-    import('./pages/order')
-        .then(({ Order }) => ({ default: Order })),
+const Token = lazy(() =>
+    import('./pages/token')
+        .then(({ Token }) => ({ default: Token })),
 );
 
 interface AppProps {
@@ -99,7 +99,7 @@ export const AppBase = (props: AppProps) => {
               <div className="content">
                 <React.Suspense fallback={<LoadingPage/>}>
                   <Routes>
-                    <Route path={"/order/:id"} element={<Order />}/>
+                    <Route path={"/token/:id"} element={<Token />}/>
                     <Route path={"/"} element={<MyProfile />}/>
                   </Routes>
                 </React.Suspense>

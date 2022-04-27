@@ -5,11 +5,11 @@ import GlobalContext from "../../components/shared/GlobalContext";
 import {useNavigate} from "react-router-dom";
 import {NftDescription} from "./components/NftDescription";
 
-interface OrderProps {
+interface TokenProps {
   className?: string;
 }
 
-export const OrderBase = (props: OrderProps) => {
+export const TokenBase = (props: TokenProps) => {
   const {
     className,
   } = props;
@@ -61,7 +61,7 @@ export const OrderBase = (props: OrderProps) => {
   )
 }
 
-export const Order = styled(OrderBase)`
+export const Token = styled(TokenBase)`
   display: flex;
   justify-content: center;
   align-items: center;

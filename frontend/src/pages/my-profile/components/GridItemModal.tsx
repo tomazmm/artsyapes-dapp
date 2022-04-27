@@ -64,7 +64,7 @@ export const GridItemModalBase = (props: GridItemModalProps) => {
                     </div>
                   })}
                 </div>
-                <Link to={"/order/" + id}  className="btn btn-light">Order Physical Item</Link>
+                <Link to={"/token/" + id}  className="btn btn-light">Order Physical Item</Link>
               </Col>
             </Row>
           </Modal.Body>
