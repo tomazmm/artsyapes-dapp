@@ -72,9 +72,5 @@ export const Token = styled(TokenBase)`
       max-height: 100%;
       display: flex;
       justify-content: center;
-      //background: rgb(0,0,0);
-      //background: linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(28, 28, 28,1) 40%, rgba(28, 28, 28,1) 100%);
-      //border: 1px solid rgba(92,92,92,.7);
-      color: white;
     }
 `;
