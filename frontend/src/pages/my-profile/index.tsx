@@ -21,7 +21,7 @@ export const MyProfileBase = (props: MyProfileProps) => {
                  lg={{span: 12}}
                  xs={{span: 12}}
                  className="d-flex flex-column col my-account-col">
-                <h2 className="mb-0 text-bold">Collection</h2>
+                <h2 className="mb-0 text-bold">Collected</h2>
                 <div className="white-line nfts"></div>
                 <Grid/>
             </Col>
