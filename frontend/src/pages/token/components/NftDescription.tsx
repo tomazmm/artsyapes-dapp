@@ -42,7 +42,7 @@ export const NftDescriptionBase = (props: NftDescriptionProps) => {
                             <h4>Physicals</h4>
                             <div className="d-flex flew-row flex-wrap flex-start">
                                 <div className="physical text-center">
-                                    <h6 className="trait-type">Tier 1</h6>
+                                    <h6 className="trait-type">Tier 3</h6>
                                     <h5 className="trait-value">0/3</h5>
                                 </div>
                                 <div className="physical text-center">
@@ -50,7 +50,7 @@ export const NftDescriptionBase = (props: NftDescriptionProps) => {
                                     <h5 className="trait-value">0/3</h5>
                                 </div>
                                 <div className="physical text-center">
-                                    <h6 className="trait-type">Tier 3</h6>
+                                    <h6 className="trait-type">Tier 1</h6>
                                     <h5 className="trait-value">0/3</h5>
                                 </div>
                             </div>
@@ -145,6 +145,15 @@ export const NftDescription = styled(NftDescriptionBase)`
             border: 1px solid rgba(92,92,92,.7);
             border-radius: 0.4rem;
             background: rgba(241, 229, 172, .2);
+            padding: 0.5em;
+            h5{
+              font-size: 0.8em;
+              margin: 0;
+            }
+            h6{
+              text-transform: uppercase;
+              font-weight: bold;
+            }
           }
         }
       }
@@ -165,6 +174,15 @@ export const NftDescription = styled(NftDescriptionBase)`
             border: 1px solid rgba(92,92,92,.7);
             border-radius: 0.4rem;
             background: rgba(241, 229, 172, .2);
+            padding: 0.5em;
+            h5{
+              font-size: 0.8em;
+              margin: 0;
+            }
+            h6{
+              text-transform: uppercase;
+              font-weight: bold;
+            }
           }
           margin-bottom: 1rem;
         }
