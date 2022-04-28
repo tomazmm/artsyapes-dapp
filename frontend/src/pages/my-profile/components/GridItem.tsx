@@ -41,28 +41,29 @@ export const GridItemBase = (props: GridItemProps) => {
         ) : (<></>)
         }
       </div>
-
-      {/*<GridItemModal nftValue={nftValue} imageName={imageName} show={show} setShow={toggleModal}/>*/}
     </div>
   )
 }
 
 export const GridItem = styled(GridItemBase)`
-  background: rgb(0,0,0);
-  background: linear-gradient(180deg, rgba(0,0,0,.5) 0%, rgba(71,71,71,.5) 40%, rgba(92,92,92,.5) 100%);
-  border: 0.1rem solid rgba(92,92,92,.7);
+  background: rgba(255,255,255, .9);
   border-radius: 0.4rem;
+  transition: margin 0.1s ease-in-out; // Add the transition
+  box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px, rgba(0, 0, 0, 0.22) 0px 15px 12px;
+  margin-top: 1px;
+  &:hover {
+    margin-top: -1px;
+  }
   .grid-item-wrapper {
     cursor: pointer;
     img{
+      border-radius: 0.4rem 0.4rem 0 0;
       max-width: 100%;
       max-height: 100%;
-      padding: 1rem;
     }
     span{
-      color: white;
-      padding-bottom: 2rem ;
-      padding-left: 1rem;
+      font-weight: bold;
+      padding: .5em;
     }
   }
 `;
