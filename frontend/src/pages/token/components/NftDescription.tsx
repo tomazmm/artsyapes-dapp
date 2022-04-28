@@ -35,7 +35,7 @@ export const NftDescriptionBase = (props: NftDescriptionProps) => {
                      xs={{span: 12}} className="d-flex flex-wrap flex-column col-info">
                     <div className="token-header">
                         <h2 className="image-name">{nftInfo.extension.name}</h2>
-                        <span>Owner since 12 Feb 1992</span>
+                        <span>Owned by</span>
                     </div>
                     <div className="token-physicals mt-4">
                         <div className="physicals">
@@ -56,7 +56,7 @@ export const NftDescriptionBase = (props: NftDescriptionProps) => {
                             </div>
                         </div>
                     </div>
-                    <div className="token-traits">
+                    <div className="token-traits mt-4">
                         <div className="traits">
                             <h4>Traits</h4>
                             <div className="d-flex flew-row flex-wrap flex-start">
@@ -122,10 +122,13 @@ export const NftDescription = styled(NftDescriptionBase)`
         padding: 0.5em;
         box-shadow: rgba(0, 0, 0, 0.15) 0px 5px 15px 0px;
         h2{
+          font-size: 2.7em;
           font-weight: 600;
         }
         span {
           font-size: .9em;
+          font-weight: 600;
+          color: grey;
         }
       }
       .token-physicals {
@@ -140,17 +143,19 @@ export const NftDescription = styled(NftDescriptionBase)`
           box-shadow: rgba(0, 0, 0, 0.15) 0px 5px 15px 0px;
           width: 100%;
           .physical{
-            width: 28%;
+            flex-grow: 1;
             margin: .2rem;
-            border: 1px solid rgba(92,92,92,.7);
+            border: 1px solid rgba(218,165,32, .4);
             border-radius: 0.4rem;
             background: rgba(241, 229, 172, .2);
             padding: 0.5em;
             h5{
-              font-size: 0.8em;
+              font-size: 1.1em;
               margin: 0;
             }
             h6{
+              color: rgba(218,165,32, 1);
+              font-size: 0.7em;
               text-transform: uppercase;
               font-weight: bold;
             }
@@ -169,17 +174,20 @@ export const NftDescription = styled(NftDescriptionBase)`
           box-shadow: rgba(0, 0, 0, 0.15) 0px 5px 15px 0px;
           width: 100%;
           .trait{
-            width: 28%;
+            flex-grow: 1;
+            flex-basis: 30%;
             margin: .2rem;
-            border: 1px solid rgba(92,92,92,.7);
-            border-radius: 0.4rem;
+            border: 1px solid rgba(218,165,32, .4);
             background: rgba(241, 229, 172, .2);
+            border-radius: 0.4rem;
             padding: 0.5em;
             h5{
-              font-size: 0.8em;
+              font-size: 1.1em;
               margin: 0;
             }
             h6{
+              color: rgba(218,165,32, 1);
+              font-size: 0.7em;
               text-transform: uppercase;
               font-weight: bold;
               margin-bottom: .3em;
