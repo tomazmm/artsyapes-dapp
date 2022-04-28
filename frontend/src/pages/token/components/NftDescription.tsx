@@ -37,15 +37,36 @@ export const NftDescriptionBase = (props: NftDescriptionProps) => {
                         <h2 className="image-name">{nftInfo.extension.name}</h2>
                         <span>Owner since 12 Feb 1992</span>
                     </div>
-                    <div className="token-traits mt-4">
-                        <h4>Traits</h4>
-                        <div className="traits d-flex justify-content-center">
-                            {nftInfo.extension.attributes.map((value: any, index: any) => {
-                                return <div key={index} className="d-flex flew-row justify-content-between">
-                                    <span className="trait-type">{value.trait_type.charAt(0).toUpperCase() + value.trait_type.slice(1)}</span>
-                                    <span className="trait-value">{value.value}</span>
+                    <div className="token-physicals mt-4">
+                        <div className="physicals">
+                            <h4>Physicals</h4>
+                            <div className="d-flex flew-row flex-wrap flex-start">
+                                <div className="physical text-center">
+                                    <h6 className="trait-type">Tier 1</h6>
+                                    <h5 className="trait-value">0/3</h5>
                                 </div>
-                            })}
+                                <div className="physical text-center">
+                                    <h6 className="trait-type">Tier 2</h6>
+                                    <h5 className="trait-value">0/3</h5>
+                                </div>
+                                <div className="physical text-center">
+                                    <h6 className="trait-type">Tier 3</h6>
+                                    <h5 className="trait-value">0/3</h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="token-traits">
+                        <div className="traits">
+                            <h4>Traits</h4>
+                            <div className="d-flex flew-row flex-wrap flex-start">
+                                {nftInfo.extension.attributes.map((value: any, index: any) => {
+                                    return <div key={index} className="trait text-center">
+                                        <h6 className="trait-type">{value.trait_type.charAt(0).toUpperCase() + value.trait_type.slice(1)}</h6>
+                                        <h5 className="trait-value">{value.value}</h5>
+                                    </div>
+                                })}
+                            </div>
                         </div>
                     </div>
                     <Button className="btn btn-light mt-3">Order Physical Item</Button>
@@ -86,7 +107,8 @@ export const NftDescription = styled(NftDescriptionBase)`
       padding: 0 2rem 2rem 2rem;
       img{
         width: 100%;
-        //margin-bottom: 1rem;
+        border-radius: 0.3rem;
+        box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
       }
       .image-name{
         font-size: 1.3rem;
@@ -95,33 +117,54 @@ export const NftDescription = styled(NftDescriptionBase)`
     .col-info{
       padding: 0 2rem 2rem 2rem;
       .token-header{
+        background-color: rgba(255,255,255,1);
+        border-radius: 0.3rem;
+        padding: 0.5em;
+        box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px, rgba(0, 0, 0, 0.22) 0px 15px 12px;
+        h2{
+          font-weight: 600;
+        }
         span {
           font-size: .9em;
         }
       }
-      .token-traits{
-        .traits{
-          display: flex;
-          flex-wrap: wrap;
+      .token-physicals {
+        h4{
+          font-size: 1.3em;
+          font-weight: bold;
+        }
+        .physicals{
+          background-color: rgba(255,255,255,1);
+          border-radius: 0.3rem;
+          padding: 0.5em;
+          box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px, rgba(0, 0, 0, 0.22) 0px 15px 12px;
           width: 100%;
-          border: 1px solid rgba(92,92,92,.7);
-          border-radius: 0.4rem;
-          padding: 1rem;
-          div{
-            width: 100%;
-            .value-title{
-              color: rgba(92,92,92,1);
-            }
-            .value{
-              padding-left: 0.5rem;
-              font-size: 0.9rem;
-              display: flex;
-              justify-content: space-between;
-            }
-            &.line{
-              border-bottom: 1px solid rgba(92,92,92,.7);
-            }
-            margin-top: 0.1rem;
+          .physical{
+            width: 28%;
+            margin: .2rem;
+            border: 1px solid rgba(92,92,92,.7);
+            border-radius: 0.4rem;
+            background: rgba(241, 229, 172, .2);
+          }
+        }
+      }
+      .token-traits{
+        h4{
+          font-size: 1.3em;
+          font-weight: bold;
+        }
+        .traits{
+          background-color: rgba(255,255,255,1);
+          border-radius: 0.3rem;
+          padding: 0.5em;
+          box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px, rgba(0, 0, 0, 0.22) 0px 15px 12px;
+          width: 100%;
+          .trait{
+            width: 28%;
+            margin: .2rem;
+            border: 1px solid rgba(92,92,92,.7);
+            border-radius: 0.4rem;
+            background: rgba(241, 229, 172, .2);
           }
           margin-bottom: 1rem;
         }

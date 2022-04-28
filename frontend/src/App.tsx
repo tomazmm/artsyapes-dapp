@@ -131,6 +131,8 @@ export const AppBase = (props: AppProps) => {
 }
 
 export const App = styled(AppBase)`
+  font-family: 'Montserrat', sans-serif;
+  
   display: flex;
   flex-flow: column;
   height: 100vh;
