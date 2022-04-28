@@ -120,7 +120,7 @@ export const NftDescription = styled(NftDescriptionBase)`
         background-color: rgba(255,255,255,1);
         border-radius: 0.3rem;
         padding: 0.5em;
-        box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px, rgba(0, 0, 0, 0.22) 0px 15px 12px;
+        box-shadow: rgba(0, 0, 0, 0.15) 0px 5px 15px 0px;
         h2{
           font-weight: 600;
         }
@@ -137,7 +137,7 @@ export const NftDescription = styled(NftDescriptionBase)`
           background-color: rgba(255,255,255,1);
           border-radius: 0.3rem;
           padding: 0.5em;
-          box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px, rgba(0, 0, 0, 0.22) 0px 15px 12px;
+          box-shadow: rgba(0, 0, 0, 0.15) 0px 5px 15px 0px;
           width: 100%;
           .physical{
             width: 28%;
@@ -166,7 +166,7 @@ export const NftDescription = styled(NftDescriptionBase)`
           background-color: rgba(255,255,255,1);
           border-radius: 0.3rem;
           padding: 0.5em;
-          box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px, rgba(0, 0, 0, 0.22) 0px 15px 12px;
+          box-shadow: rgba(0, 0, 0, 0.15) 0px 5px 15px 0px;
           width: 100%;
           .trait{
             width: 28%;
