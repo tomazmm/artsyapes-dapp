@@ -10,7 +10,6 @@ export const BackgroundBase = (props: BackgroundProps) => {
         className
     } = props;
 
-
     return (
         <div className={className}></div>
     )
