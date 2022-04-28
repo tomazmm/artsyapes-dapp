@@ -69,7 +69,7 @@ export const NftDescriptionBase = (props: NftDescriptionProps) => {
                             </div>
                         </div>
                     </div>
-                    <Button className="btn btn-light mt-3">Order Physical Item</Button>
+                    <Button variant="light" className="btn-order mt-3">Order Physical Item</Button>
                 </Col>
             </Row>
         </div>
@@ -182,11 +182,21 @@ export const NftDescription = styled(NftDescriptionBase)`
             h6{
               text-transform: uppercase;
               font-weight: bold;
+              margin-bottom: .3em;
             }
           }
           margin-bottom: 1rem;
         }
       }
     }
+    .btn-order{
+      font-weight: bold;
+      font-size: 1.2em;
+      &:hover {
+        background-color: #555555;
+        color: white;
+      }
+    }
   }
+
 `;
