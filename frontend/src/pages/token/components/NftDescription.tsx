@@ -7,13 +7,15 @@ interface NftDescriptionProps {
     className?: string;
     nftInfo: any;
     imageName: any;
+    enableOrder: boolean;
 }
 
 export const NftDescriptionBase = (props: NftDescriptionProps) => {
     const {
         className,
         nftInfo,
-        imageName
+        imageName,
+        enableOrder
     } = props;
 
     return (
@@ -34,8 +36,9 @@ export const NftDescriptionBase = (props: NftDescriptionProps) => {
                      md={{span: 12}}
                      xs={{span: 12}} className="d-flex flex-wrap flex-column col-info">
                     <div className="token-header">
-                        <h2 className="image-name">{nftInfo.extension.name}</h2>
-                        <span>Owned by</span>
+                        <h2 className="image-name">{nftInfo.info.extension.name}</h2>
+                        <span>Owned by </span>
+                        <span className="id">{nftInfo.access.owner}</span>
                     </div>
                     <div className="token-physicals mt-4">
                         <div className="physicals">
@@ -60,7 +63,7 @@ export const NftDescriptionBase = (props: NftDescriptionProps) => {
                         <div className="traits">
                             <h4>Traits</h4>
                             <div className="d-flex flew-row flex-wrap flex-start">
-                                {nftInfo.extension.attributes.map((value: any, index: any) => {
+                                {nftInfo.info.extension.attributes.map((value: any, index: any) => {
                                     return <div key={index} className="trait text-center">
                                         <h6 className="trait-type">{value.trait_type.charAt(0).toUpperCase() + value.trait_type.slice(1)}</h6>
                                         <h5 className="trait-value">{value.value}</h5>
@@ -69,7 +72,12 @@ export const NftDescriptionBase = (props: NftDescriptionProps) => {
                             </div>
                         </div>
                     </div>
-                    <Button variant="light" className="btn-order mt-3">Order Physical Item</Button>
+                    { enableOrder ?
+                        <Button variant="light" className="btn-order mt-3">Order Physical Item</Button>
+                        :
+                        <></>
+                    }
+
                 </Col>
             </Row>
         </div>
@@ -129,6 +137,10 @@ export const NftDescription = styled(NftDescriptionBase)`
           font-size: .9em;
           font-weight: 600;
           color: grey;
+          &.id{
+            font-weight: bold;
+            color: rgba(218,165,32, 1);
+          }
         }
       }
       .token-physicals {

@@ -14,14 +14,14 @@ export const GridItemBase = (props: GridItemProps) => {
   } = props;
 
   const navigate = useNavigate();
-  const id = nftValue.extension.name.split(" ")[1]
+  const id = nftValue.info.extension.name.split(" ")[1]
 
   const [imageName, setImageName] = useState<any>("")
   const [show, setShow] = useState(false);
   const [showCardText, setShowCardText] = useState(false);
 
   useEffect(() => {
-    const tempImageName = nftValue.extension.image.split("//");
+    const tempImageName = nftValue.info.extension.image.split("//");
     setImageName("https://d1mx8bduarpf8s.cloudfront.net/" + tempImageName[1]);
   }, []);
 
@@ -37,7 +37,7 @@ export const GridItemBase = (props: GridItemProps) => {
       <div className="grid-item-wrapper d-flex flex-column" onClick={navigateToToken}>
         <img src={imageName} onLoad={onLoadShowText} />
         {showCardText ? (
-          <span>{nftValue.extension.name}</span>
+          <span>{nftValue.info.extension.name}</span>
         ) : (<></>)
         }
       </div>
