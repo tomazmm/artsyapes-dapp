@@ -24,5 +24,5 @@ export const nftInfo = async (wallet : ConnectedWallet, tokenId: any): Promise<a
     URL: wallet.network.lcd,
     chainID: wallet.network.chainID,
   })
-  return lcd.wasm.contractQuery<Promise<any>>(contractAdress(wallet), { nft_info: {token_id: tokenId} })
+  return lcd.wasm.contractQuery<Promise<any>>(contractAdress(wallet), { all_nft_info: {token_id: tokenId} })
 }

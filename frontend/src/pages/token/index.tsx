@@ -4,6 +4,8 @@ import {Container} from "react-bootstrap";
 import GlobalContext from "../../components/shared/GlobalContext";
 import {useNavigate} from "react-router-dom";
 import {NftDescription} from "./components/NftDescription";
+import {LoadingCircle} from "./components/LoadingCircle";
+import * as query from "../../contract/query";
 
 interface TokenProps {
   className?: string;
@@ -18,6 +20,8 @@ export const TokenBase = (props: TokenProps) => {
 
   const [nftInfo, setNftInfo] = useState<any>(undefined);
   const [imageName, setImageName] = useState<any>("")
+  const [tokenId, setTokenId] = useState("");
+  const [isOrderable, setIsOrderable] = useState(false);
 
   const navigate = useNavigate();
   const navigateToMyProfile = () => navigate('/');
@@ -25,36 +29,48 @@ export const TokenBase = (props: TokenProps) => {
   useEffect( () => {
     // redirect if token_id (from 'pathname') not in user's wallet
     const token_id = window.location.pathname.replace( /^\D+/g, '');
-    if (!globalContext.tokens?.includes(token_id)) {
-      navigateToMyProfile();
-    }
+    setTokenId(token_id);
   }, [])
 
   useEffect( () => {
-    const token_id = window.location.pathname.replace( /^\D+/g, '');
-    const token_info = globalContext.tokensInfo.find((value : any) => {
-      if( value.extension.name.split(" ")[1] === token_id){
-        return value;
-      }else
-        return null;
-    })
-    if(token_info !== undefined){
-      setNftInfo(token_info)
-      const tempImageName = token_info.extension.image.split("//");
-      setImageName("https://d1mx8bduarpf8s.cloudfront.net/" + tempImageName[1])
+    if(tokenId !== "0" && globalContext.tokensInfo.length !== 0){
+      const token_info = globalContext.tokensInfo.find((value : any) => {
+        if( value.info.extension.name.split(" ")[1] === tokenId){
+          return value
+        }else
+          return null
+      })
+
+      // check if exist in your list else get it;
+      if(token_info !== undefined){
+        setNftInfo(token_info)
+        setIsOrderable(true);
+        const tempImageName = token_info.info.extension.image.split("//");
+        setImageName("https://d1mx8bduarpf8s.cloudfront.net/" + tempImageName[1])
+      }else{
+        const fetchTokenInfo = async () :Promise<any> => {
+          if (globalContext.connectedWallet) {
+            const token = await query.nftInfo(globalContext.connectedWallet, tokenId)
+            setNftInfo(token)
+            const tempImageName = token.info.extension.image.split("//");
+            setImageName("https://d1mx8bduarpf8s.cloudfront.net/" + tempImageName[1])
+          }
+        }
+        fetchTokenInfo()
+      }
+
     }
-  }, [globalContext.tokensInfo])
+  }, [globalContext.tokensInfo, tokenId])
 
 
   return (
     <div className={className}>
       { nftInfo !== undefined ? (
         <Container fluid>
-            <NftDescription nftInfo={nftInfo} imageName={imageName}></NftDescription>
+            <NftDescription nftInfo={nftInfo} enableOrder={isOrderable} imageName={imageName}></NftDescription>
         </Container>
       ) : (
-          <>
-          </>
+          <LoadingCircle/>
       )
       }
     </div>
