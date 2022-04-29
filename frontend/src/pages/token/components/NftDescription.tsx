@@ -72,12 +72,7 @@ export const NftDescriptionBase = (props: NftDescriptionProps) => {
                             </div>
                         </div>
                     </div>
-                    { enableOrder ?
-                        <Button variant="light" className="btn-order mt-3">Order Physical Item</Button>
-                        :
-                        <></>
-                    }
-
+                    <Button variant="light" className="btn-order mt-3">Order Physical Item</Button>
                 </Col>
             </Row>
         </div>

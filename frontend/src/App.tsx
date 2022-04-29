@@ -38,7 +38,7 @@ export const AppBase = (props: AppProps) => {
   const [show, setShow] = useState(false);
   const [loadPage, setLoadPage] = useState(true);
 
-  const [tokens, setTokens] = useState<any>([])
+  const [tokens, setTokens] = useState<any>(undefined)
   const [tokenInfo, setTokenInfo] = useState<any>([])
 
   const { status } = useWallet()
