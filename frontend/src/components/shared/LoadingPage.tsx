@@ -12,7 +12,6 @@ export const LoadingPageBase = (props: LoadingPageProps) => {
     className
   } = props;
 
-
   return (
     <div className={className}>
       <div className="loading d-flex justify-content-center align-items-center align-self-center flex-column">
@@ -24,7 +23,6 @@ export const LoadingPageBase = (props: LoadingPageProps) => {
     </div>
   )
 }
-
 
 export const LoadingPage = styled(LoadingPageBase)`
   .loading{
