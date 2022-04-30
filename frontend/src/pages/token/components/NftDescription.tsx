@@ -1,13 +1,13 @@
-import React, {useEffect, useState} from "react";
+import React, {useContext, useEffect, useState} from "react";
 import styled from 'styled-components';
 import {useNavigate} from "react-router-dom";
 import {Button, Col, Row} from "react-bootstrap";
+import GlobalContext from "../../../components/shared/GlobalContext";
 
 interface NftDescriptionProps {
     className?: string;
     nftInfo: any;
     imageName: any;
-    enableOrder: boolean;
 }
 
 export const NftDescriptionBase = (props: NftDescriptionProps) => {
@@ -15,8 +15,13 @@ export const NftDescriptionBase = (props: NftDescriptionProps) => {
         className,
         nftInfo,
         imageName,
-        enableOrder
     } = props;
+
+    const globalContext = useContext(GlobalContext);
+
+    const isOwner = () =>  {
+        return globalContext.connectedWallet?.walletAddress == nftInfo.access.owner;
+    }
 
     return (
         <div className={className}>
@@ -37,8 +42,7 @@ export const NftDescriptionBase = (props: NftDescriptionProps) => {
                      xs={{span: 12}} className="d-flex flex-wrap flex-column col-info">
                     <div className="token-header">
                         <h2 className="image-name">{nftInfo.info.extension.name}</h2>
-                        <span>Owned by </span>
-                        <span className="id">{nftInfo.access.owner}</span>
+                        <span >Owned by <a href={`https://terrasco.pe/mainnet/address/${nftInfo.access.owner}`} target="_blank" rel="noreferrer noopener">{nftInfo.access.owner}</a></span>
                     </div>
                     <div className="token-physicals mt-4">
                         <div className="physicals">
@@ -72,7 +76,9 @@ export const NftDescriptionBase = (props: NftDescriptionProps) => {
                             </div>
                         </div>
                     </div>
-                    <Button variant="light" className="btn-order mt-3">Order Physical Item</Button>
+                    <Button
+                        variant="light"
+                        className={`btn-order mt-3 ${!isOwner() ? "disabled" : ""}`}>Order Physical Item</Button>
                 </Col>
             </Row>
         </div>
@@ -126,11 +132,11 @@ export const NftDescription = styled(NftDescriptionBase)`
         box-shadow: rgba(0, 0, 0, 0.15) 0px 5px 15px 0px;
         h2{
           font-size: 2.7em;
-          font-weight: 600;
+          font-weight: 700;
         }
         span {
           font-size: .9em;
-          font-weight: 600;
+          font-weight: 700;
           color: grey;
           &.id{
             font-weight: bold;
@@ -207,9 +213,18 @@ export const NftDescription = styled(NftDescriptionBase)`
     .btn-order{
       font-weight: bold;
       font-size: 1.2em;
+      background-color: rgba(218,165,32, .9);
+      color: white;
+      &.disabled {
+        pointer-events: unset;
+        cursor: not-allowed;
+      }
       &:hover {
-        background-color: #555555;
+        background-color: rgba(218,165,32, .75);
         color: white;
+      }
+      &:focus{
+        box-shadow: 0 0 0 0.2rem rgba(218,165,32, .35);
       }
     }
   }
