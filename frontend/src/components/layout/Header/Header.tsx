@@ -20,7 +20,7 @@ export const HeaderBase = (props: HeaderProps) => {
   const toggleBurgerMenu = () => setShow();
 
   const navigate = useNavigate();
-  const navigateMyProfile = () => navigate('/');
+  const navigateToHome = () => navigate('/');
 
   return (
     <div className={className}>
@@ -30,10 +30,10 @@ export const HeaderBase = (props: HeaderProps) => {
                xs={{span: 10}} md={{span: 12}} className="left-col" >
             <Row className="h-25 d-flex flex-row align-items-center">
               <Col lg={{span: 6}} md={{span: 6}} className="col logo" >
-                <img onClick={navigateMyProfile} className="logo" src={'/assets/logo.png'}/>
+                <img onClick={navigateToHome} className="logo" src={'/assets/logo.png'}/>
               </Col>
               <Col lg={{span: 6}} md={{span: 6}} className="col right-wing">
-                <span onClick={navigateMyProfile} className="my-profile">My Apes</span>
+                <span onClick={navigateToHome} className="my-profile">My Apes</span>
                 <ConnectWallet />
               </Col>
             </Row>
