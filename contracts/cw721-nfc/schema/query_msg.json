@@ -17,11 +17,127 @@
     {
       "type": "object",
       "required": [
-        "get_cw721_token_num"
+        "get_cw721_physical_info"
       ],
       "properties": {
-        "get_cw721_token_num": {
+        "get_cw721_physical_info": {
+          "type": "object",
+          "required": [
+            "token_id"
+          ],
+          "properties": {
+            "token_id": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "cw721_physicals"
+      ],
+      "properties": {
+        "cw721_physicals": {
+          "type": "object",
+          "required": [
+            "token_id"
+          ],
+          "properties": {
+            "limit": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "start_after": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "token_id": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "all_cw721_physicals"
+      ],
+      "properties": {
+        "all_cw721_physicals": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "start_after": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "bids"
+      ],
+      "properties": {
+        "bids": {
           "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "bidding_info"
+      ],
+      "properties": {
+        "bidding_info": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "tier_info"
+      ],
+      "properties": {
+        "tier_info": {
+          "type": "object",
+          "required": [
+            "tier"
+          ],
+          "properties": {
+            "tier": {
+              "type": "integer",
+              "format": "uint8",
+              "minimum": 0.0
+            }
+          }
         }
       },
       "additionalProperties": false
