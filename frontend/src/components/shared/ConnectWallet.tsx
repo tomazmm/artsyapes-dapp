@@ -27,13 +27,8 @@ export const ConnectWalletBase = (props: ConnectWalletProps) => {
 
   const terraStationWallet = availableConnectTypes.find((value) => value === "CHROME_EXTENSION")
   const installTerraStationWalletExt = availableInstallTypes.find((value) => value === "CHROME_EXTENSION");
-  // useEffect(() => {
-  //
-  // }, [])
-
 
   switch (status) {
-
     case WalletStatus.INITIALIZING:
       return (
           <div className={className}>
