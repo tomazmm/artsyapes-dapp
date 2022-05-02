@@ -24,6 +24,10 @@ pub enum ExecuteMsg {
         token_id: String
     },
     ResolveBids {},
+    UpdateConfig {
+        owner: Option<Addr>,
+        paused: Option<bool>
+    },
     UpdateTierInfo {
         tier: u8,
         max_physical_limit: u8,

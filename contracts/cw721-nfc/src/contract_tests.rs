@@ -1,14 +1,13 @@
 #[cfg(test)]
 mod tests {
-    use std::ops::Add;
     use cosmwasm_std::testing::{mock_env, mock_info};
     use cosmwasm_std::CosmosMsg::Bank;
     use super::super::testing::mock_dependencies;
-    use cosmwasm_std::{Addr, BankMsg, coin, Coin, coins, DepsMut, from_binary, Uint128};
+    use cosmwasm_std::{Addr, Attribute, BankMsg, coin, Coin, coins, DepsMut, from_binary, Uint128};
     use cw0::Expiration;
     use crate::contract::{execute, instantiate, query};
     use crate::error::ContractError;
-    use crate::msg::ExecuteMsg::{Bid721Masterpiece, OrderCw721Print, ResolveBids, UpdateTierInfo};
+    use crate::msg::ExecuteMsg::{Bid721Masterpiece, OrderCw721Print, ResolveBids, UpdateConfig, UpdateTierInfo};
     use crate::msg::{Cw721AddressResponse, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg, TierInfoResponse, BidsResponse, BiddingInfoResponse, AllPhysicalsResponse};
     use crate::state::{BidInfo, Cw721PhysicalInfo, TierInfo};
 
@@ -142,19 +141,72 @@ mod tests {
         assert_eq!(err, ContractError::TierMaxLimitIsZero {});
     }
 
-    // #[test]
-    // fn updating_tier_info() {
-    //     let mut deps = mock_dependencies();
-    //     setup_contract(deps.as_mut());
-    //
-    //     // random cannot update tier info
-    //     let info = mock_info("random", &[]);
-    //     let msg = UpdateTierInfo { tier: 3, max_physical_limit: 100, cost: 10 * 1_000_000};
-    //     let err =
-    //         execute(deps.as_mut(), mock_env(), info, msg.clone())
-    //             .unwrap_err();
-    //     assert_eq!(err, ContractError::Unauthorized {});
-    // }
+    #[test]
+    fn pausing_contract() {
+        let mut deps = mock_dependencies();
+        setup_contract(deps.as_mut());
+
+        // random cannot pause contract or change contract owner
+        let info = mock_info("random", &[]);
+        let msg = UpdateConfig { owner: None, paused: Some(true) };
+        let err =
+            execute(deps.as_mut(), mock_env(), info.clone(), msg.clone())
+                .unwrap_err();
+        assert_eq!(err, ContractError::Unauthorized {});
+        let msg = UpdateConfig { owner: Some(Addr::unchecked("random")), paused: None };
+        let err =
+            execute(deps.as_mut(), mock_env(), info, msg.clone())
+                .unwrap_err();
+        assert_eq!(err, ContractError::Unauthorized {});
+
+        // owner can pause the contract
+        let info = mock_info("creator", &[]);
+        let msg = UpdateConfig { owner: None, paused: Some(true) };
+        let res =
+            execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
+        assert_eq!(2, res.attributes.len());
+        assert_eq!(Attribute::new("action", "update_config"), res.attributes[0]);
+        assert_eq!(Attribute::new("paused", "true"), res.attributes[1]);
+
+        // alice cannot order or bid on physical item
+        deps.querier.set_cw721_token("alice", 1);
+        let info = mock_info("alice", &[coin(10 * 1000000, "uusd")]);
+        let msg = OrderCw721Print { token_id: 1.to_string(), tier: 3.to_string()};
+        let err = execute(deps.as_mut(), mock_env(), info, msg.clone())
+            .unwrap_err();
+        assert_eq!(err, ContractError::ContractIsPaused {});
+
+        let alice_bid_funds = coin(2510 * 1000000, "uusd");
+        let info = mock_info("alice", &[alice_bid_funds.clone()]);
+        let msg = Bid721Masterpiece { token_id: 1.to_string()};
+        let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone())
+            .unwrap_err();
+        assert_eq!(err, ContractError::ContractIsPaused {});
+
+        // owner can unpause the contract
+        let info = mock_info("creator", &[]);
+        let msg = UpdateConfig { owner: None, paused: Some(false) };
+        let res =
+            execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
+        assert_eq!(2, res.attributes.len());
+        assert_eq!(Attribute::new("action", "update_config"), res.attributes[0]);
+        assert_eq!(Attribute::new("paused", "false"), res.attributes[1]);
+
+        // alice can order or bid on physical item
+        deps.querier.set_cw721_token("alice", 1);
+        let info = mock_info("alice", &[coin(10 * 1000000, "uusd")]);
+        let msg = OrderCw721Print { token_id: 1.to_string(), tier: 3.to_string()};
+        let res = execute(deps.as_mut(), mock_env(), info, msg.clone())
+            .unwrap();
+        assert_eq!(0, res.messages.len());
+
+        let alice_bid_funds = coin(2510 * 1000000, "uusd");
+        let info = mock_info("alice", &[alice_bid_funds.clone()]);
+        let msg = Bid721Masterpiece { token_id: 1.to_string()};
+        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone())
+            .unwrap();
+        assert_eq!(0, res.messages.len());
+    }
 
     #[test]
     fn processing_bids_after_bidding_window_expires() {
@@ -498,9 +550,6 @@ mod tests {
         setup_contract(deps.as_mut());
 
         deps.querier.set_cw721_token("alice", 1);
-
-        let res = query(deps.as_ref(),mock_env(), QueryMsg::BiddingInfo {}).unwrap();
-        let bidding_info: BiddingInfoResponse = from_binary(&res).unwrap();
 
         // alice cannot place bid before bidding window starts
         let mut alice_bid_funds = coin(5000 * 1_000_000, "uusd");
