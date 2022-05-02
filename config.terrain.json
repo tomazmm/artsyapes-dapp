@@ -22,7 +22,24 @@
           "symbol": "ART"
         },
         "instantiateMsg": {
-          "cw721": "terra1qpg75wmr0cs263529cxdtx7jxr37w62j7rvetq"
+          "cw721": "terra1qpg75wmr0cs263529cxdtx7jxr37w62j7rvetq",
+          "tier_info": [
+            {
+              "max_physical_limit": 1,
+              "cost": 2500000000
+            },
+            {
+                "max_physical_limit": 10,
+                "cost": 120000000
+            },
+            {
+                "max_physical_limit": 3,
+                "cost": 0
+            }
+        ],
+          "bids_limit": 1,
+          "bidding_duration": 19440,
+          "bidding_pause": 71280
         }
       }
     }
