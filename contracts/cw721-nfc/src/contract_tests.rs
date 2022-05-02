@@ -142,6 +142,60 @@ mod tests {
         assert_eq!(err, ContractError::TierMaxLimitIsZero {});
     }
 
+    // #[test]
+    // fn updating_tier_info() {
+    //     let mut deps = mock_dependencies();
+    //     setup_contract(deps.as_mut());
+    //
+    //     // random cannot update tier info
+    //     let info = mock_info("random", &[]);
+    //     let msg = UpdateTierInfo { tier: 3, max_physical_limit: 100, cost: 10 * 1_000_000};
+    //     let err =
+    //         execute(deps.as_mut(), mock_env(), info, msg.clone())
+    //             .unwrap_err();
+    //     assert_eq!(err, ContractError::Unauthorized {});
+    // }
+
+    #[test]
+    fn processing_bids_after_bidding_window_expires() {
+        let mut deps = mock_dependencies();
+        setup_contract(deps.as_mut());
+
+        deps.querier.set_cw721_token("alice", 1);
+
+        // alice places masterpiece bid
+        let  alice_bid_funds = coin(3000 * 1_000_000, "uusd");
+        let info = mock_info("alice", &[alice_bid_funds.clone()]);
+        let mut env = mock_env();
+        let msg = Bid721Masterpiece { token_id: 1.to_string()};
+        let res = execute(deps.as_mut(), env.clone(), info.clone(), msg.clone()).unwrap();
+        assert_eq!(0, res.messages.len());
+
+        env.block.height += BIDDING_DURATION; //  bidding is now expired
+
+        // Resolve Bids
+        let res = execute(deps.as_mut(), env.clone(), info.clone(), ResolveBids {}).unwrap();
+        assert_eq!(0, res.messages.len());
+
+        // Success, check bids
+        let res = query(deps.as_ref(),mock_env(), QueryMsg::Bids {}).unwrap();
+        let bids: BidsResponse = from_binary(&res).unwrap();
+        assert_eq!(0, bids.bids.len());
+        // Check physicals
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::AllCw721Physicals {start_after: None, limit: None}).unwrap();
+        let physicals: AllPhysicalsResponse = from_binary(&res).unwrap();
+        assert_eq!(1, physicals.physicals.len());
+        // Check updated Bidding Information
+        let res = query(deps.as_ref(),mock_env(), QueryMsg::BiddingInfo {}).unwrap();
+        let bidding_info: BiddingInfoResponse = from_binary(&res).unwrap();
+        assert_eq!(BIDDING_DURATION, bidding_info.duration);
+        assert_eq!(env.block.height + BIDDING_PAUSE, bidding_info.start);
+        assert_eq!(Expiration::AtHeight(env.block.height + BIDDING_DURATION + BIDDING_PAUSE), bidding_info.expiration);
+    }
+
     #[test]
     fn ordering_prints() {
         let mut deps = mock_dependencies();
@@ -482,45 +536,5 @@ mod tests {
                 Ok(_) => continue
             }
         }
-    }
-
-    #[test]
-    fn processing_bids_after_bidding_window_expires() {
-        let mut deps = mock_dependencies();
-        setup_contract(deps.as_mut());
-
-        deps.querier.set_cw721_token("alice", 1);
-
-        // alice places masterpiece bid
-        let  alice_bid_funds = coin(3000 * 1_000_000, "uusd");
-        let info = mock_info("alice", &[alice_bid_funds.clone()]);
-        let mut env = mock_env();
-        let msg = Bid721Masterpiece { token_id: 1.to_string()};
-        let res = execute(deps.as_mut(), env.clone(), info.clone(), msg.clone()).unwrap();
-        assert_eq!(0, res.messages.len());
-
-        env.block.height += BIDDING_DURATION; //  bidding is now expired
-
-        // Resolve Bids
-        let res = execute(deps.as_mut(), env.clone(), info.clone(), ResolveBids {}).unwrap();
-        assert_eq!(0, res.messages.len());
-
-        // Success, check bids
-        let res = query(deps.as_ref(),mock_env(), QueryMsg::Bids {}).unwrap();
-        let bids: BidsResponse = from_binary(&res).unwrap();
-        assert_eq!(0, bids.bids.len());
-        // Check physicals
-        let res = query(
-            deps.as_ref(),
-            mock_env(),
-            QueryMsg::AllCw721Physicals {start_after: None, limit: None}).unwrap();
-        let physicals: AllPhysicalsResponse = from_binary(&res).unwrap();
-        assert_eq!(1, physicals.physicals.len());
-        // Check updated Bidding Information
-        let res = query(deps.as_ref(),mock_env(), QueryMsg::BiddingInfo {}).unwrap();
-        let bidding_info: BiddingInfoResponse = from_binary(&res).unwrap();
-        assert_eq!(BIDDING_DURATION, bidding_info.duration);
-        assert_eq!(env.block.height + BIDDING_PAUSE, bidding_info.start);
-        assert_eq!(Expiration::AtHeight(env.block.height + BIDDING_DURATION + BIDDING_PAUSE), bidding_info.expiration);
     }
 }
