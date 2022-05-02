@@ -6,7 +6,7 @@ use cw0::Expiration;
 use cw_storage_plus::{Item, Map, IndexedMap, MultiIndex, IndexList, UniqueIndex, U32Key, Index, U8Key};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct ContractInfo {
+pub struct ContractConfig {
     pub owner: Addr,
     pub cw721: Addr,
     pub paused: bool
@@ -78,7 +78,7 @@ pub fn physicals<'a>() -> IndexedMap<'a, &'a [u8], Cw721PhysicalInfo, PhysicalIn
 }
 
 
-pub const CONTRACT_INFO: Item<ContractInfo> = Item::new("contract_info");
+pub const CONTRACT_CONFIG: Item<ContractConfig> = Item::new("contract_info");
 
 pub const TIERS: Map<U8Key, TierInfo> = Map::new("tiers");
 pub fn load_tier_info(storage: &dyn Storage, tier: u8, ) -> StdResult<TierInfo> {

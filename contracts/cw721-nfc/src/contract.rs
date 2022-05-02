@@ -1,6 +1,6 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, Storage, Order, Uint128, Coin, Addr, BankMsg, BlockInfo, Event};
+use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery, Storage, Order, Uint128, Coin, Addr, BankMsg, BlockInfo, Event, Attribute};
 use cosmwasm_std::CosmosMsg::Bank;
 use cw0::{Expiration, maybe_addr};
 use cw2::set_contract_version;
@@ -10,7 +10,7 @@ use cw_storage_plus::{Bound, PrimaryKey, U32Key, U8Key};
 
 use crate::error::ContractError;
 use crate::msg::{AllPhysicalsResponse, Cw721AddressResponse, ExecuteMsg, InstantiateMsg, Cw721PhysicalInfoResponse, Cw721PhysicalsResponse, QueryMsg, TierInfoResponse, BidsResponse, BiddingInfoResponse};
-use crate::state::{ContractInfo, CONTRACT_INFO, Cw721PhysicalInfo, PHYSICALS_COUNT, physicals, TIERS, TierInfo, BIDS, BidInfo, load_tier_info, BiddingInfo, BIDDING_INFO};
+use crate::state::{ContractConfig, CONTRACT_CONFIG, Cw721PhysicalInfo, PHYSICALS_COUNT, physicals, TIERS, TierInfo, BIDS, BidInfo, load_tier_info, BiddingInfo, BIDDING_INFO};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw721-nfc";
@@ -28,13 +28,13 @@ pub fn instantiate(
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
-    let contract_info = ContractInfo {
+    let contract_info = ContractConfig {
         owner: info.sender.clone(),
         cw721: msg.cw721,
         paused: false
     };
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-    CONTRACT_INFO.save(deps.storage, &contract_info)?;
+    CONTRACT_CONFIG.save(deps.storage, &contract_info)?;
 
     // Initialize tier information
     for i in 0..3{
@@ -80,9 +80,14 @@ pub fn execute(
         ExecuteMsg::ResolveBids {} => {
             assert_not_paused(deps.storage)?;
             resolve_bids(deps.storage, &_env.block)
+        },
+        ExecuteMsg::UpdateConfig { owner, paused} => {
+            assert_owner(deps.storage, info.clone().sender)?;
+            update_config(deps, owner, paused)
         }
         ExecuteMsg::UpdateTierInfo { tier, max_physical_limit, cost} => {
-            update_tier_info(deps, info, tier, max_physical_limit, cost)
+            assert_owner(deps.storage, info.clone().sender)?;
+            update_tier_info(deps, tier, max_physical_limit, cost)
         }
     }
 }
@@ -198,15 +203,10 @@ fn place_bid(
 }
 
 fn update_tier_info(deps: DepsMut,
-                    info: MessageInfo,
                     tier: u8,
                     max_physical_limit: u8,
                     cost: u64
 ) -> Result<Response, ContractError> {
-    let state = CONTRACT_INFO.load(deps.storage)?;
-    if state.owner != info.sender {
-        return Err(ContractError::Unauthorized {});
-    }
     if tier < 1 || tier > 3{
         return Err(ContractError::InvalidTier {})
     }
@@ -218,6 +218,32 @@ fn update_tier_info(deps: DepsMut,
     TIERS.save(deps.storage, U8Key::from(tier), &tier_info)?;
 
     Ok(Response::default())
+}
+
+fn update_config(deps: DepsMut,
+                 owner: Option<Addr>,
+                 paused: Option<bool>
+) -> Result<Response, ContractError> {
+    let mut contract_info = CONTRACT_CONFIG.load(deps.storage)?;
+
+    let mut attributes: Vec<Attribute> = vec![Attribute::new("action", "update_config")];
+
+    if owner.is_some() {
+        contract_info.owner = owner.unwrap();
+        attributes.push(Attribute::new(
+            "owner", contract_info.owner.to_string()
+        ))
+    }
+    if paused.is_some() {
+        contract_info.paused = paused.unwrap();
+        attributes.push(Attribute::new(
+            "paused", contract_info.paused.to_string()
+        ))
+    }
+
+    CONTRACT_CONFIG.save(deps.storage, &contract_info)?;
+
+    Ok(Response::new().add_attributes(attributes))
 }
 
 fn physicals_count(storage: &dyn Storage) -> StdResult<u32> {
@@ -279,7 +305,7 @@ fn is_physical_item_available(
 /// - updates the 'BIDDING_INFO' state variable
 /// Returns [`Ok`]
 fn resolve_bids(storage: &mut dyn Storage, block: &BlockInfo) -> Result<Response, ContractError> {
-    let mut bidding_info = BIDDING_INFO.load(storage)?;
+    let bidding_info = BIDDING_INFO.load(storage)?;
     if bidding_info.expires.is_expired(&block) {
         // fetch all on-going bids
         let bids : Vec<_> = BIDS
@@ -299,7 +325,7 @@ fn resolve_bids(storage: &mut dyn Storage, block: &BlockInfo) -> Result<Response
             })?;
             increment_physcials(storage)?;
         }
-        bidding_info = BIDDING_INFO.update(storage, |mut info| -> StdResult<_> {
+        BIDDING_INFO.update(storage, |mut info| -> StdResult<_> {
             info.start = block.height + info.pause_duration;
             info.expires = Expiration::AtHeight(info.start + bidding_info.duration);
             Ok(info)
@@ -334,7 +360,7 @@ fn assert_ust(funds: Vec<Coin>) -> Result<(), ContractError> {
 /// ## Params
 /// * **storage** is an object of type [`Storage`]
 fn assert_not_paused(storage: &dyn Storage) -> Result<(), ContractError> {
-    let contract_info = CONTRACT_INFO.load(storage)?;
+    let contract_info = CONTRACT_CONFIG.load(storage)?;
     if contract_info.paused {
         return Err(ContractError::ContractIsPaused {});
     }
@@ -348,7 +374,7 @@ fn assert_not_paused(storage: &dyn Storage) -> Result<(), ContractError> {
 /// * **storage** is an object of type [`Storage`]
 /// * **sender** is an object of type [`Addr`]
 fn assert_owner(storage: &dyn Storage, sender: Addr) -> Result<(), ContractError> {
-    let contract_info = CONTRACT_INFO.load(storage)?;
+    let contract_info = CONTRACT_CONFIG.load(storage)?;
     if contract_info.owner != sender {
         return Err(ContractError::Unauthorized {});
     }
@@ -376,12 +402,12 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 fn query_cw721_address(deps: Deps) -> StdResult<Cw721AddressResponse> {
-    let state = CONTRACT_INFO.load(deps.storage)?;
+    let state = CONTRACT_CONFIG.load(deps.storage)?;
     Ok(Cw721AddressResponse { cw721: state.cw721 })
 }
 
 fn query_cw721_owner(deps: Deps, token_id: String) -> StdResult<OwnerOfResponse> {
-    let state = CONTRACT_INFO.load(deps.storage)?;
+    let state = CONTRACT_CONFIG.load(deps.storage)?;
     let owner: OwnerOfResponse =
         deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
             contract_addr: state.cw721.to_string(),
