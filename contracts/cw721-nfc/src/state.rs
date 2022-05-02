@@ -8,7 +8,8 @@ use cw_storage_plus::{Item, Map, IndexedMap, MultiIndex, IndexList, UniqueIndex,
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ContractInfo {
     pub owner: Addr,
-    pub cw721: Addr
+    pub cw721: Addr,
+    pub paused: bool
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

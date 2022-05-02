@@ -30,7 +30,8 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     let contract_info = ContractInfo {
         owner: info.sender.clone(),
-        cw721: msg.cw721
+        cw721: msg.cw721,
+        paused: false
     };
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     CONTRACT_INFO.save(deps.storage, &contract_info)?;
@@ -67,14 +68,17 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::OrderCw721Print { token_id, tier} => {
+            assert_not_paused(deps.storage)?;
             assert_ust(info.funds.clone())?;
             order_cw721_print(deps, info, token_id, tier)
         },
         ExecuteMsg::Bid721Masterpiece { token_id} => {
+            assert_not_paused(deps.storage)?;
             assert_ust(info.funds.clone())?;
             place_bid(deps, &_env.block, info, token_id)
         },
         ExecuteMsg::ResolveBids {} => {
+            assert_not_paused(deps.storage)?;
             resolve_bids(deps.storage, &_env.block)
         }
         ExecuteMsg::UpdateTierInfo { tier, max_physical_limit, cost} => {
@@ -324,6 +328,32 @@ fn assert_ust(funds: Vec<Coin>) -> Result<(), ContractError> {
     Ok(())
 }
 
+/// ## Description
+/// Verify that contract is not paused
+/// Returns [`Ok`] if contract is not paused, otherwise returns [`ContractError`]
+/// ## Params
+/// * **storage** is an object of type [`Storage`]
+fn assert_not_paused(storage: &dyn Storage) -> Result<(), ContractError> {
+    let contract_info = CONTRACT_INFO.load(storage)?;
+    if contract_info.paused {
+        return Err(ContractError::ContractIsPaused {});
+    }
+    Ok(())
+}
+
+/// ## Description
+/// Checks if the message sender is a contract owner.
+/// Returns [`Ok`] if sender is the contract owner, otherwise returns [`ContractError`]
+/// ## Params
+/// * **storage** is an object of type [`Storage`]
+/// * **sender** is an object of type [`Addr`]
+fn assert_owner(storage: &dyn Storage, sender: Addr) -> Result<(), ContractError> {
+    let contract_info = CONTRACT_INFO.load(storage)?;
+    if contract_info.owner != sender {
+        return Err(ContractError::Unauthorized {});
+    }
+    Ok(())
+}
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
