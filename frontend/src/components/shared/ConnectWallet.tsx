@@ -1,9 +1,11 @@
 import { useWallet, WalletStatus } from '@terra-dev/use-wallet'
-import React from "react";
+import React, {useEffect, useState} from "react";
 import styled from "styled-components";
 import {Button} from "react-bootstrap";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {faWallet} from "@fortawesome/free-solid-svg-icons";
+import {ConnectionOptionsModal} from "../../pages/home/components/ConnectionOptionsModal";
+import { ConnectType } from '@terra-money/wallet-provider';
 
 interface ConnectWalletProps {
   className?: string;
@@ -13,6 +15,9 @@ export const ConnectWalletBase = (props: ConnectWalletProps) => {
   const {
     className,
   } = props
+
+  const [allConnectTypes, setAllConnectTypes] = useState<any>([])
+  const [showModal, setShowModal] = useState<boolean>(false)
 
   const {
     status,
@@ -24,9 +29,52 @@ export const ConnectWalletBase = (props: ConnectWalletProps) => {
     disconnect,
   } = useWallet()
 
+  useEffect(() => {
+    const tempArrayOfConnectionTypes: any[] = [];
 
-  const terraStationWallet = availableConnectTypes.find((value) => value === "CHROME_EXTENSION")
-  const installTerraStationWalletExt = availableInstallTypes.find((value) => value === "CHROME_EXTENSION");
+    for(const it of availableConnectTypes){
+      let tempValueName: string;
+      switch (it){
+        case "CHROME_EXTENSION":
+          tempValueName = "Terra Station Wallet"
+          tempArrayOfConnectionTypes.push({
+            type: it,
+            valueName: tempValueName,
+            func: connect,
+            logo: "terra-station"
+          })
+          break;
+        case "WALLETCONNECT":
+          tempValueName = "Wallet Connect"
+          tempArrayOfConnectionTypes.push({
+            type: it,
+            valueName: tempValueName,
+            func: connect,
+            logo: "wallet-connect"
+          })
+          break;
+      }
+    }
+
+    for(const it of availableInstallTypes){
+      let tempValueName: string;
+      switch (it){
+        case "CHROME_EXTENSION":
+          tempValueName = "Install Terra Station Extension"
+          tempArrayOfConnectionTypes.push({
+            type: it,
+            valueName: tempValueName,
+            func: install,
+            logo: "terra-station"
+          })
+          break;
+      }
+    }
+
+    setAllConnectTypes(tempArrayOfConnectionTypes);
+  }, [availableConnectTypes]);
+
+  const toggleModal = () => setShowModal(!showModal);
 
   switch (status) {
     case WalletStatus.INITIALIZING:
@@ -38,31 +86,21 @@ export const ConnectWalletBase = (props: ConnectWalletProps) => {
     case WalletStatus.WALLET_NOT_CONNECTED:
       return (
             <div className={className}>
-              {terraStationWallet !== undefined ?
+              {allConnectTypes.length > 0 ?
                 (
-                  <Button variant="light"
-                    key={`connect-${terraStationWallet}`}
-                    onClick={() => connect(terraStationWallet)}
-                    type="button"
-                  >
+                  <>
+                    <Button variant="light" type="button" onClick={toggleModal}>
                       <span className="button-text">Connect wallet</span>
                       <FontAwesomeIcon className="icon" icon={faWallet}  />
-                  </Button>) :
-                (
-                  installTerraStationWalletExt !== undefined ? (
-                    <Button variant="primary"
-                            key={`install-${installTerraStationWalletExt}`}
-                            onClick={() => install(installTerraStationWalletExt)}
-                            type="button"
-                    >
-                      <span className="button-text ">Install</span>
-                      <span className="button-text bold-text">Terra Station Wallet</span>
                     </Button>
-                  ) : (
-                    <div className="text-white">
-                      Please use a web browser that is compatible with terra station extension.
-                    </div>
-                  )
+
+                    <ConnectionOptionsModal show={showModal} setShow={setShowModal} availableConnectTypes={allConnectTypes}></ConnectionOptionsModal>
+                  </>
+                ):
+                (
+                  <div className="text-white">
+                    Please use a web browser that is compatible with terra station extension.
+                  </div>
               )}
             </div>
       )
