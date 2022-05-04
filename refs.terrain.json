@@ -1,9 +1,9 @@
 {
   "testnet": {
     "cw721-metadata-onchain": {
-      "codeId": "50792",
+      "codeId": "64910",
       "contractAddresses": {
-        "default": "terra1qpg75wmr0cs263529cxdtx7jxr37w62j7rvetq"
+        "default": "terra18vw9w9t9q34x8c6ngjjerugsjn4yu9fhd8ham5"
       }
     },
     "cw721-nfc": {

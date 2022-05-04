@@ -9,6 +9,10 @@
   "workspaces": [
     "frontend"
   ],
+  "scripts": {
+    "testnet:mint-dummy-nfts": "terrain task:run mint-dummy-nfts --network testnet",
+    "testnet:duplicate-cw721-on-testnet": "terrain task:run duplicate-cw721-on-testnet --network testnet"
+  },
   "author": "",
   "license": "ISC"
 }
