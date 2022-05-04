@@ -1,10 +1,7 @@
 import React, {useContext, useEffect, useState} from "react";
 import styled from 'styled-components';
 import {Button, Col, Modal, ModalHeader, Row} from "react-bootstrap";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faClose} from "@fortawesome/free-solid-svg-icons";
-import {Link} from "react-router-dom";
-import {increment} from "../../../contract/execute";
+import {ShippingForm} from "./ShippingForm";
 
 interface OrderModalProps {
     className?: string;
@@ -91,14 +88,7 @@ export const OrderModalBase = (props: OrderModalProps) => {
                 <div id="step-2" className="step">
                     {
                         order.tier !== 1 &&
-                        <div className="row">
-                            <div className="col-md-6">
-                                <input type="text" className="form-control" placeholder="Name" required/>
-                            </div>
-                            <div className="col-md-6">
-                                <input type="text" className="form-control" placeholder="Email" required/>
-                            </div>
-                        </div>
+                        <ShippingForm />
                     }
                     {
                         order.tier === 1 &&
@@ -124,11 +114,9 @@ export const OrderModalBase = (props: OrderModalProps) => {
 
 export const OrderModal = styled(OrderModalBase)`
   &.modal-xl{
-    //width: 60vm;
-    
   }
   .modal-content {
-    height: 65vh;
+    height: 60vh;
     .modal-body{
       .step {
         display: none;
@@ -163,18 +151,18 @@ export const OrderModal = styled(OrderModalBase)`
       .btn-step {
         font-weight: bold;
         font-size: 1.2em;
-        background-color: rgba(218,165,32, .9);
+        background-color: rgba(0, 0, 0, .7);
         border: none;
         color: white;
         &.disabled {
           cursor: not-allowed;
         }
         &:hover {
-          background-color: rgba(218,165,32, .75);
+          background-color: rgba(0, 0, 0, .8);
           color: white;
         }
         &:focus{
-          box-shadow: 0 0 0 0.2rem rgba(218,165,32, .35);
+          background-color: rgba(0, 0, 0, .8);
         }
       }
     }
