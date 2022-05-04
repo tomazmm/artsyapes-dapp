@@ -59,6 +59,9 @@ export const AppBase = (props: AppProps) => {
             })
           }
         }
+      }else{
+        setTokens(undefined);
+        setTokenInfo([]);
       }
     }
     fetchTokenInfo()
