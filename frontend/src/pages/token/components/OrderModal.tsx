@@ -89,14 +89,25 @@ export const OrderModalBase = (props: OrderModalProps) => {
                     </div>
                 </div>
                 <div id="step-2" className="step">
-                    <div className="row">
-                        <div className="col-md-6">
-                            <input type="text" className="form-control" placeholder="Name" required/>
+                    {
+                        order.tier !== 1 &&
+                        <div className="row">
+                            <div className="col-md-6">
+                                <input type="text" className="form-control" placeholder="Name" required/>
+                            </div>
+                            <div className="col-md-6">
+                                <input type="text" className="form-control" placeholder="Email" required/>
+                            </div>
                         </div>
-                        <div className="col-md-6">
-                            <input type="text" className="form-control" placeholder="Email" required/>
-                        </div>
-                    </div>
+                    }
+                    {
+                        order.tier === 1 &&
+                        <Row>
+                            <Col>
+                                <h1>BETTTING</h1>
+                            </Col>
+                        </Row>
+                    }
                 </div>
             </Modal.Body>
             <Modal.Footer>
@@ -113,7 +124,8 @@ export const OrderModalBase = (props: OrderModalProps) => {
 
 export const OrderModal = styled(OrderModalBase)`
   &.modal-xl{
-    width: 70vw;
+    //width: 60vm;
+    
   }
   .modal-content {
     height: 65vh;
