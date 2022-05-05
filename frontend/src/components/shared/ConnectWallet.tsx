@@ -42,7 +42,8 @@ export const ConnectWalletBase = (props: ConnectWalletProps) => {
             type: it,
             valueName: tempValueName,
             func: connect,
-            logo: "terra-station"
+            logo: "terra-station",
+            logosrc: "assets/terrastation-logo.png"
           })
           break;
         case "WALLETCONNECT":
@@ -51,7 +52,8 @@ export const ConnectWalletBase = (props: ConnectWalletProps) => {
             type: it,
             valueName: tempValueName,
             func: connect,
-            logo: "wallet-connect"
+            logo: "wallet-connect",
+            logosrc: "assets/walletconnect-logo.png"
           })
           break;
       }
@@ -66,7 +68,8 @@ export const ConnectWalletBase = (props: ConnectWalletProps) => {
             type: it,
             valueName: tempValueName,
             func: install,
-            logo: "terra-station"
+            logo: "terra-station",
+            logosrc: "assets/terrastation-logo.png"
           })
           break;
       }
