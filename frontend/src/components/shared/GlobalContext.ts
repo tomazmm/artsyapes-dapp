@@ -5,7 +5,8 @@ import {ConnectedWallet} from "@terra-dev/use-wallet/useConnectedWallet";
 interface IGlobalContext {
   tokens: string[],
   tokensInfo?: any,
-  connectedWallet?: ConnectedWallet
+  connectedWallet?: ConnectedWallet,
+  setLogout: any
 }
 
 const GlobalContext = React.createContext({} as IGlobalContext);

@@ -8,6 +8,7 @@ import {BurgerMenu} from "./components/layout/Header/components/BurgerMenu";
 import {Background} from "./components/layout/Background/Background";
 import GlobalContext from "./components/shared/GlobalContext";
 import styled from "styled-components";
+import {ErrorPage} from "./pages/404";
 
 
 
@@ -36,12 +37,13 @@ export const AppBase = (props: AppProps) => {
   } = props;
 
   const [show, setShow] = useState(false);
-  const [loadPage, setLoadPage] = useState(true);
+  const navigate = useNavigate();
 
   const [tokens, setTokens] = useState<any>(undefined)
   const [tokenInfo, setTokenInfo] = useState<any>([])
+  const [logout, setLogout] = useState(false)
 
-  const { status } = useWallet()
+  const { status, disconnect } = useWallet()
 
   const connectedWallet = useConnectedWallet()
 
@@ -59,13 +61,25 @@ export const AppBase = (props: AppProps) => {
             })
           }
         }
-      }else{
-        setTokens(undefined);
-        setTokenInfo([]);
       }
     }
     fetchTokenInfo()
   }, [connectedWallet])
+
+  useEffect(() => {
+    const fetchTokenInfo = async () :Promise<any> => {
+      if (logout){
+        setTokens(undefined)
+        setTokenInfo([])
+        await disconnect()
+        navigate("/")
+        setLogout(false);
+      }
+    }
+    fetchTokenInfo()
+  }, [logout])
+
+
 
   const toggleBurgerMenu = () => setShow(!show);
 
@@ -73,64 +87,54 @@ export const AppBase = (props: AppProps) => {
     tokens,
     tokensInfo: tokenInfo,
     connectedWallet: connectedWallet,
+    setLogout
   };
 
 
-  switch (status){
-    case WalletStatus.INITIALIZING:
-      return (
-        <>
-          <div className={className}>
-            <LoadingPage />
-          </div>
-        </>
-      )
-    case WalletStatus.WALLET_CONNECTED:
-      return (
-        <GlobalContext.Provider value={globalContext}>
-          {loadPage ? (
-            <div className={className}>
-              <Background/>
-              <div className="header">
+  return (
+    <GlobalContext.Provider value={globalContext}>
+      <div className={className}>
+      {status === WalletStatus.INITIALIZING || logout ? (
+          <LoadingPage />
+      ) : (
+          <>
+            {connectedWallet ?(
+              <>
+                <Background/>
+                <div className="header">
+                  {/*TODO: add BurgerMenu to Header*/}
                   <Header setShow={toggleBurgerMenu}/>
-                  {show ?
-                      <BurgerMenu/>
-                      :
-                      <></>
-                  }
-              </div>
-              <div className="content">
-                <React.Suspense fallback={<LoadingPage/>}>
-                  <Routes>
-                    <Route path={"/token/:id"} element={<Token />}/>
-                    <Route path={"/"} element={<MyProfile />}/>
-                  </Routes>
-                </React.Suspense>
-              </div>
-            </div>
+                </div>
+              </>
+            ) : (
+              <>
+              </>
+            )}
 
-          ) : (
-            <>
-              <div className="ArtsyApesApp">
-                <LoadingPage />
-              </div>
-            </>
-          )
-          }
-        </GlobalContext.Provider>
-      )
-    case WalletStatus.WALLET_NOT_CONNECTED:
-      return (
-        <div className="ArtsyApesApp">
-          <React.Suspense fallback={<LoadingPage/>}>
-            <Routes>
-              <Route path="/" element={<Home />}/>
-              <Route path="*" element={<Navigate to="/"/>}/>
-            </Routes>
-          </React.Suspense>
-        </div>
-      )
-  }
+            <div className="content">
+              <React.Suspense fallback={<LoadingPage/>}>
+                <Routes>
+                  {connectedWallet ? (
+                    <>
+                      <Route path={"/"} element={<MyProfile />}/>
+                      <Route path={"/token/:id"} element={<Token />}/>
+                    </>
+                  ) : (
+                    <>
+                      <Route path={"/"} element={<Home />}/>
+                    </>
+                  )}
+
+                  <Route path="*" element ={<Navigate to="/404"/>}/>
+                  <Route path="/404" element={<ErrorPage />}/>
+                </Routes>
+              </React.Suspense>
+            </div>
+          </>
+        )}
+      </div>
+    </GlobalContext.Provider>
+  )
 }
 
 export const App = styled(AppBase)`

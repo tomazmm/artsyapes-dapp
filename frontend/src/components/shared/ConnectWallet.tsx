@@ -1,11 +1,11 @@
 import { useWallet, WalletStatus } from '@terra-dev/use-wallet'
-import React, {useEffect, useState} from "react";
+import React, {useContext, useEffect, useState} from "react";
 import styled from "styled-components";
 import {Button} from "react-bootstrap";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {faWallet} from "@fortawesome/free-solid-svg-icons";
 import {ConnectionOptionsModal} from "../../pages/home/components/ConnectionOptionsModal";
-import { ConnectType } from '@terra-money/wallet-provider';
+import GlobalContext from "./GlobalContext";
 
 interface ConnectWalletProps {
   className?: string;
@@ -18,6 +18,7 @@ export const ConnectWalletBase = (props: ConnectWalletProps) => {
 
   const [allConnectTypes, setAllConnectTypes] = useState<any>([])
   const [showModal, setShowModal] = useState<boolean>(false)
+  const context = useContext(GlobalContext);
 
   const {
     status,
@@ -76,13 +77,11 @@ export const ConnectWalletBase = (props: ConnectWalletProps) => {
 
   const toggleModal = () => setShowModal(!showModal);
 
-  switch (status) {
-    case WalletStatus.INITIALIZING:
-      return (
-          <div className={className}>
+  const disconnectWallet = () => {
+    context.setLogout(true)
+  }
 
-          </div>
-      );
+  switch (status) {
     case WalletStatus.WALLET_NOT_CONNECTED:
       return (
             <div className={className}>
@@ -109,7 +108,7 @@ export const ConnectWalletBase = (props: ConnectWalletProps) => {
           <div className={className}>
             {/*{wallets[0].terraAddress}*/}
             <Button variant="light" className="wallet"
-                onClick={() => disconnect()}
+                onClick={() => disconnectWallet()}
                 type="button"
             >
               <span className="button-text">{wallets[0].terraAddress}</span>
@@ -117,6 +116,11 @@ export const ConnectWalletBase = (props: ConnectWalletProps) => {
             </Button>
           </div>
       )
+    default:
+      return (
+        <></>
+      )
+      break;
   }
 }
 

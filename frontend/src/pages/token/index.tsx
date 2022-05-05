@@ -6,7 +6,6 @@ import {useNavigate} from "react-router-dom";
 import {NftDescription} from "./components/NftDescription";
 import {LoadingCircle} from "./components/LoadingCircle";
 import * as query from "../../contract/query";
-import {PageNotExists} from "../../components/shared/PageNotExists";
 
 
 type Nullable<T> = T | null | undefined;
@@ -21,11 +20,11 @@ export const TokenBase = (props: TokenProps) => {
   } = props;
 
   const globalContext = useContext(GlobalContext);
+  const navigate = useNavigate();
 
   const [tokenId, setTokenId] = useState<Nullable<string>>(null);
   const [nftInfo, setNftInfo] = useState<any>(undefined);
   const [imageName, setImageName] = useState<any>("")
-  const [notValidId, setNotValidId] = useState(false);
 
 
   useEffect( () => {
@@ -33,7 +32,7 @@ export const TokenBase = (props: TokenProps) => {
       if(globalContext.tokens !== undefined && tokenId === null){
         const token_id = window.location.pathname.replace( /^\D+/g, '');
         if(!/^\d+$/.test(token_id) || parseInt(token_id) <= 0 || parseInt(token_id) >= 3778){
-          setNotValidId(true);
+          navigate('/404')
         }
 
         const token = globalContext.tokens.find((value : string) => value === token_id);
@@ -44,7 +43,7 @@ export const TokenBase = (props: TokenProps) => {
   }, [globalContext.tokens])
 
   useEffect( () => {
-    if(nftInfo === undefined && tokenId !== null && !notValidId){
+    if(nftInfo === undefined && tokenId !== null ){
       if(tokenId !== undefined){
         const token_info = globalContext
             .tokensInfo
@@ -74,7 +73,7 @@ export const TokenBase = (props: TokenProps) => {
             <NftDescription nftInfo={nftInfo} imageName={imageName}/>
         </Container>
       ) : (
-          (notValidId) ? <PageNotExists/> : <LoadingCircle/>
+        <LoadingCircle/>
       )
       }
     </div>
