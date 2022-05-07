@@ -3,11 +3,11 @@ import styled from 'styled-components';
 import {Spinner} from "react-bootstrap";
 
 
-interface ErrorPageProps {
+interface Page404Props {
   className?: string;
 }
 
-export const ErrorPageBase = (props: ErrorPageProps) => {
+export const Page404Base = (props: Page404Props) => {
   const {
     className,
   } = props;
@@ -22,7 +22,7 @@ export const ErrorPageBase = (props: ErrorPageProps) => {
 }
 
 
-export const ErrorPage = styled(ErrorPageBase)`
+export const Page404 = styled(Page404Base)`
   display: flex;
   flex-direction: column;
   justify-content: center;

@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {faWallet} from "@fortawesome/free-solid-svg-icons";
 import {ConnectionOptionsModal} from "../../pages/home/components/ConnectionOptionsModal";
 import GlobalContext from "./GlobalContext";
+import { useNavigate } from 'react-router-dom';
 
 interface ConnectWalletProps {
   className?: string;
@@ -19,6 +20,8 @@ export const ConnectWalletBase = (props: ConnectWalletProps) => {
   const [allConnectTypes, setAllConnectTypes] = useState<any>([])
   const [showModal, setShowModal] = useState<boolean>(false)
   const context = useContext(GlobalContext);
+
+  const navigate = useNavigate();
 
   const {
     status,
@@ -81,7 +84,8 @@ export const ConnectWalletBase = (props: ConnectWalletProps) => {
   const toggleModal = () => setShowModal(!showModal);
 
   const disconnectWallet = () => {
-    context.setLogout(true)
+    disconnect()
+    navigate("/")
   }
 
   switch (status) {

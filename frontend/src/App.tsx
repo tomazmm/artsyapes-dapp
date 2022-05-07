@@ -8,7 +8,7 @@ import {BurgerMenu} from "./components/layout/Header/components/BurgerMenu";
 import {Background} from "./components/layout/Background/Background";
 import GlobalContext from "./components/shared/GlobalContext";
 import styled from "styled-components";
-import {ErrorPage} from "./pages/404";
+import {Page404} from "./pages/404";
 
 
 
@@ -37,13 +37,11 @@ export const AppBase = (props: AppProps) => {
   } = props;
 
   const [show, setShow] = useState(false);
-  const navigate = useNavigate();
 
   const [tokens, setTokens] = useState<any>(undefined)
   const [tokenInfo, setTokenInfo] = useState<any>([])
-  const [logout, setLogout] = useState(false)
 
-  const { status, disconnect } = useWallet()
+  const { status } = useWallet()
 
   const connectedWallet = useConnectedWallet()
 
@@ -66,35 +64,19 @@ export const AppBase = (props: AppProps) => {
     fetchTokenInfo()
   }, [connectedWallet])
 
-  useEffect(() => {
-    const fetchTokenInfo = async () :Promise<any> => {
-      if (logout){
-        setTokens(undefined)
-        setTokenInfo([])
-        await disconnect()
-        navigate("/")
-        setLogout(false);
-      }
-    }
-    fetchTokenInfo()
-  }, [logout])
-
-
-
   const toggleBurgerMenu = () => setShow(!show);
 
   const globalContext = {
     tokens,
     tokensInfo: tokenInfo,
-    connectedWallet: connectedWallet,
-    setLogout
+    connectedWallet: connectedWallet
   };
 
 
   return (
     <GlobalContext.Provider value={globalContext}>
       <div className={className}>
-      {status === WalletStatus.INITIALIZING || logout ? (
+      {status === WalletStatus.INITIALIZING ? (
           <LoadingPage />
       ) : (
           <>
@@ -126,7 +108,7 @@ export const AppBase = (props: AppProps) => {
                   )}
 
                   <Route path="*" element ={<Navigate to="/404"/>}/>
-                  <Route path="/404" element={<ErrorPage />}/>
+                  <Route path="/404" element={<Page404 />}/>
                 </Routes>
               </React.Suspense>
             </div>
