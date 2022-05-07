@@ -45,7 +45,9 @@ export const ConnectionOptionsModalBase = (props: ConnectionOptionsModalProps) =
                           className="d-flex justify-content-between align-items-center"
                   >
                     <span className="button-text">{value.valueName}</span>
-                    <div className={"logo " + value.logo}></div>
+                    <div className="logo">
+                      <img src={value.logosrc} className={value.logo}></img>
+                    </div>
                   </Button>
                 </Col>
               })
@@ -83,15 +85,14 @@ export const ConnectionOptionsModal = styled(ConnectionOptionsModalBase)`
               .logo{
                 width: 2rem;
                 height: 2rem;
-                background-position: center;
-                background-repeat: no-repeat;
-                background-size: contain;
-                &.terra-station{
-                  background-image: url("assets/terrastation-logo.png");
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                .terra-station{
+                  width: 2rem;
                 }
-                &.wallet-connect{
-                  background-image: url("assets/walletconnect-logo.png");
-                  
+                .wallet-connect{
+                  width: 1.7rem;
                 }
               }
             }
