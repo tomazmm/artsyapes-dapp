@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from "react";
 import styled from 'styled-components';
 import {useNavigate} from "react-router-dom";
+import Spinner from "react-bootstrap/esm/Spinner";
 
 interface GridItemProps {
   className?: string;
@@ -18,7 +19,7 @@ export const GridItemBase = (props: GridItemProps) => {
 
   const [imageName, setImageName] = useState<any>("")
   const [show, setShow] = useState(false);
-  const [showCardText, setShowCardText] = useState(false);
+  const [showToken, setShowToken] = useState(false);
 
   useEffect(() => {
     const tempImageName = nftValue.info.extension.image.split("//");
@@ -29,23 +30,32 @@ export const GridItemBase = (props: GridItemProps) => {
 
   const toggleModal = () => setShow(!show);
 
-  const onLoadShowText = () => setShowCardText(true);
+  const showTokenOnLoad = () => setShowToken(true);
 
   return (
     <div className={className}>
       {/*Card View*/}
       <div className="grid-item-wrapper d-flex flex-column" onClick={navigateToToken}>
-        <img src={imageName} onLoad={onLoadShowText} />
-        {showCardText ? (
-          <span>{nftValue.info.extension.name}</span>
-        ) : (<></>)
-        }
+        <div className="token-image">
+          <img className={`${showToken ? "active" : ""}`} src={imageName} onLoad={showTokenOnLoad}/>
+          {showToken ? (
+            <></>
+          ) : (
+            <div className="loading">
+              <Spinner className="p-2 position-absolute" animation="border" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </Spinner>
+            </div>
+          )}
+        </div>
+        <span>{nftValue.info.extension.name}</span>
       </div>
     </div>
   )
 }
 
 export const GridItem = styled(GridItemBase)`
+  width: 100%;
   background: rgba(255,255,255, .9);
   border-radius: 0.4rem;
   transition: margin 0.1s ease-in-out; // Add the transition
@@ -56,10 +66,24 @@ export const GridItem = styled(GridItemBase)`
   }
   .grid-item-wrapper {
     cursor: pointer;
-    img{
-      border-radius: 0.4rem 0.4rem 0 0;
-      max-width: 100%;
-      max-height: 100%;
+    .token-image{
+      img{
+        display: none;
+        &.active{
+          display: block;
+        }
+        border-radius: 0.4rem 0.4rem 0 0;
+        max-width: 100%;
+        max-height: 100%;
+      }
+      .loading{
+        padding-bottom: 48%;
+        padding-top: 48%;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
     }
     span{
       font-weight: bold;

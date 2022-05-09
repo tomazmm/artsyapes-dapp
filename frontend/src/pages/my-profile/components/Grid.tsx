@@ -38,7 +38,7 @@ export const GridBase = (props: GridProps) => {
                           xl={{span: 4}}
                           lg={{span: 6}}
                           xs={{span: 12}}
-                          className="d-flex flex-column justify-content-start align-self-start align-content-center align-items-center col mb-4">
+                          className="d-flex flex-column justify-content-start align-self-start align-content-center align-items-center col p-4">
                 <GridItem nftValue={value}/>
               </Col>
             })
@@ -82,7 +82,7 @@ export const Grid = styled(GridBase)`
   .grid-row{
     margin-right: 0.1rem;
     max-height: 100%;
-    height: 100%!important;
+    height: auto !important;
     display: flex;
     @media screen and (max-width: 991px) {
       flex-flow: column;
