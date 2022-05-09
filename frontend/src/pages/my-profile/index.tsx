@@ -35,19 +35,30 @@ export const MyProfileBase = (props: MyProfileProps) => {
 export const MyProfile= styled(MyProfileBase)`
   height: 100%;
   margin-top: 2.5em;
+  @media screen and (max-width: 767px) {
+    margin-top: 1em;
+  }
+  
     > .container-fluid{
         height: 100%;
         width: 70%;
+        @media screen and (max-width: 767px) {
+          width: 100%;
+        }
         .row{
           height: 100%;
           .col{
+            h2{
+              @media screen and (max-width: 767px) {
+                font-size: 1.4em;
+              }
+            }
             &.my-account-col{
               height: 90%;
             }
             .white-line{
               border-bottom: 2px groove white;
               width: 100%;
-              margin-bottom: 2rem;
               &.nfts{
                 margin-top: 1rem;
                 @media screen and (max-width: 1200px) and (min-width: 768px){
