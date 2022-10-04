@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::{Addr, StdResult, Storage, Uint128};
 use cw0::Expiration;
-use cw_storage_plus::{Item, Map, IndexedMap, MultiIndex, IndexList, UniqueIndex, U32Key, Index, U8Key};
+use cw_storage_plus::{Item, Map, IndexedMap, MultiIndex, IndexList, UniqueIndex, U32Key, Index, U8Key, U128Key};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ContractConfig {
@@ -88,7 +88,7 @@ pub fn load_tier_info(storage: &dyn Storage, tier: u8, ) -> StdResult<TierInfo> 
 pub const BIDS: Map<U8Key, BidInfo> = Map::new("bids");
 pub const BIDDING_INFO: Item<BiddingInfo> = Item::new("bidding_info");
 
-pub const PHYSICALS: Map<String, Cw721PhysicalInfo> = Map::new("physicals");
+pub const PHYSICALS: Map<U128Key, Cw721PhysicalInfo> = Map::new("physicals");
 pub const PHYSICALS_COUNT: Item<u32> = Item::new("physicals_count");
 
 

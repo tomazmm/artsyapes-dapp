@@ -16,22 +16,9 @@ pub struct InstantiateMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
-    OrderCw721Print {
-        token_id: String,
-        tier: String
-    },
-    Bid721Masterpiece {
-        token_id: String
-    },
-    ResolveBids {},
-    UpdateConfig {
-        owner: Option<Addr>,
-        paused: Option<bool>
-    },
-    UpdateTierInfo {
-        tier: u8,
-        max_physical_limit: u8,
-        cost: u64
+    CreateCw721Physical{
+        token_id: u128,
+        nfc_tag: string
     }
 }
 

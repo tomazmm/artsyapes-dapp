@@ -7,7 +7,7 @@
       }
     }
   },
-  "mainnet": {
+  "classic": {
     "cw721-metadata-onchain": {
       "codeId": "1870",
       "contractAddresses": {
